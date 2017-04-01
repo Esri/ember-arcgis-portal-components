@@ -1,6 +1,6 @@
 /* jshint node: true */
 
-module.exports = function(environment) {
+module.exports = function (environment) {
   var ENV = {
     modulePrefix: 'dummy',
     environment: environment,
@@ -51,7 +51,16 @@ module.exports = function(environment) {
     ENV.APP.rootElement = '#ember-testing';
   }
 
+  if (environment === 'github') {
+    ENV.locationType = 'hash';
+    ENV.rootURL = '/ember-arcgis-portal-components/';
+    ENV.torii.providers['arcgis-oauth-bearer'].apiKey = 'JXTVRvZpKwuSPyuJ';
+    ENV.torii.providers['arcgis-oauth-bearer'].portalUrl = 'https://www.arcgis.com';
+  }
+
   if (environment === 'production') {
+    ENV.locationType = 'hash';
+    ENV.rootURL = '/ember-arcgis-portal-components/';
 
   }
 
