@@ -1,0 +1,184 @@
+$body-bg: #fff !default;
+$row-color: #efefef !default;
+$midrange-border-color:#cccccc !default;
+$table-bg-hover: #d9edf7 !default;
+
+.item-picker {
+  position: relative;
+  .item-picker-datasets-pane, .item-picker-items-pane {
+    min-height: 55rem;
+  }
+  .item-picker-results-container {
+    min-height: 400px;
+  }
+
+  ul.pagination {
+    margin: 0;
+  }
+  .item-picker-status {
+    margin: 8px 0;
+  }
+  ul.results-list {
+    padding: 0;
+    li:nth-child(even) {background: $row-color}
+    li {
+      list-style: none;
+      padding: 0;
+      a {
+        padding: 0.5rem 1rem;
+        display: block;
+        font-size: 1rem;
+        h2 {
+          margin: 0;
+          // width: 250px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 1.5rem;
+        }
+        .shared-by {
+          color: $gray-dark;
+        }
+      }
+      .item-picker-item-results-item-details {
+        margin-top: 8px;
+      }
+      &.is-selected {
+        background-color: $table-bg-hover;
+      }
+      &.select-multiple {
+        a:first-child {
+          display: inline-block;
+        }
+        .item-picker-item-results-item-inner {
+          display:inline-block;
+        }
+        input {
+          top: -22px;
+        }
+      }
+    }
+  }
+
+  .item-picker-current-item {
+    z-index: 1;
+    padding: 15px;
+    position: absolute;
+    top: 0;
+    left: 55%;
+    right: 0;
+    bottom: 0;
+    background-color: $body-bg;
+    border-top: solid 1px $midrange-border-color;
+    border-left: solid 1px $midrange-border-color;
+    box-shadow: -1px -1px 4px $midrange-border-color;
+    .item-picker-current-item-preview {
+      position: absolute;
+      height: calc(85% - 15px);
+      width: calc(100% - 30px);
+      top: 1em;
+      bottom: 10%;
+      overflow: auto;
+      img {
+        height: 133px;
+      }
+      > h2 {
+        font-size: 2rem;
+        color: $brand-primary;
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+      }
+      > h3 {
+        font-size: 1.25rem;
+        margin-top: 0;
+      }
+      .item-picker-current-item-preview-description {
+        position: relative;
+        overflow: hidden;
+        max-height: 20rem;
+        margin-bottom: 1rem;
+        padding-bottom: 60px;
+        word-wrap: break-word;
+        .text-fadeout {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          margin: 0;
+          padding-bottom: 60px;
+          // background-image: linear-gradient(to bottom, transparent, $body-bg);
+          background: -webkit-linear-gradient(
+            rgba(255, 255, 255, 0) 0%,
+            $body-bg 100%
+          );
+          background-image: -moz-linear-gradient(
+            rgba(255, 255, 255, 0) 0%,
+            $body-bg 100%
+          );
+          background-image: -o-linear-gradient(
+            rgba(255, 255, 255, 0) 0%,
+            $body-bg 100%
+          );
+          background-image: linear-gradient(
+            rgba(255, 255, 255, 0) 0%,
+            $body-bg 100%
+          );
+          background-image: -ms-linear-gradient(
+            rgba(255, 255, 255, 0) 0%,
+            $body-bg 100%
+          );
+        }
+      }
+      .item-picker-current-dataset-preview-field-list {
+        list-style:none;
+        padding:0;
+        margin:0;
+        li {
+          float:left;
+          margin: 5px 5px 5px 0;
+          border: 1px solid $midrange-border-color;
+          padding: 0;
+          text-align: center;
+          outline: 0px solid transparent;
+          width: auto;
+          -moz-transition: border-color 1s ease-in, outline 1s ease-in;    /* FF3.7+ */
+          -o-transition: border-color 1s ease-in, outline 1s ease-in;      /* Opera 10.5 */
+          -webkit-transition: border-color 1s ease-in, outline 1s ease-in; /* Saf3.2+, Chrome */
+          transition: border-color 1s ease-in, outline 1s ease-in;
+          &.fade-outline {
+            border-color: $link-color;
+            outline: 1px solid $link-color;
+          }
+
+          .chart-button {
+            background: none;
+            border: none;
+            padding: 10px;
+            &:hover {
+              background-color: $link-color;
+              color: #FFFFFF;
+              fill: #FFFFFF;
+            }
+            &:focus{
+              background-color: $link-color;
+              color: #FFFFFF;
+              fill: #FFFFFF;
+            }
+            svg {
+              display: inline-block;
+              margin: 0 auto;
+              height: 12px;
+              width: 12px;
+            }
+          }
+        }
+      }
+    }
+    .item-picker-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{{#if showPagination}}
+  <ul class="pagination">
+    {{!-- If we're on the first page, do not display the link --}}
+    {{#if isFirstPage}}
+      <li class="disabled">
+        <a aria-label="{{t (concat _i18nScope 'aria.disabled')}}">&laquo;</a>
+      </li>
+      <li class="disabled">
+        <a aria-label="{{t (concat _i18nScope 'aria.disabled')}}">&lsaquo;</a>
+      </li>
+    {{else}}
+      <li>
+        <a href="" {{action changePage 1}} aria-label="{{t (concat _i18nScope 'aria.first_pg')}}">&laquo;</a>
+      </li>
+      <li>
+        <a href="" {{action changePage prevPage}} aria-label="{{t (concat _i18nScope 'aria.prev')}}">&lsaquo;</a>
+      </li>
+    {{/if}}
+
+    {{!-- For each page, display a link leading to it --}}
+    {{#each pageRange as |num|}}
+      <li class="{{num.className}}">
+        <a href="" {{action changePage num.page}}>{{format-number num.page}}</a>
+      </li>
+    {{/each}}
+
+    {{!-- If we're on the last page, do not display the link --}}
+    {{#if isLastPage}}
+      <li class="disabled">
+        <a aria-label="{{t (concat _i18nScope 'aria.disabled')}}">&rsaquo;</a>
+      </li>
+      <li class="disabled">
+        <a aria-label="{{t (concat _i18nScope 'aria.disabled')}}">&raquo;</a>
+      </li>
+    {{else}}
+      <li>
+        <a href="" {{action changePage nextPage}} aria-label="{{t (concat _i18nScope 'aria.next')}}">&rsaquo;</a>
+      </li>
+      <li>
+        <a href="" {{action changePage lastPage}} aria-label="{{t (concat _i18nScope 'aria.last_pg')}}">&raquo;</a>
+      </li>
+    {{/if}}
+  </ul>
+{{/if}}

@@ -1,0 +1,67 @@
+{
+  "ember-arcgis-portal-components": {
+    "itemPicker": {
+      "searchDatasets": "Search datasets",
+      "searchItems": "Search items",
+      "rows": "{count} Rows",
+      "datasets": "Datasets",
+      "items": "Items",
+      "itemDetails": "Item Details",
+      "loading": "loading",
+      "sharedBy": "Shared by",
+      "selectedCount": "Total Datasets Selected: {count}",
+      "licenses": {
+        "none": "No license specified",
+        "custom": "Custom License"
+      },
+      "noDatasets": {
+        "withQuery": "No datasets matched your search.",
+        "withoutQuery": "No datasets found."
+      },
+      "buttons": {
+        "back": "Back",
+        "select": "Select"
+      },
+      "aria": {
+        "disabled": "Disabled",
+        "first_pg": "First Page",
+        "last_pg": "Last Page",
+        "next": "Next",
+        "prev": "Previous",
+        "chartable-icon": "Attribute can be charted"
+      },
+      "shared": {
+        "content_types": {
+          "spatial": "Spatial Dataset",
+          "table": "Tabular Dataset",
+          "raster": "Raster Dataset",
+          "webmap": "Web Map",
+          "storymap": "Story Map",
+          "document": "Document",
+          "webmappingapp": "Web Mapping Application"
+        },
+        "fieldType": {
+          "esriFieldTypeGlobalID": "Unique ID",
+          "esriFieldTypeGUID": "Unique ID",
+          "esriFieldTypeDouble": "Number",
+          "esriFieldTypeDate": "Date or Time",
+          "esriFieldTypeString": "Text",
+          "esriFieldTypeOID": "Unique ID",
+          "esriFieldTypeInteger": "Number",
+          "esriFieldTypeGeometry": "Geometry",
+          "esriFieldTypeSmallInteger": "Number",
+          "esriFieldTypeSingle": "Number",
+          "esriFieldTypeRaster": "Raster",
+          "esriFieldTypeBlob": "Blob"
+        },
+        "itemType": {
+          "featureService": "Feature Service",
+          "mapService": "Map Service",
+          "imageService": "Image Service",
+          "webMap": "Web Map",
+          "webMappingApplication": "Web Mapping Application"
+        }
+      }
+    }
+  }
+}

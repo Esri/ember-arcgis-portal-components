@@ -6,7 +6,11 @@ const Router = Ember.Router.extend({
   rootURL: config.rootURL
 });
 
-Router.map(function() {
+Router.map(function () {
+  this.route('itempicker', function () {
+    this.route('multiselect');
+    this.route('facets');
+  });
 });
 
 export default Router;

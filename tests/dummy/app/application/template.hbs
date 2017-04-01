@@ -1,0 +1,42 @@
+<nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+        {{link-to 'ember-arcgis-portal-components' 'index' class="navbar-brand"}}
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        {{#active-link}}{{link-to "Home" "index"}}{{/active-link}}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Item Picker <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+              {{#active-link}}{{link-to "Default Usage" "itempicker.index"}}{{/active-link}}
+              {{#active-link}}{{link-to "Multi-Select" "itempicker.multiselect"}}{{/active-link}}
+              {{#active-link}}{{link-to "Facets" "itempicker.facets"}}{{/active-link}}
+          </ul>
+        </li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        {{#if session.isAuthenticated}}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{session.currentUser.fullName}} <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#" {{action 'signout'}}>Sign Out</a></li>
+          </ul>
+        </li>
+        {{else}}
+        {{#active-link}}<a href="#" {{action 'signin'}}>Sign In</a>{{/active-link}}
+        {{/if}}
+        <li><a href="https://github.com/arcgis/ember-arcgis-portal-components">Github</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container-fluid -->
+</nav>
+<div class="container">
+  {{outlet}}
+</div>
