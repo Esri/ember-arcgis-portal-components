@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import layout from './template';
+import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
 
 export default Ember.Component.extend({
 
@@ -13,7 +14,7 @@ export default Ember.Component.extend({
     return `${this.getWithDefault('i18nScope', 'ember-arcgis-portal-components.itemPicker')}.`;
   }),
 
-  classNames: [ 'item-picker', 'clearfix' ],
+  classNames: [ 'item-picker', 'clearfix', 'row' ],
 
   init () {
     this._super(...arguments);
@@ -32,7 +33,9 @@ export default Ember.Component.extend({
 
   query: '',
 
-  pageSize: 10,
+  pageSize: Ember.computed(function () {
+    return this.get('rowCount') || 10;
+  }),
 
   items: Ember.A([]),
 
@@ -45,6 +48,8 @@ export default Ember.Component.extend({
   }),
 
   hasSearched: false,
+
+  showTabs: Ember.computed.notEmpty('catalog'),
 
   noItemsFoundMsg: Ember.computed('items.[]', 'q', function () {
     let result = '';
@@ -67,13 +72,7 @@ export default Ember.Component.extend({
 
   disableAddItems: Ember.computed.not('hasItemsToAdd'),
 
-  _doSearch (q, page = 1) {
-    this.setProperties({
-      loading: true,
-      currentItem: null,
-      items: null,
-    });
-
+  _defaultSearch (q) {
     let parts = [];
     if (q) {
       parts.push(`title:${q}`);
@@ -87,14 +86,30 @@ export default Ember.Component.extend({
       // this is just so that when searchItemsOnInit === true, it returns something
       parts.push('access:public');
     }
+    return parts.join(' AND ');
+  },
+
+  _doSearch (q, page = 1) {
+    this.setProperties({
+      loading: true,
+      currentItem: null,
+      items: null,
+    });
+
+    const selectedCatalog = this.get('selectedCatalog');
+
+    let query = this.get('showTabs') && selectedCatalog
+      ? queryHelpers.createQuery(selectedCatalog, q)
+      : this._defaultSearch(q);
 
     const pageSize = this.get('pageSize');
     let params = {
-      q: parts.join(' AND '),
+      q: query,
       start: ((page - 1) * pageSize) + 1,
       num: pageSize,
       sortField: 'title'
     };
+    console.log(params);
 
     this.get('itemService').search(params)
       .then((resp) => {
@@ -111,6 +126,14 @@ export default Ember.Component.extend({
   },
 
   actions: {
+    chooseCatalog (val) {
+      const selectedCatalog = this.get('catalog').findBy('name', val);
+      this.set('selectedCatalogName', selectedCatalog.name);
+      this.set('selectedCatalog', selectedCatalog);
+      // Run search..
+      this._doSearch();
+    },
+
     doSearch () {
       const q = this.get('q');
       Ember.run.debounce(this, this._doSearch, q, 150);
