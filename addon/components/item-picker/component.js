@@ -49,7 +49,13 @@ export default Ember.Component.extend({
 
   hasSearched: false,
 
-  showTabs: Ember.computed.notEmpty('catalog'),
+  showTabs: Ember.computed('catalog', function () {
+    const catalog = this.get('catalog');
+    if (catalog && catalog.length > 1) {
+      return true;
+    }
+    return false;
+  }),
 
   noItemsFoundMsg: Ember.computed('items.[]', 'q', function () {
     let result = '';
@@ -96,11 +102,14 @@ export default Ember.Component.extend({
       items: null,
     });
 
+    const catalog = this.get('catalog');
     const selectedCatalog = this.get('selectedCatalog');
 
-    let query = this.get('showTabs') && selectedCatalog
-      ? queryHelpers.createQuery(selectedCatalog, q)
-      : this._defaultSearch(q);
+    let query = this.get('showTabs') && selectedCatalog // If showTabs and we have a catalog selected
+      ? queryHelpers.createQuery(selectedCatalog, q) // Create a query for that tab.
+      : catalog && catalog.length === 1 // If there's only one entry in the catalog...
+      ? queryHelpers.createQuery(catalog[0], q) // Create a query for that one entry
+      : this._defaultSearch(q); // Otherwise perform a normal search
 
     const pageSize = this.get('pageSize');
     let params = {

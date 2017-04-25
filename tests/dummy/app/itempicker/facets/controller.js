@@ -85,6 +85,18 @@ export default Ember.Controller.extend({
           'WebMap'
         ]
       }
+    },
+    {
+      name: 'My favorite enviro apps',
+      query: {
+        tags: [
+          'environment',
+          'hydrology'
+        ],
+        type: [
+          'Web Mapping Applications'
+        ]
+      }
     }
   ]),
 
