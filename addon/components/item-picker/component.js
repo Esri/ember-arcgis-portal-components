@@ -118,7 +118,6 @@ export default Ember.Component.extend({
       num: pageSize,
       sortField: 'title'
     };
-    console.log(params);
 
     this.get('itemService').search(params)
       .then((resp) => {
