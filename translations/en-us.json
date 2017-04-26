@@ -21,7 +21,8 @@
       "buttons": {
         "back": "Back",
         "select": "Select",
-        "selectMultiple": "Select"
+        "selectMultiple": "Select",
+        "preview": "Preview"
       },
       "aria": {
         "disabled": "Disabled",

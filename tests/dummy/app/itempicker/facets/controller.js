@@ -6,96 +6,112 @@ export default Ember.Controller.extend({
   catalog: Ember.A([
     {
       name: 'All',
-      query: {
-        access: 'public'
+      params: {
+        query: {
+          access: 'public'
+        }
       }
     },
     {
       name: 'Apps',
-      query: {
-        type: [
-          'Web Mapping Application'
-        ],
-        typekeywords: [
-          '-hubsite',
-          '-story'
-        ],
-        tags: [
-          '-survey',
-          '-storymap',
-          '-site'
-        ]
+      params: {
+        query: {
+          type: [
+            'Web Mapping Application'
+          ],
+          typekeywords: [
+            '-hubsite',
+            '-story'
+          ],
+          tags: [
+            '-survey',
+            '-storymap',
+            '-site'
+          ]
+        }
       }
     },
     {
       name: 'Pages',
-      query: {
-        tags: [
-          'page'
-        ],
-        typekeywords: [
-          'hubsite'
-        ]
+      params: {
+        query: {
+          tags: [
+            'page'
+          ],
+          typekeywords: [
+            'hubsite'
+          ]
+        }
       }
     },
     {
       name: 'Sites',
-      query: {
-        tags: [
-          'site'
-        ],
-        typekeywords: [
-          'hubSite'
-        ]
+      params: {
+        query: {
+          tags: [
+            'site'
+          ],
+          typekeywords: [
+            'hubSite'
+          ]
+        }
       }
     },
     {
       name: 'Story Maps',
-      query: {
-        typekeywords: [
-          'story'
-        ],
-        tags: [
-          'storymap'
-        ]
+      params: {
+        query: {
+          typekeywords: [
+            'story'
+          ],
+          tags: [
+            'storymap'
+          ]
+        }
       }
     },
     {
       name: 'Surveys',
-      query: {
-        typekeywords: [
-          'Registered App'
-        ],
-        tags: [
-          'survey'
-        ],
-        type: [
-          'Web Mapping Application'
-        ]
+      params: {
+        query: {
+          typekeywords: [
+            'Registered App'
+          ],
+          tags: [
+            'survey'
+          ],
+          type: [
+            'Web Mapping Application'
+          ]
+        }
       }
     },
     {
       name: 'Webmaps',
-      query: {
-        type: [
-          'Web Map',
-          '-Web Mapping Application'
-        ],
-        tags: [
-          'WebMap'
-        ]
+      params: {
+        query: {
+          type: [
+            'Web Map',
+            '-Web Mapping Application'
+          ],
+          tags: [
+            'WebMap'
+          ]
+        }
       }
     },
     {
       name: 'My favorite enviro apps',
-      query: {
-        tags: [
-          'environment',
-          'hydrology'
-        ],
-        type: [
-          'Web Mapping Applications'
-        ]
+      params: {
+        query: {
+          tags: [
+            'environment',
+            'hydrology'
+          ],
+          type: [
+            'Web Mapping Applications'
+          ]
+        }
       }
     }
   ]),

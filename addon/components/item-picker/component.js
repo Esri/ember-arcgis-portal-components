@@ -37,6 +37,12 @@ export default Ember.Component.extend({
     return this.get('rowCount') || 10;
   }),
 
+  disabledStatus: Ember.computed('currentItem', function () {
+    if (!this.get('currentItem.url')) {
+      return 'disabled';
+    }
+  }),
+
   items: Ember.A([]),
 
   totalCount: Ember.computed.reads('items.total'),

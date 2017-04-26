@@ -8,9 +8,6 @@ $table-bg-hover: #d9edf7 !default;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
-  .item-picker-results-container {
-    min-height: 400px;
-  }
 
   ul.pagination {
     margin: 0;
@@ -210,7 +207,17 @@ $table-bg-hover: #d9edf7 !default;
     .item-picker-controls {
       position: absolute;
       bottom: 20px;
-      right: 20px;
+      right: 0px;
+      width: 100%;
+      a {
+        width: 90%;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 40%;
+        margin-left: auto;
+        margin-right: auto;
+      }
     }
   }
 }

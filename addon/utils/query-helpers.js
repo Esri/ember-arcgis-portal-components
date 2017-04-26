@@ -4,27 +4,24 @@ import Ember from 'ember';
  */
 function createQuery (catalog, searchString) {
   const queryParts = Ember.A([]);
+  const queryObj = catalog.params.query;
 
   if (searchString) {
     queryParts.push(`title:${searchString}`);
   }
 
-  for (let prop in catalog.query) {
+  for (let prop in queryObj) {
     // If it's an array handle it as such..
-    if (Array.isArray(catalog.query[prop])) {
-      if (catalog.query[prop].length) {
-        queryParts.push(getFieldQuery(prop, catalog.query[prop]));
+    if (Array.isArray(queryObj[prop])) {
+      if (queryObj[prop].length) {
+        queryParts.push(getFieldQuery(prop, queryObj[prop]));
       }
     }
     // If it's a string handle it as such.
-    if (typeof catalog.query[prop] === 'string') {
-      if (prop === 'orgid' && catalog.query[prop] === 'selfOrg') {
-        console.log('orgid called....');
-      } else if (prop === 'owner' && catalog.query[prop] === 'self') {
-        console.log('owner called...');
-      } else {
-        queryParts.push(`${prop}:${catalog.query[prop]}`);
-      }
+    if (typeof queryObj[prop] === 'string') {
+      // Right now we are assuming the consuming application will supply
+      // owner and orgid in those props.
+      queryParts.push(`${prop}:${queryObj[prop]}`);
     }
   }
 
@@ -32,16 +29,11 @@ function createQuery (catalog, searchString) {
 }
 
 function getFieldQuery (fieldName, fieldArray) {
-  const removes = fieldArray.filter(startsWithDash);
-  const removeParts = removes.map(val => {
-    const stripped = val.replace('-', '');
-    return `-${fieldName}:"${stripped}"`;
-  });
-
-  const adds = fieldArray.filter(startsWithoutDash);
-  const addParts = adds.map(val => {
-    return `${fieldName}:"${val}"`;
-  });
+  // Filter out all the ones that do not have dashes
+  // and remove those dashes.
+  const removeParts = excludedParams(fieldName, fieldArray);
+  // Normal search params.
+  const addParts = includedParams(fieldName, fieldArray);
 
   // collect parts into an array so we can cleanly join them
   const q = Ember.A([]);
@@ -57,10 +49,33 @@ function getFieldQuery (fieldName, fieldArray) {
   return query;
 }
 
+// Search params that will not be included in the search results.
+// EX: ((type:Web Map) AND (-type:\"Web Mapping Application\"))
+// Will return all Web Maps that are not Web Mapping Applications
+function excludedParams (fieldName, fieldArray) {
+  return fieldArray
+    .filter(startsWithDash)
+    .map(val => {
+      const stripped = val.replace('-', '');
+      return `-${fieldName}:"${stripped}"`;
+    });
+}
+
+// normal search params
+function includedParams (fieldName, fieldArray) {
+  return fieldArray
+    .filter(startsWithoutDash)
+    .map(val => {
+      return `${fieldName}:"${val}"`;
+    });
+}
+
+// Does it start with a dash..
 function startsWithDash (str) {
   return str[0] === '-';
 }
 
+// Does it not start with a dash..
 function startsWithoutDash (str) {
   return !startsWithDash(str);
 }

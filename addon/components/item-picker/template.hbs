@@ -45,8 +45,11 @@
           _i18nScope=_i18nScope
           model=currentItem}}
         <section class="item-picker-controls">
-          <button type="button" class="btn btn-default" {{action "cancelAction"}}>{{t (concat _i18nScope "buttons.back")}}</button>
-          <button type="button" class="btn btn-primary" {{action selectAction currentItem}}>{{t (concat _i18nScope "buttons.select")}}</button>
+          <a href="{{currentItem.url}}" target="_blank" class="btn btn-primary btn-block {{disabledStatus}} center-block">{{t (concat _i18nScope "buttons.preview")}}</a>
+          <div class="center-block">
+            <button type="button" class="btn btn-default" {{action "cancelAction"}}>{{t (concat _i18nScope "buttons.back")}}</button>
+            <button type="button" class="btn btn-primary" {{action selectAction currentItem}}>{{t (concat _i18nScope "buttons.select")}}</button>
+          </div>
         </section>
       </section>
     {{/if}}
