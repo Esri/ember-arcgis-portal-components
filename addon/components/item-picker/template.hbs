@@ -47,13 +47,19 @@
 
         <section class="item-picker-controls">
 
-        <div class="ctrls-container">
-          <button type="button" class="btn btn-primary btn-block" {{action selectAction currentItem}}>{{t (concat _i18nScope "buttons.select")}}</button>
+            <div class="full-width-btn">
+              <div>
+              <button type="button" class="btn btn-primary btn-block" {{action selectAction currentItem}}>{{t (concat _i18nScope "buttons.select")}}</button>
+              </div>
+            </div>
 
-          <a href="{{currentItem.url}}" target="_blank" class="btn btn-default {{disabledStatus}}">{{t (concat _i18nScope "buttons.preview")}}</a>
+            <div class="side-by-side">
+              <div>
+                <button type="button" class="btn btn-default btn-block" {{action "cancelAction"}}>{{t (concat _i18nScope "buttons.back")}}</button>
 
-          <button type="button" class="btn btn-default" {{action "cancelAction"}}>{{t (concat _i18nScope "buttons.back")}}</button>
-        </div>
+                <a href="{{currentItem.url}}" target="_blank" class="btn btn-default btn-block {{disabledStatus}}">{{t (concat _i18nScope "buttons.preview")}}</a>
+              </div>
+            </div>
 
         </section>
 

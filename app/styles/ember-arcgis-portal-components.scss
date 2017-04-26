@@ -3,19 +3,19 @@ $row-color: #efefef !default;
 $midrange-border-color:#cccccc !default;
 $table-bg-hover: #d9edf7 !default;
 
+div.panel-body:has(.item-picker) {
+  padding: 15px 15px 0px 15px;
+}
+
 .item-picker {
   position: relative;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
 
-  .panel-body {
-    //padding-bottom: 0px;
-  }
-
   ul.pagination {
-    margin:0px;
-    //margin: 0 0 15px 0;
+    //margin:0px;
+    margin: 0 0 15px 0;
   }
   .item-picker-status {
     margin: 8px 0;
@@ -102,6 +102,7 @@ $table-bg-hover: #d9edf7 !default;
     left: 55%;
     right: 0;
     bottom: 0;
+    min-height: 340px;
     background-color: $body-bg;
     border-top: solid 1px $midrange-border-color;
     border-left: solid 1px $midrange-border-color;
@@ -139,11 +140,39 @@ $table-bg-hover: #d9edf7 !default;
           margin-right: 5px;
         }
 
-      .ctrls-container {
-        position: relative;
       }
-
+    }
+    
+    .item-picker-controls {
+      position: absolute;
+      bottom: 0px;
+      right: 0px;
+      width: 100%;
+      border-spacing: 15px;
+      .full-width-btn {
+        padding-left:15px; 
+        padding-right:15px;
+        div {
+          display: table-row;
+          display: block;
+        }
       }
+      .side-by-side {
+        display:table;
+        width: 100%;
+        div {
+          display:table-row;
+        }
+        a {
+          display: table-cell;
+          width: 50%;
+        }
+        button {
+          display: table-cell;
+          width: 100%;
+        }
+      }
+    }
 
       .item-picker-current-dataset-preview-field-list {
         list-style:none;
@@ -189,24 +218,7 @@ $table-bg-hover: #d9edf7 !default;
           }
         }
       }
-    }
-    .item-picker-controls {
-      position: absolute;
-      bottom: 20px;
-      right: 0px;
-      width: 100%;
-      .ctrls-container {
-        margin: auto 15px 0px 15px;
-      }
-      /*a {
-        width: 90%;
-        margin-bottom: 10px;
-      }
-      button {
-        width: 40%;
-        margin-left: auto;
-        margin-right: auto;
-      }*/
-    }
+    
+    
   }
 }
