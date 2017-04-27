@@ -5814,14 +5814,15 @@ button.close {
   .hidden-print {
     display: none !important; } }
 
+div.panel-body:has(.item-picker) {
+  padding: 15px 15px 0px 15px; }
+
 .item-picker {
   position: relative; }
   .item-picker .item-picker-datasets-pane, .item-picker .item-picker-items-pane {
     min-height: 55rem; }
-  .item-picker .item-picker-results-container {
-    min-height: 400px; }
   .item-picker ul.pagination {
-    margin: 0; }
+    margin: 0 0 15px 0; }
   .item-picker .item-picker-status {
     margin: 8px 0; }
   .item-picker ul.results-list {
@@ -5843,8 +5844,9 @@ button.close {
           font-size: 1.5rem; }
         .item-picker ul.results-list li a .shared-by {
           color: #333333; }
-      .item-picker ul.results-list li .item-picker-item-results-item-details {
-        margin-top: 8px; }
+      .item-picker ul.results-list li .item-picker-item-results-item-type {
+        margin-top: 8px;
+        margin-right: 10px; }
       .item-picker ul.results-list li.is-selected {
         background-color: #f5f5f5; }
       .item-picker ul.results-list li.select-multiple a:first-child {
@@ -5853,6 +5855,27 @@ button.close {
         display: inline-block; }
       .item-picker ul.results-list li.select-multiple input {
         top: -22px; }
+  .item-picker .item-picker-radio-buttons {
+    border-right: 1px solid #efefef;
+    padding-left: 0px;
+    padding-right: 0px; }
+    .item-picker .item-picker-radio-buttons [type="radio"] {
+      display: none; }
+    .item-picker .item-picker-radio-buttons label {
+      display: block;
+      cursor: pointer;
+      background-color: #ffffff;
+      padding: 10px;
+      border-bottom: 1px solid #efefef;
+      border-left: 1px solid #efefef;
+      margin-bottom: 0px;
+      margin-left: 15px; }
+    .item-picker .item-picker-radio-buttons label:first-of-type {
+      border-top: 1px solid #efefef; }
+    .item-picker .item-picker-radio-buttons [type="radio"] + span:before {
+      display: block; }
+    .item-picker .item-picker-radio-buttons .checked {
+      background-color: #d2e9f9; }
   .item-picker .item-picker-current-item {
     z-index: 1;
     padding: 15px;
@@ -5861,87 +5884,100 @@ button.close {
     left: 55%;
     right: 0;
     bottom: 0;
+    min-height: 355px;
+    margin-bottom: -15px;
     background-color: #fff;
     border-top: solid 1px #cccccc;
     border-left: solid 1px #cccccc;
-    box-shadow: -1px -1px 4px #cccccc; }
+    box-shadow: -6px 0px 6px -6px #cccccc; }
     .item-picker .item-picker-current-item .item-picker-current-item-preview {
       position: absolute;
-      height: calc(85% - 15px);
+      height: calc(85% - 70px);
       width: calc(100% - 30px);
       top: 1em;
       bottom: 10%;
       overflow: auto; }
       .item-picker .item-picker-current-item .item-picker-current-item-preview img {
         height: 133px; }
-      .item-picker .item-picker-current-item .item-picker-current-item-preview > h2 {
-        font-size: 2rem;
-        color: #337ab7;
-        margin-top: 0;
-        margin-bottom: 0.5rem; }
-      .item-picker .item-picker-current-item .item-picker-current-item-preview > h3 {
+      .item-picker .item-picker-current-item .item-picker-current-item-preview h2 {
+        font-size: 1.8rem;
+        color: #4c4c4c;
+        margin: 0px auto 0.5rem auto;
+        font-weight: 500; }
+      .item-picker .item-picker-current-item .item-picker-current-item-preview .shared-by-owner {
         font-size: 1.25rem;
-        margin-top: 0; }
+        display: inline-block;
+        margin: 0px auto 20px auto; }
       .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-item-preview-description {
-        position: relative;
         overflow: hidden;
-        max-height: 20rem;
-        margin-bottom: 1rem;
-        padding-bottom: 60px;
-        word-wrap: break-word; }
-        .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-item-preview-description .text-fadeout {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          text-align: center;
-          margin: 0;
-          padding-bottom: 60px;
-          background: -webkit-linear-gradient(rgba(255, 255, 255, 0) 0%, #fff 100%);
-          background-image: -moz-linear-gradient(rgba(255, 255, 255, 0) 0%, #fff 100%);
-          background-image: -o-linear-gradient(rgba(255, 255, 255, 0) 0%, #fff 100%);
-          background-image: linear-gradient(rgba(255, 255, 255, 0) 0%, #fff 100%);
-          background-image: -ms-linear-gradient(rgba(255, 255, 255, 0) 0%, #fff 100%); }
-      .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list {
-        list-style: none;
-        padding: 0;
-        margin: 0; }
-        .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li {
-          float: left;
-          margin: 5px 5px 5px 0;
-          border: 1px solid #cccccc;
-          padding: 0;
-          text-align: center;
-          outline: 0px solid transparent;
-          width: auto;
-          -moz-transition: border-color 1s ease-in, outline 1s ease-in;
-          /* FF3.7+ */
-          -o-transition: border-color 1s ease-in, outline 1s ease-in;
-          /* Opera 10.5 */
-          -webkit-transition: border-color 1s ease-in, outline 1s ease-in;
-          /* Saf3.2+, Chrome */
-          transition: border-color 1s ease-in, outline 1s ease-in; }
-          .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li.fade-outline {
-            border-color: #337ab7;
-            outline: 1px solid #337ab7; }
-          .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li .chart-button {
-            background: none;
-            border: none;
-            padding: 10px; }
-            .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li .chart-button:hover {
-              background-color: #337ab7;
-              color: #FFFFFF;
-              fill: #FFFFFF; }
-            .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li .chart-button:focus {
-              background-color: #337ab7;
-              color: #FFFFFF;
-              fill: #FFFFFF; }
-            .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-dataset-preview-field-list li .chart-button svg {
-              display: inline-block;
-              margin: 0 auto;
-              height: 12px;
-              width: 12px; }
+        max-height: 55px; }
+      .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-item-preview-meta {
+        margin: 20px auto; }
+        .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-item-preview-meta .glyphicon {
+          margin-right: 5px; }
     .item-picker .item-picker-current-item .item-picker-controls {
       position: absolute;
-      bottom: 20px;
-      right: 20px; }
+      bottom: 0px;
+      right: 0px;
+      width: 100%;
+      border-spacing: 15px;
+      background-color: #fff;
+      padding-top: 15px; }
+      .item-picker .item-picker-current-item .item-picker-controls .full-width-btn {
+        padding-left: 15px;
+        padding-right: 15px; }
+        .item-picker .item-picker-current-item .item-picker-controls .full-width-btn div {
+          display: table-row;
+          display: block; }
+      .item-picker .item-picker-current-item .item-picker-controls .side-by-side {
+        display: table;
+        width: 100%; }
+        .item-picker .item-picker-current-item .item-picker-controls .side-by-side div {
+          display: table-row; }
+        .item-picker .item-picker-current-item .item-picker-controls .side-by-side a {
+          display: table-cell;
+          width: 50%;
+          white-space: normal; }
+        .item-picker .item-picker-current-item .item-picker-controls .side-by-side button {
+          display: table-cell;
+          width: 100%;
+          white-space: normal; }
+    .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list {
+      list-style: none;
+      padding: 0;
+      margin: 0; }
+      .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li {
+        float: left;
+        margin: 5px 5px 5px 0;
+        border: 1px solid #cccccc;
+        padding: 0;
+        text-align: center;
+        outline: 0px solid transparent;
+        width: auto;
+        -moz-transition: border-color 1s ease-in, outline 1s ease-in;
+        /* FF3.7+ */
+        -o-transition: border-color 1s ease-in, outline 1s ease-in;
+        /* Opera 10.5 */
+        -webkit-transition: border-color 1s ease-in, outline 1s ease-in;
+        /* Saf3.2+, Chrome */
+        transition: border-color 1s ease-in, outline 1s ease-in; }
+        .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li.fade-outline {
+          border-color: #337ab7;
+          outline: 1px solid #337ab7; }
+        .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li .chart-button {
+          background: none;
+          border: none;
+          padding: 10px; }
+          .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li .chart-button:hover {
+            background-color: #337ab7;
+            color: #FFFFFF;
+            fill: #FFFFFF; }
+          .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li .chart-button:focus {
+            background-color: #337ab7;
+            color: #FFFFFF;
+            fill: #FFFFFF; }
+          .item-picker .item-picker-current-item .item-picker-current-dataset-preview-field-list li .chart-button svg {
+            display: inline-block;
+            margin: 0 auto;
+            height: 12px;
+            width: 12px; }

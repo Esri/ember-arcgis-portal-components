@@ -172,6 +172,30 @@ define('dummy/components/item-picker/item-row/component', ['exports', 'ember-arc
     }
   });
 });
+define('dummy/components/labeled-radio-button', ['exports', 'ember-radio-button/components/labeled-radio-button'], function (exports, _emberRadioButtonComponentsLabeledRadioButton) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberRadioButtonComponentsLabeledRadioButton['default'];
+    }
+  });
+});
+define('dummy/components/radio-button-input', ['exports', 'ember-radio-button/components/radio-button-input'], function (exports, _emberRadioButtonComponentsRadioButtonInput) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberRadioButtonComponentsRadioButtonInput['default'];
+    }
+  });
+});
+define('dummy/components/radio-button', ['exports', 'ember-radio-button/components/radio-button'], function (exports, _emberRadioButtonComponentsRadioButton) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberRadioButtonComponentsRadioButton['default'];
+    }
+  });
+});
 define('dummy/components/torii-iframe-placeholder', ['exports', 'torii/components/torii-iframe-placeholder'], function (exports, _toriiComponentsToriiIframePlaceholder) {
   exports['default'] = _toriiComponentsToriiIframePlaceholder['default'];
 });
@@ -201,6 +225,13 @@ define('dummy/ember-arcgis-portal-components/tests/modules/ember-arcgis-portal-c
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'modules/ember-arcgis-portal-components/components/item-picker/item-row/component.js should pass ESLint.\n');
+  });
+});
+define('dummy/ember-arcgis-portal-components/tests/modules/ember-arcgis-portal-components/utils/query-helpers.lint-test', ['exports'], function (exports) {
+  QUnit.module('ESLint - modules/ember-arcgis-portal-components/utils/query-helpers.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'modules/ember-arcgis-portal-components/utils/query-helpers.js should pass ESLint.\n');
   });
 });
 define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/mixins/service-mixin.lint-test', ['exports'], function (exports) {
@@ -440,14 +471,6 @@ define('dummy/helpers/sanitize-html', ['exports', 'ember-sanitize/utils/sanitize
     }
   });
 });
-define('dummy/helpers/t-html', ['exports', 'ember-intl/helpers/format-html-message'], function (exports, _emberIntlHelpersFormatHtmlMessage) {
-  Object.defineProperty(exports, 'default', {
-    enumerable: true,
-    get: function get() {
-      return _emberIntlHelpersFormatHtmlMessage['default'];
-    }
-  });
-});
 define('dummy/helpers/t', ['exports', 'ember-intl/helpers/t'], function (exports, _emberIntlHelpersT) {
   /**
    * Copyright 2015, Yahoo! Inc.
@@ -623,20 +646,44 @@ define('dummy/initializers/torii-provider-arcgis', ['exports', 'dummy/ext/torii-
  * which reopen's the Torii Session, and adds additional methods
  * to it which are useful for ArcGIS Online Sessions
  */
-define('dummy/instance-initializers/ember-intl', ['exports', 'ember'], function (exports, _ember) {
+define('dummy/instance-initializers/ember-intl', ['exports', 'dummy/config/environment'], function (exports, _dummyConfigEnvironment) {
   exports.instanceInitializer = instanceInitializer;
 
+  function filterBy(type) {
+    return Object.keys(requirejs._eak_seen).filter(function (key) {
+      return key.indexOf(_dummyConfigEnvironment['default'].modulePrefix + '/' + type + '/') === 0;
+    });
+  }
+
   function instanceInitializer(instance) {
-    _ember['default'].deprecate('[ember-intl] instance initializer is deprecated, no longer necessary to call in testing.', false, {
-      id: 'ember-intl-instance-initalizer'
+    var service = undefined;
+
+    if (typeof instance.lookup === 'function') {
+      service = instance.lookup('service:intl');
+    } else {
+      service = instance.container.lookup('service:intl');
+    }
+
+    filterBy('cldrs').map(function (cldr) {
+      return require(cldr, null, null, true)['default'];
+    }).forEach(function (lang) {
+      return lang.forEach(service.addLocaleData);
+    });
+
+    filterBy('translations').forEach(function (key) {
+      var localeSplit = key.split('\/');
+      var localeName = localeSplit[localeSplit.length - 1];
+      service.addTranslations(localeName, require(key, null, null, true)['default']);
     });
   }
 
   exports['default'] = {
     name: 'ember-intl',
-    initialize: function initialize() {}
+    initialize: instanceInitializer
   };
 });
+/* globals requirejs */
+
 /**
  * Copyright 2015, Yahoo! Inc.
  * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
@@ -680,11 +727,90 @@ define('dummy/instance-initializers/walk-providers', ['exports', 'torii/lib/cont
     }
   };
 });
+define('dummy/itempicker/facets/controller', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Controller.extend({
+    selectedItem: null,
+
+    catalog: _ember['default'].A([{
+      name: 'All',
+      params: {
+        query: {
+          access: 'public'
+        }
+      }
+    }, {
+      name: 'Apps',
+      params: {
+        query: {
+          type: ['Web Mapping Application'],
+          typekeywords: ['-hubsite', '-story'],
+          tags: ['-survey', '-storymap', '-site']
+        }
+      }
+    }, {
+      name: 'Pages',
+      params: {
+        query: {
+          tags: ['page'],
+          typekeywords: ['hubsite']
+        }
+      }
+    }, {
+      name: 'Sites',
+      params: {
+        query: {
+          tags: ['site'],
+          typekeywords: ['hubSite']
+        }
+      }
+    }, {
+      name: 'Story Maps',
+      params: {
+        query: {
+          typekeywords: ['story'],
+          tags: ['storymap']
+        }
+      }
+    }, {
+      name: 'Surveys',
+      params: {
+        query: {
+          typekeywords: ['Registered App'],
+          tags: ['survey'],
+          type: ['Web Mapping Application']
+        }
+      }
+    }, {
+      name: 'Webmaps',
+      params: {
+        query: {
+          type: ['Web Map', '-Web Mapping Application'],
+          tags: ['WebMap']
+        }
+      }
+    }, {
+      name: 'My favorite enviro apps',
+      params: {
+        query: {
+          tags: ['environment', 'hydrology'],
+          type: ['Web Mapping Applications']
+        }
+      }
+    }]),
+
+    actions: {
+      onSelectItem: function onSelectItem(selected) {
+        _ember['default'].$('#myModal').modal('hide');
+        this.set('selectedItem', selected);
+      }
+    }
+  });
+});
 define('dummy/itempicker/facets/route', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Route.extend({});
 });
 define("dummy/itempicker/facets/template", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "6ublmnDc", "block": "{\"statements\":[[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/facets/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "8U1zqIUq", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Faceting by type\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"catalog\",\"rowCount\",\"searchItemsOnInit\",\"selectAction\"],[[\"get\",[\"catalog\"]],5,true,[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/facets/template.hbs" } });
 });
 define('dummy/itempicker/index/controller', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Controller.extend({
@@ -704,11 +830,23 @@ define('dummy/itempicker/index/route', ['exports', 'ember'], function (exports, 
 define("dummy/itempicker/index/template", ["exports"], function (exports) {
   exports["default"] = Ember.HTMLBars.template({ "id": "fxsJjCmA", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Picking Items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"To simply add the component into your template and wire up the \"],[\"open-element\",\"code\",[]],[\"flush-element\"],[\"text\",\"selectAction\"],[\"close-element\"],[\"text\",\" closure action.\\n      By default, the component will search public items in ArcGIS Online, or whatever portal your app is configured to use. \"],[\"close-element\"],[\"text\",\"\\n\\n      \"],[\"open-element\",\"pre\",[]],[\"flush-element\"],[\"text\",\"\\n\"],[\"append\",\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")}}\",false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Selected Item \"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectedItem\"]]],null,1,0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Modal Example \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary\"],[\"static-attr\",\"data-toggle\",\"modal\"],[\"static-attr\",\"data-target\",\"#myModal\"],[\"flush-element\"],[\"text\",\"Select an Item\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"comment\",\" Modal \"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal fade\"],[\"static-attr\",\"id\",\"myModal\"],[\"static-attr\",\"tabindex\",\"-1\"],[\"static-attr\",\"role\",\"dialog\"],[\"static-attr\",\"aria-labelledby\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-dialog modal-lg\"],[\"static-attr\",\"role\",\"document\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-content\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-header\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"close\"],[\"static-attr\",\"data-dismiss\",\"modal\"],[\"static-attr\",\"aria-label\",\"Close\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"aria-hidden\",\"true\"],[\"flush-element\"],[\"text\",\"×\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h4\",[]],[\"static-attr\",\"class\",\"modal-title\"],[\"static-attr\",\"id\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert alert-warning\"],[\"static-attr\",\"role\",\"alert\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"No Item Selected\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectedItem\",\"title\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"selectedItem\",\"description\"]]],null],false],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/index/template.hbs" } });
 });
+define('dummy/itempicker/multiselect/controller', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Controller.extend({
+    selectedItem: null,
+
+    actions: {
+      onSelectItem: function onSelectItem(selected) {
+        _ember['default'].$('#myModal').modal('hide');
+        this.set('selectedItem', selected);
+      }
+    }
+  });
+});
 define('dummy/itempicker/multiselect/route', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Route.extend({});
 });
 define("dummy/itempicker/multiselect/template", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "i8bSSzMi", "block": "{\"statements\":[[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/multiselect/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "NM4ieOD/", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Picking multiple items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectMultiple\",\"searchItemsOnInit\",\"selectAction\"],[true,true,[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/multiselect/template.hbs" } });
 });
 define('dummy/itempicker/route', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Route.extend({});
@@ -1215,25 +1353,29 @@ define('dummy/torii-providers/arcgis-oauth-bearer', ['exports', 'torii/providers
  * torii provider that works with ArcGIS.com oauth
  */
 define("dummy/translations/en-us", ["exports"], function (exports) {
-  exports["default"] = { "ember-arcgis-portal-components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "back": "Back", "select": "Select" }, "datasets": "Datasets", "itemDetails": "Item Details", "items": "Items", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "noDatasets": { "withQuery": "No datasets matched your search.", "withoutQuery": "No datasets found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Datasets Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" } } };
+  exports["default"] = { "ember-arcgis-portal-components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "back": "Back", "preview": "Preview", "select": "Select", "selectMultiple": "Select" }, "datasets": "Datasets", "itemDetails": "Item Details", "items": "Items", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "noDatasets": { "withQuery": "No datasets matched your search.", "withoutQuery": "No datasets found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Datasets Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" } } };
 });
 define('dummy/utils/intl/missing-message', ['exports', 'ember', 'ember-intl/utils/links'], function (exports, _ember, _emberIntlUtilsLinks) {
   exports['default'] = missingMessage;
-  var warn = _ember['default'].warn;
+  var logger = _ember['default'].Logger;
 
   function missingMessage(key, locales) {
     if (!locales) {
-      warn('[ember-intl] no locale has been set. Documentation: ' + _emberIntlUtilsLinks['default'].unsetLocale, false, {
-        id: 'ember-intl-no-locale-set'
-      });
+      logger.warn('ember-intl: no locale has been set. Documentation: ' + _emberIntlUtilsLinks['default'].unsetLocale);
     } else {
-      warn('[ember-intl] translation: \'' + key + '\' on locale: \'' + locales.join(', ') + '\' was not found.', false, {
-        id: 'ember-intl-missing-translation'
-      });
+      logger.warn('ember-intl: translation: \'' + key + '\' on locale: \'' + locales.join(', ') + '\' was not found.');
     }
 
     return 'Missing translation: ' + key;
   }
+});
+define('dummy/utils/query-helpers', ['exports', 'ember-arcgis-portal-components/utils/query-helpers'], function (exports, _emberArcgisPortalComponentsUtilsQueryHelpers) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberArcgisPortalComponentsUtilsQueryHelpers['default'];
+    }
+  });
 });
 /* jshint ignore:start */
 
@@ -1271,7 +1413,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"0.0.0+1a9b8036"});
+  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"0.0.0+5038cac3"});
 }
 
 /* jshint ignore:end */

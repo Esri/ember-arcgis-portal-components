@@ -326,7 +326,7 @@ define('dummy/tests/integration/components/item-picker/item-preview/component-te
     // assert.equal(this.$().text().trim(), '');
     var el = this.$('.item-picker-current-item-preview');
     assert.equal(el.find('h2').text().trim(), 'This is the name');
-    assert.equal(el.find('h3').text().trim(), 'Shared by: jupe');
+    assert.equal(el.find('span').text().trim(), 'Shared by: jupe');
     assert.equal(el.find('.item-picker-current-item-preview-description').text().trim(), 'This is the description');
     assert.equal(el.find('.item-picker-current-item-preview-meta > div').length, 2);
     assert.equal(el.find('.item-picker-current-item-preview-meta > div:nth-child(1)').text().trim(), '9/18/2014');
@@ -432,7 +432,8 @@ define('dummy/tests/integration/components/item-picker/item-row/component-test',
     }));
 
     assert.equal(this.$('h2').text().trim(), 'This is the name');
-    assert.equal(this.$('.item-picker-item-results-item a').length, 2);
+    assert.equal(this.$('.item-picker-item-results-item span').length, 1);
+    assert.equal(this.$('.item-picker-item-results-item a').length, 1);
     assert.equal(this.$('.item-picker-item-results-item a input').length, 1);
     assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'));
   });
@@ -492,6 +493,15 @@ define('dummy/tests/integration/components/item-picker/item-row/component-test.l
     assert.ok(true, 'integration/components/item-picker/item-row/component-test.js should pass ESLint.\n');
   });
 });
+define('dummy/tests/itempicker/facets/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/facets/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/facets/controller.js should pass ESLint.\n');
+  });
+});
 define('dummy/tests/itempicker/facets/route.lint-test', ['exports'], function (exports) {
   'use strict';
 
@@ -517,6 +527,15 @@ define('dummy/tests/itempicker/index/route.lint-test', ['exports'], function (ex
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'itempicker/index/route.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/multiselect/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/multiselect/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/multiselect/controller.js should pass ESLint.\n');
   });
 });
 define('dummy/tests/itempicker/multiselect/route.lint-test', ['exports'], function (exports) {
@@ -566,6 +585,36 @@ define('dummy/tests/test-helper.lint-test', ['exports'], function (exports) {
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'test-helper.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/unit/utils/query-helpers-test', ['exports', 'dummy/utils/query-helpers', 'qunit'], function (exports, _dummyUtilsQueryHelpers, _qunit) {
+
+  (0, _qunit.module)('Unit | Utility | query helpers');
+
+  // Replace this with your real tests.
+  (0, _qunit.test)('it works', function (assert) {
+    var facet = {
+      name: 'Apps',
+      params: {
+        query: {
+          type: ['Web Mapping Application'],
+          typekeywords: ['-hubsite', '-story'],
+          tags: ['-survey', '-storymap', '-site']
+        }
+      }
+    };
+    var query = 'Environment';
+    var result = _dummyUtilsQueryHelpers['default'].createQuery(facet, query);
+    assert.ok(result);
+  });
+});
+define('dummy/tests/unit/utils/query-helpers-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - unit/utils/query-helpers-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/utils/query-helpers-test.js should pass ESLint.\n');
   });
 });
 /* jshint ignore:start */
