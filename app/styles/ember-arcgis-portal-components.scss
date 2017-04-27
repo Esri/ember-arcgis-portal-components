@@ -102,23 +102,23 @@ div.panel-body:has(.item-picker) {
     left: 55%;
     right: 0;
     bottom: 0;
-    min-height: 340px;
+    min-height: 355px;
+    margin-bottom: -15px;
     background-color: $body-bg;
     border-top: solid 1px $midrange-border-color;
     border-left: solid 1px $midrange-border-color;
     box-shadow: -6px 0px 6px -6px $midrange-border-color;
     .item-picker-current-item-preview {
-      /*position: absolute;
+      position: absolute;
       height: calc(85% - 15px);
       width: calc(100% - 30px);
       top: 1em;
       bottom: 10%;
-      overflow: auto;*/
+      overflow: auto;
       img {
-        min-height: 133px; //remove
         height: 133px;
       }
-      > h2 {
+      h2 {
         font-size: 1.8rem;
         color: #4c4c4c;
         margin: 0px auto 0.5rem auto;
@@ -149,6 +149,8 @@ div.panel-body:has(.item-picker) {
       right: 0px;
       width: 100%;
       border-spacing: 15px;
+      background-color: #fff;
+      padding-top: 15px;
       .full-width-btn {
         padding-left:15px;
         padding-right:15px;
@@ -166,10 +168,12 @@ div.panel-body:has(.item-picker) {
         a {
           display: table-cell;
           width: 50%;
+          white-space: normal;
         }
         button {
           display: table-cell;
           width: 100%;
+          white-space: normal;
         }
       }
     }
