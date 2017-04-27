@@ -30,7 +30,7 @@ test('it renders', function (assert) {
   // assert.equal(this.$().text().trim(), '');
   const el = this.$('.item-picker-current-item-preview');
   assert.equal(el.find('h2').text().trim(), 'This is the name');
-  assert.equal(el.find('h3').text().trim(), 'Shared by: jupe');
+  assert.equal(el.find('span').text().trim(), 'Shared by: jupe');
   assert.equal(el.find('.item-picker-current-item-preview-description').text().trim(), 'This is the description');
   assert.equal(el.find('.item-picker-current-item-preview-meta > div').length, 2);
   assert.equal(el.find('.item-picker-current-item-preview-meta > div:nth-child(1)').text().trim(), '9/18/2014');

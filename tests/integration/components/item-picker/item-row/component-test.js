@@ -73,7 +73,8 @@ test('multiple-mode: it renders', function (assert) {
   this.render(hbs`{{item-picker/item-row model=model selectMultiple=true itemsToAdd=itemsToAdd currentItemId=currentItemId onClick=(action onClick item)}}`);
 
   assert.equal(this.$('h2').text().trim(), 'This is the name');
-  assert.equal(this.$('.item-picker-item-results-item a').length, 2);
+  assert.equal(this.$('.item-picker-item-results-item span').length, 1);
+  assert.equal(this.$('.item-picker-item-results-item a').length, 1);
   assert.equal(this.$('.item-picker-item-results-item a input').length, 1);
   assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'));
 });
