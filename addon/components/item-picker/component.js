@@ -73,7 +73,7 @@ export default Ember.Component.extend({
 
   noItemsFoundMsg: Ember.computed('items.[]', 'q', function () {
     let result = '';
-    if (this.get('hasSearched') && this.get('items.length') === 0) {
+    if (this.get('hasSearched') && this.get('items.results.length') === 0) {
       let i18nKey = 'noItems.withoutQuery';
       if (!Ember.isEmpty(this.get('q'))) {
         i18nKey = 'noItems.withQuery';
