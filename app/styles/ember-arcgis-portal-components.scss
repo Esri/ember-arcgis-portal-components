@@ -80,6 +80,9 @@ div.panel-body:has(.item-picker) {
       border-left: 1px solid #efefef;
       margin-bottom: 0px;
       margin-left: 15px;
+      span {
+        font-weight: normal;
+      }
     }
     label:first-of-type {
       border-top: 1px solid #efefef;
