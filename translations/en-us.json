@@ -21,6 +21,8 @@
       "buttons": {
         "back": "Back",
         "select": "Select",
+        "validating": "Validating data...",
+        "selectAnyway": "Select Anyway",
         "selectMultiple": "Select",
         "preview": "Preview"
       },
