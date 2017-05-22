@@ -1,15 +1,14 @@
 <div class="row">
   <div class="col-sm-12">
-    <h2>Picking Items</h2>
+    <h2>Validate Items</h2>
   </div>
   <div class="col-sm-6">
-    <h3>Default Usage</h3>
-    <p>To simply add the component into your template and wire up the <code>selectAction</code> closure action.
-      By default, the component will search public items in ArcGIS Online, or whatever portal your app is configured to use. </p>
+    <h3>Validator</h3>
+    <p>To validate items simply add an action <code>onSelectionValidator</code></p>
 
       <pre>
 {{ '{{item-picker
-      selectAction=(action "onSelectItem")}}' }}
+      selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator") }}' }}
     </pre>
   </div>
   <div class="col-sm-6">
@@ -39,7 +38,7 @@
         <h3 class="panel-title">Search ArcGIS.com for Items</h3>
       </div>
       <div class="panel-body">
-        {{item-picker selectAction=(action "onSelectItem")}}
+        {{item-picker selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator")}}
       </div>
     </div>
   </div>
@@ -54,7 +53,7 @@
         <h4 class="modal-title" id="myModalLabel">Default Usage</h4>
       </div>
       <div class="modal-body">
-        {{item-picker selectAction=(action "onSelectItem")}}
+        {{item-picker selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator")}}
       </div>
     </div>
   </div>
