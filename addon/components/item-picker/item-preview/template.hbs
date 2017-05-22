@@ -1,3 +1,8 @@
+{{#if showError}}
+  <p class="alert {{messageClass}}">
+    {{errorMessage.message}}
+  </p>
+{{/if}}
 {{#unless showFallback}}
   <img src="{{thumbnailUrl}}" alt="" />
 {{else}}

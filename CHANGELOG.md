@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### Added
+- A validator can be passed in to validate the viability of an item
+
+## [0.1.1]
 ### Fixed
 - No search results now properly display No datasets found messages.
 

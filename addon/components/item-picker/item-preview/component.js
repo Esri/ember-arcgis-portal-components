@@ -43,6 +43,16 @@ export default Ember.Component.extend({
 
   description: Ember.computed.reads('model.description'),
 
+  showError: Ember.computed.notEmpty('errorMessage'),
+
+  messageClass: Ember.computed('errorMessage', function () {
+    if (this.get('errorMessage.status') === 'warning') {
+      return 'alert-warning';
+    } else if (this.get('errorMessage.status') === 'error') {
+      return 'alert-danger';
+    }
+  }),
+
   onImageError () {
     Ember.run(this, function () {
       if (!this.get('isDestroyed') && !this.get('isDestroying')) {

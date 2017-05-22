@@ -1,0 +1,60 @@
+<div class="row">
+  <div class="col-sm-12">
+    <h2>Validate Items</h2>
+  </div>
+  <div class="col-sm-6">
+    <h3>Validator</h3>
+    <p>To validate items simply add an action <code>onSelectionValidator</code></p>
+
+      <pre>
+{{ '{{item-picker
+      selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator") }}' }}
+    </pre>
+  </div>
+  <div class="col-sm-6">
+    <h3>Selected Item </h3>
+    {{#if selectedItem}}
+      <div class="panel panel-default">
+        <div class="panel-heading"><h3 class="panel-title">{{selectedItem.title}}</h3></div>
+        <div class="panel-body">
+          {{sanitize-html selectedItem.description}}
+        </div>
+      </div>
+    {{else}}
+      <div class="alert alert-warning" role="alert">
+        <p class="text-center">No Item Selected</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <div class="col-sm-12">
+    <h3>Modal Example </h3>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Select an Item</button>
+  </div>
+  <div class="col-sm-12">
+    <h3>Inline Panel Example</h3>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Search ArcGIS.com for Items</h3>
+      </div>
+      <div class="panel-body">
+        {{item-picker selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator")}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Default Usage</h4>
+      </div>
+      <div class="modal-body">
+        {{item-picker selectAction=(action "onSelectItem") onSelectionValidator=(action "selectionValidator")}}
+      </div>
+    </div>
+  </div>
+</div>
