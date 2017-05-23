@@ -208,8 +208,11 @@ export default Ember.Component.extend({
         if (this.get('currentItem.id') === item.id) {
           this.set('currentItem', null);
         } else {
-          this.set('errorHash', null);
-          this.set('currentItem', item);
+          this.setProperties({
+            errorHash: null,
+            selectAnyway: false,
+            currentItem: item
+          });
         }
       }
     },
@@ -241,6 +244,7 @@ export default Ember.Component.extend({
     cancelAction () {
       this.setProperties({
         errorHash: null,
+        selectAnyway: false,
         currentItem: null,
         itemsToAdd: []
       });
