@@ -1,0 +1,39 @@
+<div class="row">
+  <div class="col-sm-12">
+    <h2>Searching other Portals</h2>
+    <p>Sometimes it is useful to search across portals - to import items etc.</p>
+  </div>
+  <div class="col-sm-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">Portal Information</div>
+      <div class="panel-body">
+        <div class="col-sm-4 form">
+          <div class="form-group">
+            <label for="exampleInputEmail1">Username</label>
+            {{input value=username class="form-control" placeholder="username"}}
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Password</label>
+            {{input value=password type="password" class="form-control" placeholder="password"}}
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Portal Url</label>
+            {{input value=model.portalBaseUrl class="form-control" placeholder="www.arcgis.com"}}
+          </div>
+          <button class="btn btn-default" {{action 'getToken'}}>Get Token</button>
+        </div>
+        <div class="col-sm-8">
+          <h5>Current Token</h5>
+          <p style="word-wrap: break-word;">{{model.token}}</p>
+          <p class="small">Expires at: {{expires}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12">
+    <h2>Searching against: {{portalOpts.portalHostname}}</h2>
+    {{item-picker
+      portalOpts=portalOpts
+      selectAction=(action "onSelectItem")}}
+  </div>
+</div>

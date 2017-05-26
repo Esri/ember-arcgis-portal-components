@@ -2,7 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [0.3.0]
+### Changed
+- `item-picker` component now accepts a portalOpts parameter, and will use that when searching.
+- added example to dummy app
+- added doc to README.md
+
+
+## [0.2.1]
 ### Fixed
 - Once a warning appeared select anyway button would never revert to select.
 
