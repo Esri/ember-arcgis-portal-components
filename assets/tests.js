@@ -547,6 +547,24 @@ define('dummy/tests/itempicker/multiselect/route.lint-test', ['exports'], functi
     assert.ok(true, 'itempicker/multiselect/route.js should pass ESLint.\n');
   });
 });
+define('dummy/tests/itempicker/portalopts/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/portalopts/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/portalopts/controller.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/portalopts/route.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/portalopts/route.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/portalopts/route.js should pass ESLint.\n');
+  });
+});
 define('dummy/tests/itempicker/route.lint-test', ['exports'], function (exports) {
   'use strict';
 
@@ -554,6 +572,24 @@ define('dummy/tests/itempicker/route.lint-test', ['exports'], function (exports)
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'itempicker/route.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/validation/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/validation/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/validation/controller.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/validation/route.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/validation/route.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/validation/route.js should pass ESLint.\n');
   });
 });
 define('dummy/tests/resolver.lint-test', ['exports'], function (exports) {

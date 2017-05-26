@@ -71106,6 +71106,430 @@ requireModule("ember");
 
 }());
 
+;(function (global) {
+  define('ember-network/fetch', [ 'ember', 'exports' ], function(Ember, self) {
+    'use strict';
+
+    var Promise = Ember['default'].RSVP.Promise;
+    if (global.FormData) {
+      self.FormData = global.FormData;
+    }
+    if (global.FileReader) {
+      self.FileReader = global.FileReader;
+    }
+    if (global.Blob) {
+      self.Blob = global.Blob;
+    }
+
+    (function(self) {
+  'use strict';
+
+  if (self.fetch) {
+    return
+  }
+
+  function normalizeName(name) {
+    if (typeof name !== 'string') {
+      name = String(name)
+    }
+    if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
+      throw new TypeError('Invalid character in header field name')
+    }
+    return name.toLowerCase()
+  }
+
+  function normalizeValue(value) {
+    if (typeof value !== 'string') {
+      value = String(value)
+    }
+    return value
+  }
+
+  function Headers(headers) {
+    this.map = {}
+
+    if (headers instanceof Headers) {
+      headers.forEach(function(value, name) {
+        this.append(name, value)
+      }, this)
+
+    } else if (headers) {
+      Object.getOwnPropertyNames(headers).forEach(function(name) {
+        this.append(name, headers[name])
+      }, this)
+    }
+  }
+
+  Headers.prototype.append = function(name, value) {
+    name = normalizeName(name)
+    value = normalizeValue(value)
+    var list = this.map[name]
+    if (!list) {
+      list = []
+      this.map[name] = list
+    }
+    list.push(value)
+  }
+
+  Headers.prototype['delete'] = function(name) {
+    delete this.map[normalizeName(name)]
+  }
+
+  Headers.prototype.get = function(name) {
+    var values = this.map[normalizeName(name)]
+    return values ? values[0] : null
+  }
+
+  Headers.prototype.getAll = function(name) {
+    return this.map[normalizeName(name)] || []
+  }
+
+  Headers.prototype.has = function(name) {
+    return this.map.hasOwnProperty(normalizeName(name))
+  }
+
+  Headers.prototype.set = function(name, value) {
+    this.map[normalizeName(name)] = [normalizeValue(value)]
+  }
+
+  Headers.prototype.forEach = function(callback, thisArg) {
+    Object.getOwnPropertyNames(this.map).forEach(function(name) {
+      this.map[name].forEach(function(value) {
+        callback.call(thisArg, value, name, this)
+      }, this)
+    }, this)
+  }
+
+  function consumed(body) {
+    if (body.bodyUsed) {
+      return Promise.reject(new TypeError('Already read'))
+    }
+    body.bodyUsed = true
+  }
+
+  function fileReaderReady(reader) {
+    return new Promise(function(resolve, reject) {
+      reader.onload = function() {
+        resolve(reader.result)
+      }
+      reader.onerror = function() {
+        reject(reader.error)
+      }
+    })
+  }
+
+  function readBlobAsArrayBuffer(blob) {
+    var reader = new FileReader()
+    reader.readAsArrayBuffer(blob)
+    return fileReaderReady(reader)
+  }
+
+  function readBlobAsText(blob) {
+    var reader = new FileReader()
+    reader.readAsText(blob)
+    return fileReaderReady(reader)
+  }
+
+  var support = {
+    blob: 'FileReader' in self && 'Blob' in self && (function() {
+      try {
+        new Blob()
+        return true
+      } catch(e) {
+        return false
+      }
+    })(),
+    formData: 'FormData' in self,
+    arrayBuffer: 'ArrayBuffer' in self
+  }
+
+  function Body() {
+    this.bodyUsed = false
+
+
+    this._initBody = function(body) {
+      this._bodyInit = body
+      if (typeof body === 'string') {
+        this._bodyText = body
+      } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
+        this._bodyBlob = body
+      } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
+        this._bodyFormData = body
+      } else if (!body) {
+        this._bodyText = ''
+      } else if (support.arrayBuffer && ArrayBuffer.prototype.isPrototypeOf(body)) {
+        // Only support ArrayBuffers for POST method.
+        // Receiving ArrayBuffers happens via Blobs, instead.
+      } else {
+        throw new Error('unsupported BodyInit type')
+      }
+
+      if (!this.headers.get('content-type')) {
+        if (typeof body === 'string') {
+          this.headers.set('content-type', 'text/plain;charset=UTF-8')
+        } else if (this._bodyBlob && this._bodyBlob.type) {
+          this.headers.set('content-type', this._bodyBlob.type)
+        }
+      }
+    }
+
+    if (support.blob) {
+      this.blob = function() {
+        var rejected = consumed(this)
+        if (rejected) {
+          return rejected
+        }
+
+        if (this._bodyBlob) {
+          return Promise.resolve(this._bodyBlob)
+        } else if (this._bodyFormData) {
+          throw new Error('could not read FormData body as blob')
+        } else {
+          return Promise.resolve(new Blob([this._bodyText]))
+        }
+      }
+
+      this.arrayBuffer = function() {
+        return this.blob().then(readBlobAsArrayBuffer)
+      }
+
+      this.text = function() {
+        var rejected = consumed(this)
+        if (rejected) {
+          return rejected
+        }
+
+        if (this._bodyBlob) {
+          return readBlobAsText(this._bodyBlob)
+        } else if (this._bodyFormData) {
+          throw new Error('could not read FormData body as text')
+        } else {
+          return Promise.resolve(this._bodyText)
+        }
+      }
+    } else {
+      this.text = function() {
+        var rejected = consumed(this)
+        return rejected ? rejected : Promise.resolve(this._bodyText)
+      }
+    }
+
+    if (support.formData) {
+      this.formData = function() {
+        return this.text().then(decode)
+      }
+    }
+
+    this.json = function() {
+      return this.text().then(JSON.parse)
+    }
+
+    return this
+  }
+
+  // HTTP methods whose capitalization should be normalized
+  var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT']
+
+  function normalizeMethod(method) {
+    var upcased = method.toUpperCase()
+    return (methods.indexOf(upcased) > -1) ? upcased : method
+  }
+
+  function Request(input, options) {
+    options = options || {}
+    var body = options.body
+    if (Request.prototype.isPrototypeOf(input)) {
+      if (input.bodyUsed) {
+        throw new TypeError('Already read')
+      }
+      this.url = input.url
+      this.credentials = input.credentials
+      if (!options.headers) {
+        this.headers = new Headers(input.headers)
+      }
+      this.method = input.method
+      this.mode = input.mode
+      if (!body) {
+        body = input._bodyInit
+        input.bodyUsed = true
+      }
+    } else {
+      this.url = input
+    }
+
+    this.credentials = options.credentials || this.credentials || 'omit'
+    if (options.headers || !this.headers) {
+      this.headers = new Headers(options.headers)
+    }
+    this.method = normalizeMethod(options.method || this.method || 'GET')
+    this.mode = options.mode || this.mode || null
+    this.referrer = null
+
+    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+      throw new TypeError('Body not allowed for GET or HEAD requests')
+    }
+    this._initBody(body)
+  }
+
+  Request.prototype.clone = function() {
+    return new Request(this)
+  }
+
+  function decode(body) {
+    var form = new FormData()
+    body.trim().split('&').forEach(function(bytes) {
+      if (bytes) {
+        var split = bytes.split('=')
+        var name = split.shift().replace(/\+/g, ' ')
+        var value = split.join('=').replace(/\+/g, ' ')
+        form.append(decodeURIComponent(name), decodeURIComponent(value))
+      }
+    })
+    return form
+  }
+
+  function headers(xhr) {
+    var head = new Headers()
+    var pairs = (xhr.getAllResponseHeaders() || '').trim().split('\n')
+    pairs.forEach(function(header) {
+      var split = header.trim().split(':')
+      var key = split.shift().trim()
+      var value = split.join(':').trim()
+      head.append(key, value)
+    })
+    return head
+  }
+
+  Body.call(Request.prototype)
+
+  function Response(bodyInit, options) {
+    if (!options) {
+      options = {}
+    }
+
+    this.type = 'default'
+    this.status = options.status
+    this.ok = this.status >= 200 && this.status < 300
+    this.statusText = options.statusText
+    this.headers = options.headers instanceof Headers ? options.headers : new Headers(options.headers)
+    this.url = options.url || ''
+    this._initBody(bodyInit)
+  }
+
+  Body.call(Response.prototype)
+
+  Response.prototype.clone = function() {
+    return new Response(this._bodyInit, {
+      status: this.status,
+      statusText: this.statusText,
+      headers: new Headers(this.headers),
+      url: this.url
+    })
+  }
+
+  Response.error = function() {
+    var response = new Response(null, {status: 0, statusText: ''})
+    response.type = 'error'
+    return response
+  }
+
+  var redirectStatuses = [301, 302, 303, 307, 308]
+
+  Response.redirect = function(url, status) {
+    if (redirectStatuses.indexOf(status) === -1) {
+      throw new RangeError('Invalid status code')
+    }
+
+    return new Response(null, {status: status, headers: {location: url}})
+  }
+
+  self.Headers = Headers
+  self.Request = Request
+  self.Response = Response
+
+  self.fetch = function(input, init) {
+    return new Promise(function(resolve, reject) {
+      var request
+      if (Request.prototype.isPrototypeOf(input) && !init) {
+        request = input
+      } else {
+        request = new Request(input, init)
+      }
+
+      var xhr = new XMLHttpRequest()
+
+      function responseURL() {
+        if ('responseURL' in xhr) {
+          return xhr.responseURL
+        }
+
+        // Avoid security warnings on getResponseHeader when not allowed by CORS
+        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
+          return xhr.getResponseHeader('X-Request-URL')
+        }
+
+        return
+      }
+
+      xhr.onload = function() {
+        var status = (xhr.status === 1223) ? 204 : xhr.status
+        if (status < 100 || status > 599) {
+          reject(new TypeError('Network request failed'))
+          return
+        }
+        var options = {
+          status: status,
+          statusText: xhr.statusText,
+          headers: headers(xhr),
+          url: responseURL()
+        }
+        var body = 'response' in xhr ? xhr.response : xhr.responseText
+        resolve(new Response(body, options))
+      }
+
+      xhr.onerror = function() {
+        reject(new TypeError('Network request failed'))
+      }
+
+      xhr.ontimeout = function() {
+        reject(new TypeError('Network request failed'))
+      }
+
+      xhr.open(request.method, request.url, true)
+
+      if (request.credentials === 'include') {
+        xhr.withCredentials = true
+      }
+
+      if ('responseType' in xhr && support.blob) {
+        xhr.responseType = 'blob'
+      }
+
+      request.headers.forEach(function(value, name) {
+        xhr.setRequestHeader(name, value)
+      })
+
+      xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit)
+    })
+  }
+  self.fetch.polyfill = true
+})(typeof self !== 'undefined' ? self : this);
+
+
+    self['default'] = self.fetch;
+  });
+
+  define('fetch/ajax', [ 'fetch', 'exports' ], function(fetch, exports) {
+    'use strict';
+
+    exports['default'] = function() {
+      return fetch['default'].apply(fetch, arguments).then(function(request) {
+        return request.json();
+      });
+    };
+  });
+}(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : this));
+
 ;/*!
  * Bootstrap v3.3.7 (http://getbootstrap.com)
  * Copyright 2011-2016 Twitter, Inc.
@@ -90641,1173 +91065,7 @@ if ( typeof define === "function" ) {
   define( "sanitize", [], function () { return Sanitize; } );
 }
 
-;define('ember-ajax/ajax-request', ['exports', 'ember', 'ember-ajax/mixins/ajax-request'], function (exports, _ember, _emberAjaxMixinsAjaxRequest) {
-  'use strict';
-
-  exports['default'] = _ember['default'].Object.extend(_emberAjaxMixinsAjaxRequest['default']);
-});
-define('ember-ajax/errors', ['exports', 'ember'], function (exports, _ember) {
-  'use strict';
-
-  exports.AjaxError = AjaxError;
-  exports.InvalidError = InvalidError;
-  exports.UnauthorizedError = UnauthorizedError;
-  exports.ForbiddenError = ForbiddenError;
-  exports.BadRequestError = BadRequestError;
-  exports.NotFoundError = NotFoundError;
-  exports.TimeoutError = TimeoutError;
-  exports.AbortError = AbortError;
-  exports.ServerError = ServerError;
-  exports.isAjaxError = isAjaxError;
-  exports.isUnauthorizedError = isUnauthorizedError;
-  exports.isForbiddenError = isForbiddenError;
-  exports.isInvalidError = isInvalidError;
-  exports.isBadRequestError = isBadRequestError;
-  exports.isNotFoundError = isNotFoundError;
-  exports.isTimeoutError = isTimeoutError;
-  exports.isAbortError = isAbortError;
-  exports.isServerError = isServerError;
-  exports.isSuccess = isSuccess;
-
-  var EmberError = _ember['default'].Error;
-
-  /**
-   * @class AjaxError
-   * @private
-   */
-
-  function AjaxError(errors) {
-    var message = arguments.length <= 1 || arguments[1] === undefined ? 'Ajax operation failed' : arguments[1];
-
-    EmberError.call(this, message);
-
-    this.errors = errors || [{
-      title: 'Ajax Error',
-      detail: message
-    }];
-  }
-
-  AjaxError.prototype = Object.create(EmberError.prototype);
-
-  /**
-   * @class InvalidError
-   * @public
-   */
-
-  function InvalidError(errors) {
-    AjaxError.call(this, errors, 'Request was rejected because it was invalid');
-  }
-
-  InvalidError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class UnauthorizedError
-   * @public
-   */
-
-  function UnauthorizedError(errors) {
-    AjaxError.call(this, errors, 'Ajax authorization failed');
-  }
-
-  UnauthorizedError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class ForbiddenError
-   * @public
-   */
-
-  function ForbiddenError(errors) {
-    AjaxError.call(this, errors, 'Request was rejected because user is not permitted to perform this operation.');
-  }
-
-  ForbiddenError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class BadRequestError
-   * @public
-   */
-
-  function BadRequestError(errors) {
-    AjaxError.call(this, errors, 'Request was formatted incorrectly.');
-  }
-
-  BadRequestError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class NotFoundError
-   * @public
-   */
-
-  function NotFoundError(errors) {
-    AjaxError.call(this, errors, 'Resource was not found.');
-  }
-
-  NotFoundError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class TimeoutError
-   * @public
-   */
-
-  function TimeoutError() {
-    AjaxError.call(this, null, 'The ajax operation timed out');
-  }
-
-  TimeoutError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class AbortError
-   * @public
-   */
-
-  function AbortError() {
-    AjaxError.call(this, null, 'The ajax operation was aborted');
-  }
-
-  AbortError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * @class ServerError
-   * @public
-   */
-
-  function ServerError(errors) {
-    AjaxError.call(this, errors, 'Request was rejected due to server error');
-  }
-
-  ServerError.prototype = Object.create(AjaxError.prototype);
-
-  /**
-   * Checks if the given error is or inherits from AjaxError
-   * @method isAjaxError
-   * @public
-   * @param  {Error} error
-   * @return {Boolean}
-   */
-
-  function isAjaxError(error) {
-    return error instanceof AjaxError;
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents an
-   * unauthorized request error
-   * @method isUnauthorizedError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isUnauthorizedError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof UnauthorizedError;
-    } else {
-      return error === 401;
-    }
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents a forbidden
-   * request error
-   * @method isForbiddenError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isForbiddenError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof ForbiddenError;
-    } else {
-      return error === 403;
-    }
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents an invalid
-   * request error
-   * @method isInvalidError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isInvalidError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof InvalidError;
-    } else {
-      return error === 422;
-    }
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents a bad request
-   * error
-   * @method isBadRequestError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isBadRequestError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof BadRequestError;
-    } else {
-      return error === 400;
-    }
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents a
-   * "not found" error
-   * @method isNotFoundError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isNotFoundError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof NotFoundError;
-    } else {
-      return error === 404;
-    }
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents a
-   * "timeout" error
-   * @method isTimeoutError
-   * @public
-   * @param  {AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isTimeoutError(error) {
-    return error instanceof TimeoutError;
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents an
-   * "abort" error
-   * @method isAbortError
-   * @public
-   * @param  {AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isAbortError(error) {
-    return error instanceof AbortError;
-  }
-
-  /**
-   * Checks if the given status code or AjaxError object represents a server error
-   * @method isServerError
-   * @public
-   * @param  {Number | AjaxError} error
-   * @return {Boolean}
-   */
-
-  function isServerError(error) {
-    if (isAjaxError(error)) {
-      return error instanceof ServerError;
-    } else {
-      return error >= 500 && error < 600;
-    }
-  }
-
-  /**
-   * Checks if the given status code represents a successful request
-   * @method isSuccess
-   * @public
-   * @param  {Number} status
-   * @return {Boolean}
-   */
-
-  function isSuccess(status) {
-    var s = parseInt(status, 10);
-    return s >= 200 && s < 300 || s === 304;
-  }
-});
-define('ember-ajax/index', ['exports', 'ember-ajax/request'], function (exports, _emberAjaxRequest) {
-  'use strict';
-
-  Object.defineProperty(exports, 'default', {
-    enumerable: true,
-    get: function get() {
-      return _emberAjaxRequest['default'];
-    }
-  });
-});
-define('ember-ajax/mixins/ajax-request', ['exports', 'ember', 'ember-ajax/errors', 'ember-ajax/utils/parse-response-headers', 'ember-ajax/utils/url-helpers', 'ember-ajax/utils/ajax'], function (exports, _ember, _emberAjaxErrors, _emberAjaxUtilsParseResponseHeaders, _emberAjaxUtilsUrlHelpers, _emberAjaxUtilsAjax) {
-  'use strict';
-
-  var $ = _ember['default'].$;
-  var EmberError = _ember['default'].Error;
-  var Mixin = _ember['default'].Mixin;
-  var Promise = _ember['default'].RSVP.Promise;
-  var get = _ember['default'].get;
-  var isNone = _ember['default'].isNone;
-  var merge = _ember['default'].merge;
-  var run = _ember['default'].run;
-  var Test = _ember['default'].Test;
-  var testing = _ember['default'].testing;
-
-  var JSONAPIContentType = 'application/vnd.api+json';
-
-  function isJSONAPIContentType(header) {
-    if (isNone(header)) {
-      return false;
-    }
-    return header.indexOf(JSONAPIContentType) === 0;
-  }
-
-  function startsWithSlash(string) {
-    return string.charAt(0) === '/';
-  }
-
-  function endsWithSlash(string) {
-    return string.charAt(string.length - 1) === '/';
-  }
-
-  function stripSlashes(path) {
-    // make sure path starts with `/`
-    if (startsWithSlash(path)) {
-      path = path.substring(1);
-    }
-
-    // remove end `/`
-    if (endsWithSlash(path)) {
-      path = path.slice(0, -1);
-    }
-    return path;
-  }
-
-  var pendingRequestCount = 0;
-  if (testing) {
-    Test.registerWaiter(function () {
-      return pendingRequestCount === 0;
-    });
-  }
-
-  exports['default'] = Mixin.create({
-
-    request: function request(url, options) {
-      var _this = this;
-
-      var hash = this.options(url, options);
-      return new Promise(function (resolve, reject) {
-        _this.raw(url, hash).then(function (_ref) {
-          var response = _ref.response;
-
-          resolve(response);
-        })['catch'](function (_ref2) {
-          var response = _ref2.response;
-
-          reject(response);
-        });
-      }, 'ember-ajax: ' + hash.type + ' ' + hash.url + ' response');
-    },
-
-    raw: function raw(url, options) {
-      var _this2 = this;
-
-      var hash = this.options(url, options);
-      var requestData = {
-        type: hash.type,
-        url: hash.url
-      };
-
-      if (isJSONAPIContentType(hash.headers['Content-Type']) && requestData.type !== 'GET') {
-        if (typeof hash.data === 'object') {
-          hash.data = JSON.stringify(hash.data);
-        }
-      }
-
-      return new Promise(function (resolve, reject) {
-        hash.success = function (payload, textStatus, jqXHR) {
-          var response = _this2.handleResponse(jqXHR.status, (0, _emberAjaxUtilsParseResponseHeaders['default'])(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-          pendingRequestCount--;
-
-          if ((0, _emberAjaxErrors.isAjaxError)(response)) {
-            run.join(null, reject, { payload: payload, textStatus: textStatus, jqXHR: jqXHR, response: response });
-          } else {
-            run.join(null, resolve, { payload: payload, textStatus: textStatus, jqXHR: jqXHR, response: response });
-          }
-        };
-
-        hash.error = function (jqXHR, textStatus, errorThrown) {
-          var payload = _this2.parseErrorResponse(jqXHR.responseText) || errorThrown;
-          var response = undefined;
-
-          if (errorThrown instanceof Error) {
-            response = errorThrown;
-          } else if (textStatus === 'timeout') {
-            response = new _emberAjaxErrors.TimeoutError();
-          } else if (textStatus === 'abort') {
-            response = new _emberAjaxErrors.AbortError();
-          } else {
-            response = _this2.handleResponse(jqXHR.status, (0, _emberAjaxUtilsParseResponseHeaders['default'])(jqXHR.getAllResponseHeaders()), payload, requestData);
-          }
-
-          pendingRequestCount--;
-
-          run.join(null, reject, { payload: payload, textStatus: textStatus, jqXHR: jqXHR, errorThrown: errorThrown, response: response });
-        };
-
-        pendingRequestCount++;
-
-        (0, _emberAjaxUtilsAjax['default'])(hash);
-      }, 'ember-ajax: ' + hash.type + ' ' + hash.url);
-    },
-
-    /**
-     * calls `request()` but forces `options.type` to `POST`
-     * @public
-     */
-    post: function post(url, options) {
-      return this.request(url, this._addTypeToOptionsFor(options, 'POST'));
-    },
-
-    /**
-     * calls `request()` but forces `options.type` to `PUT`
-     * @public
-     */
-    put: function put(url, options) {
-      return this.request(url, this._addTypeToOptionsFor(options, 'PUT'));
-    },
-
-    /**
-     * calls `request()` but forces `options.type` to `PATCH`
-     * @public
-     */
-    patch: function patch(url, options) {
-      return this.request(url, this._addTypeToOptionsFor(options, 'PATCH'));
-    },
-
-    /**
-     * calls `request()` but forces `options.type` to `DELETE`
-     * @public
-     */
-    del: function del(url, options) {
-      return this.request(url, this._addTypeToOptionsFor(options, 'DELETE'));
-    },
-
-    /**
-     * calls `request()` but forces `options.type` to `DELETE`
-     * alias for `del()`
-     * @public
-     */
-    'delete': function _delete() {
-      return this.del.apply(this, arguments);
-    },
-
-    /**
-     * Wrap the `.get` method so that we issue a warning if
-     *
-     * Since `.get` is both an AJAX pattern _and_ an Ember pattern, we want to try
-     * to warn users when they try using `.get` to make a request
-     *
-     * @method get
-     * @public
-     */
-    get: function get(url) {
-      if (arguments.length > 1 || url.charAt(0) === '/') {
-        throw new EmberError('It seems you tried to use `.get` to make a request! Use the `.request` method instead.');
-      }
-      return this._super.apply(this, arguments);
-    },
-
-    // forcibly manipulates the options hash to include the HTTP method on the type key
-    _addTypeToOptionsFor: function _addTypeToOptionsFor(options, method) {
-      options = options || {};
-      options.type = method;
-      return options;
-    },
-
-    /**
-     * @method _getFullHeadersHash
-     * @private
-     * @param {Object} headers
-     * @return {Object}
-     */
-    _getFullHeadersHash: function _getFullHeadersHash(headers) {
-      var classHeaders = get(this, 'headers') || {};
-      var _headers = merge({}, classHeaders);
-      return merge(_headers, headers);
-    },
-
-    /**
-     * @method options
-     * @private
-     * @param {String} url
-     * @param {Object} options
-     * @return {Object}
-     */
-    options: function options(url) {
-      var _options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-      _options.url = this._buildURL(url, _options);
-      _options.type = _options.type || 'GET';
-      _options.dataType = _options.dataType || 'json';
-
-      if (this._shouldSendHeaders(_options)) {
-        _options.headers = this._getFullHeadersHash(_options.headers);
-      } else {
-        _options.headers = _options.headers || {};
-      }
-
-      return _options;
-    },
-
-    /**
-     * Build a URL for a request
-     *
-     * If the provided `url` is deemed to be a complete URL, it will be returned
-     * directly.  If it is not complete, then the segment provided will be combined
-     * with the `host` and `namespace` options of the request class to create the
-     * full URL.
-     *
-     * @private
-     * @param {string} url the url, or url segment, to request
-     * @param {object} [options] the options for the request being made
-     * @param {object.host} [host] the host to use for this request
-     * @returns {string} the URL to make a request to
-     */
-    _buildURL: function _buildURL(url) {
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-      var urlObject = new _emberAjaxUtilsUrlHelpers.RequestURL(url);
-
-      // If the URL passed is not relative, return the whole URL
-      if (urlObject.isComplete) {
-        return urlObject.href;
-      }
-
-      var host = options.host || get(this, 'host');
-      var namespace = get(this, 'namespace');
-      if (namespace) {
-        namespace = stripSlashes(namespace);
-      }
-
-      var fullUrl = '';
-      // Add the host, if it exists
-      if (host) {
-        fullUrl += host;
-      }
-      // Add the namespace, if it exists
-      if (namespace) {
-        if (!endsWithSlash(fullUrl)) {
-          fullUrl += '/';
-        }
-        fullUrl += namespace;
-      }
-      // Add the URL segment, if it exists
-      if (url) {
-        if (!startsWithSlash(url)) {
-          fullUrl += '/';
-        }
-        fullUrl += url;
-      }
-
-      return fullUrl;
-    },
-
-    _normalizePath: function _normalizePath(path) {
-      if (path) {
-        // make sure path starts with `/`
-        if (path.charAt(0) !== '/') {
-          path = '/' + path;
-        }
-
-        // remove end `/`
-        if (path.charAt(path.length - 1) === '/') {
-          path = path.slice(0, -1);
-        }
-      }
-      return path;
-    },
-
-    /**
-     * Takes an ajax response, and returns the json payload or an error.
-     *
-     * By default this hook just returns the json payload passed to it.
-     * You might want to override it in two cases:
-     *
-     * 1. Your API might return useful results in the response headers.
-     *    Response headers are passed in as the second argument.
-     *
-     * 2. Your API might return errors as successful responses with status code
-     *    200 and an Errors text or object.
-     *
-     * @method handleResponse
-     * @private
-     * @param  {Number} status
-     * @param  {Object} headers
-     * @param  {Object} payload
-     * @param  {Object} requestData the original request information
-     * @return {Object | AjaxError} response
-     */
-    handleResponse: function handleResponse(status, headers, payload, requestData) {
-      payload = payload || {};
-      var errors = this.normalizeErrorResponse(status, headers, payload);
-
-      if (this.isSuccess(status, headers, payload)) {
-        return payload;
-      } else if (this.isUnauthorizedError(status, headers, payload)) {
-        return new _emberAjaxErrors.UnauthorizedError(errors);
-      } else if (this.isForbiddenError(status, headers, payload)) {
-        return new _emberAjaxErrors.ForbiddenError(errors);
-      } else if (this.isInvalidError(status, headers, payload)) {
-        return new _emberAjaxErrors.InvalidError(errors);
-      } else if (this.isBadRequestError(status, headers, payload)) {
-        return new _emberAjaxErrors.BadRequestError(errors);
-      } else if (this.isNotFoundError(status, headers, payload)) {
-        return new _emberAjaxErrors.NotFoundError(errors);
-      } else if (this.isServerError(status, headers, payload)) {
-        return new _emberAjaxErrors.ServerError(errors);
-      }
-
-      var detailedMessage = this.generateDetailedMessage(status, headers, payload, requestData);
-      return new _emberAjaxErrors.AjaxError(errors, detailedMessage);
-    },
-
-    /**
-     * Match the host to a provided array of strings or regexes that can match to a host
-     *
-     * @method matchHosts
-     * @private
-     * @param {String} host the host you are sending too
-     * @param {RegExp | String} matcher a string or regex that you can match the host to.
-     * @returns {Boolean} if the host passed the matcher
-     */
-    _matchHosts: function _matchHosts(host, matcher) {
-      if (matcher.constructor === RegExp) {
-        return matcher.test(host);
-      } else if (typeof matcher === 'string') {
-        return matcher === host;
-      } else {
-        _ember['default'].Logger.warn('trustedHosts only handles strings or regexes.', matcher, 'is neither.');
-        return false;
-      }
-    },
-
-    /**
-     * Determine whether the headers should be added for this request
-     *
-     * This hook is used to help prevent sending headers to every host, regardless
-     * of the destination, since this could be a security issue if authentication
-     * tokens are accidentally leaked to third parties.
-     *
-     * To avoid that problem, subclasses should utilize the `headers` computed
-     * property to prevent authentication from being sent to third parties, or
-     * implement this hook for more fine-grain control over when headers are sent.
-     *
-     * By default, the headers are sent if the host of the request matches the
-     * `host` property designated on the class.
-     *
-     * @method _shouldSendHeaders
-     * @private
-     * @property {Object} hash request options hash
-     * @returns {Boolean} whether or not headers should be sent
-     */
-    _shouldSendHeaders: function _shouldSendHeaders(_ref3) {
-      var _this3 = this;
-
-      var url = _ref3.url;
-      var host = _ref3.host;
-
-      url = url || '';
-      host = host || get(this, 'host') || '';
-
-      var urlObject = new _emberAjaxUtilsUrlHelpers.RequestURL(url);
-      var trustedHosts = get(this, 'trustedHosts') || _ember['default'].A();
-
-      // Add headers on relative URLs
-      if (!urlObject.isComplete) {
-        return true;
-      } else if (trustedHosts.find(function (matcher) {
-        return _this3._matchHosts(urlObject.hostname, matcher);
-      })) {
-        return true;
-      }
-
-      // Add headers on matching host
-      var hostObject = new _emberAjaxUtilsUrlHelpers.RequestURL(host);
-      return urlObject.sameHost(hostObject);
-    },
-
-    /**
-     * Generates a detailed ("friendly") error message, with plenty
-     * of information for debugging (good luck!)
-     * @method generateDetailedMessage
-     * @private
-     * @param  {Number} status
-     * @param  {Object} headers
-     * @param  {Object} payload
-     * @param  {Object} requestData the original request information
-     * @return {Object} request information
-     */
-    generateDetailedMessage: function generateDetailedMessage(status, headers, payload, requestData) {
-      var shortenedPayload = undefined;
-      var payloadContentType = headers['Content-Type'] || 'Empty Content-Type';
-
-      if (payloadContentType === 'text/html' && payload.length > 250) {
-        shortenedPayload = '[Omitted Lengthy HTML]';
-      } else {
-        shortenedPayload = JSON.stringify(payload);
-      }
-
-      var requestDescription = requestData.type + ' ' + requestData.url;
-      var payloadDescription = 'Payload (' + payloadContentType + ')';
-
-      return ['Ember Data Request ' + requestDescription + ' returned a ' + status, payloadDescription, shortenedPayload].join('\n');
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a an authorized error.
-     * @method isUnauthorizedError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isUnauthorizedError: function isUnauthorizedError(status) {
-      return (0, _emberAjaxErrors.isUnauthorizedError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a forbidden error.
-     * @method isForbiddenError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isForbiddenError: function isForbiddenError(status) {
-      return (0, _emberAjaxErrors.isForbiddenError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a an invalid error.
-     * @method isInvalidError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isInvalidError: function isInvalidError(status) {
-      return (0, _emberAjaxErrors.isInvalidError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a bad request error.
-     * @method isBadRequestError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isBadRequestError: function isBadRequestError(status) {
-      return (0, _emberAjaxErrors.isBadRequestError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a "not found" error.
-     * @method isNotFoundError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isNotFoundError: function isNotFoundError(status) {
-      return (0, _emberAjaxErrors.isNotFoundError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a server error.
-     * @method isServerError
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isServerError: function isServerError(status) {
-      return (0, _emberAjaxErrors.isServerError)(status);
-    },
-
-    /**
-     * Default `handleResponse` implementation uses this hook to decide if the
-     * response is a success.
-     * @method isSuccess
-     * @private
-     * @param {Number} status
-     * @param {Object} headers
-     * @param {Object} payload
-     * @return {Boolean}
-     */
-    isSuccess: function isSuccess(status) {
-      return (0, _emberAjaxErrors.isSuccess)(status);
-    },
-
-    /**
-     * @method parseErrorResponse
-     * @private
-     * @param {String} responseText
-     * @return {Object}
-     */
-    parseErrorResponse: function parseErrorResponse(responseText) {
-      var json = responseText;
-
-      try {
-        json = $.parseJSON(responseText);
-      } catch (e) {}
-
-      return json;
-    },
-
-    /**
-     * @method normalizeErrorResponse
-     * @private
-     * @param  {Number} status
-     * @param  {Object} headers
-     * @param  {Object} payload
-     * @return {Array} errors payload
-     */
-    normalizeErrorResponse: function normalizeErrorResponse(status, headers, payload) {
-      if (payload && typeof payload === 'object' && payload.errors) {
-        if (!_ember['default'].isArray(payload.errors)) {
-          return payload.errors;
-        }
-
-        return payload.errors.map(function (error) {
-          var ret = merge({}, error);
-
-          if (typeof ret.status === 'number') {
-            ret.status = '' + ret.status;
-          }
-
-          return ret;
-        });
-      } else {
-        return [{
-          status: '' + status,
-          title: 'The backend responded with an error',
-          detail: payload
-        }];
-      }
-    }
-  });
-});
-define('ember-ajax/raw', ['exports', 'ember-ajax/ajax-request'], function (exports, _emberAjaxAjaxRequest) {
-  'use strict';
-
-  exports['default'] = raw;
-
-  /**
-   * Same as `request` except it resolves an object with
-   *
-   *   {response, textStatus, jqXHR}
-   *
-   * Useful if you need access to the jqXHR object for headers, etc.
-   *
-   * @public
-   */
-  function raw() {
-    var ajax = new _emberAjaxAjaxRequest['default']();
-    return ajax.raw.apply(ajax, arguments);
-  }
-});
-define('ember-ajax/request', ['exports', 'ember-ajax/ajax-request'], function (exports, _emberAjaxAjaxRequest) {
-  'use strict';
-
-  exports['default'] = request;
-
-  /**
-   * Helper function that allows you to use the default `ember-ajax` to make
-   * requests without using the service.
-   *
-   * Note: Unlike `ic-ajax`'s `request` helper function, this will *not* return a
-   * jqXHR object in the error handler.  If you need jqXHR, you can use the `raw`
-   * function instead.
-   *
-   * @public
-   */
-  function request() {
-    var ajax = new _emberAjaxAjaxRequest['default']();
-    return ajax.request.apply(ajax, arguments);
-  }
-});
-define('ember-ajax/services/ajax', ['exports', 'ember', 'ember-ajax/mixins/ajax-request'], function (exports, _ember, _emberAjaxMixinsAjaxRequest) {
-  'use strict';
-
-  var Service = _ember['default'].Service;
-
-  /**
-   * ### Headers customization
-   *
-   * Some APIs require HTTP headers, e.g. to provide an API key. Arbitrary
-   * headers can be set as key/value pairs on the `RESTAdapter`'s `headers`
-   * object and Ember Data will send them along with each ajax request.
-   *
-   * ```app/services/ajax
-   * import AjaxService from 'ember-ajax/services/ajax';
-   *
-   * export default AjaxService.extend({
-   *   headers: {
-   *     "API_KEY": "secret key",
-   *     "ANOTHER_HEADER": "Some header value"
-   *   }
-   * });
-   * ```
-   *
-   * `headers` can also be used as a computed property to support dynamic
-   * headers.
-   *
-   * ```app/services/ajax.js
-   * import Ember from 'ember';
-   * import AjaxService from 'ember-ajax/services/ajax';
-   *
-   * export default AjaxService.extend({
-   *   session: Ember.inject.service(),
-   *   headers: Ember.computed("session.authToken", function() {
-   *     return {
-   *       "API_KEY": this.get("session.authToken"),
-   *       "ANOTHER_HEADER": "Some header value"
-   *     };
-   *   })
-   * });
-   * ```
-   *
-   * In some cases, your dynamic headers may require data from some
-   * object outside of Ember's observer system (for example
-   * `document.cookie`). You can use the
-   * [volatile](/api/classes/Ember.ComputedProperty.html#method_volatile)
-   * function to set the property into a non-cached mode causing the headers to
-   * be recomputed with every request.
-   *
-   * ```app/services/ajax.js
-   * import Ember from 'ember';
-   * import AjaxService from 'ember-ajax/services/ajax';
-   *
-   * export default AjaxService.extend({
-   *   session: Ember.inject.service(),
-   *   headers: Ember.computed("session.authToken", function() {
-   *     return {
-   *       "API_KEY": Ember.get(document.cookie.match(/apiKey\=([^;]*)/), "1"),
-   *       "ANOTHER_HEADER": "Some header value"
-   *     };
-   *   }).volatile()
-   * });
-   * ```
-   * @public
-   */
-  exports['default'] = Service.extend(_emberAjaxMixinsAjaxRequest['default']);
-});
-define('ember-ajax/utils/ajax', ['exports', 'ember', 'ember-ajax/utils/is-fastboot'], function (exports, _ember, _emberAjaxUtilsIsFastboot) {
-  /* global najax */
-  'use strict';
-
-  var $ = _ember['default'].$;
-
-  exports['default'] = _emberAjaxUtilsIsFastboot['default'] ? najax : $.ajax;
-});
-define('ember-ajax/utils/is-fastboot', ['exports'], function (exports) {
-  /* global FastBoot */
-  'use strict';
-
-  var isFastBoot = typeof FastBoot !== 'undefined';
-  exports['default'] = isFastBoot;
-});
-define('ember-ajax/utils/parse-response-headers', ['exports'], function (exports) {
-  'use strict';
-
-  exports['default'] = parseResponseHeaders;
-
-  function _toArray(arr) {
-    return Array.isArray(arr) ? arr : Array.from(arr);
-  }
-
-  var CLRF = '\r\n';
-  function parseResponseHeaders(headersString) {
-    var headers = {};
-
-    if (!headersString) {
-      return headers;
-    }
-
-    var headerPairs = headersString.split(CLRF);
-
-    headerPairs.forEach(function (header) {
-      var _header$split = header.split(':');
-
-      var _header$split2 = _toArray(_header$split);
-
-      var field = _header$split2[0];
-
-      var value = _header$split2.slice(1);
-
-      field = field.trim();
-      value = value.join(':').trim();
-
-      if (value) {
-        headers[field] = value;
-      }
-    });
-
-    return headers;
-  }
-});
-define('ember-ajax/utils/url-helpers', ['exports', 'ember-ajax/utils/is-fastboot'], function (exports, _emberAjaxUtilsIsFastboot) {
-  'use strict';
-
-  var _createClass = (function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-    };
-  })();
-
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError('Cannot call a class as a function');
-    }
-  }
-
-  /* global require, module, URL */
-
-  var completeUrlRegex = /^(http|https)/;
-
-  /*
-   * Isomorphic URL parsing
-   * Borrowed from
-   * http://www.sitepoint.com/url-parsing-isomorphic-javascript/
-   */
-  var isNode = typeof module === 'object' && module.exports;
-  var url = getUrlModule();
-
-  /**
-   * Get the node url module or an anchor element
-   *
-   * @private
-   * @return {Object|HTMLAnchorElement} Object to parse urls
-   */
-  function getUrlModule() {
-    if (_emberAjaxUtilsIsFastboot['default']) {
-      // ember-fastboot-server provides the node url module as URL global
-      return URL;
-    }
-
-    if (isNode) {
-      return require('url');
-    }
-
-    return document.createElement('a');
-  }
-
-  /**
-   * Parse a URL string into an object that defines its structure
-   *
-   * The returned object will have the following properties:
-   *
-   *   href: the full URL
-   *   protocol: the request protocol
-   *   hostname: the target for the request
-   *   port: the port for the request
-   *   pathname: any URL after the host
-   *   search: query parameters
-   *   hash: the URL hash
-   *
-   * @private
-   * @return {Object} URL structure
-   */
-  function parseUrl(str) {
-    var fullObject = undefined;
-    if (isNode || _emberAjaxUtilsIsFastboot['default']) {
-      fullObject = url.parse(str);
-    } else {
-      url.href = str;
-      fullObject = url;
-    }
-    var desiredProps = {};
-    desiredProps.href = fullObject.href;
-    desiredProps.protocol = fullObject.protocol;
-    desiredProps.hostname = fullObject.hostname;
-    desiredProps.port = fullObject.port;
-    desiredProps.pathname = fullObject.pathname;
-    desiredProps.search = fullObject.search;
-    desiredProps.hash = fullObject.hash;
-    return desiredProps;
-  }
-
-  /**
-   * RequestURL
-   *
-   * Converts a URL string into an object for easy comparison to other URLs
-   *
-   * @public
-   */
-
-  var RequestURL = (function () {
-    function RequestURL(url) {
-      _classCallCheck(this, RequestURL);
-
-      this.url = url;
-    }
-
-    _createClass(RequestURL, [{
-      key: 'sameHost',
-      value: function sameHost(other) {
-        var _this = this;
-
-        return ['protocol', 'hostname', 'port'].reduce(function (previous, prop) {
-          return previous && _this[prop] === other[prop];
-        }, true);
-      }
-    }, {
-      key: 'url',
-      get: function get() {
-        return this._url;
-      },
-      set: function set(value) {
-        this._url = value;
-
-        var explodedUrl = parseUrl(value);
-        for (var prop in explodedUrl) {
-          this[prop] = explodedUrl[prop];
-        }
-
-        return this._url;
-      }
-    }, {
-      key: 'isComplete',
-      get: function get() {
-        return this.url.match(completeUrlRegex);
-      }
-    }]);
-
-    return RequestURL;
-  })();
-
-  exports.RequestURL = RequestURL;
-});
-define('ember-arcgis-portal-components/components/item-pager/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-pager/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPagerTemplate) {
+;define('ember-arcgis-portal-components/components/item-pager/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-pager/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPagerTemplate) {
   'use strict';
 
   /*
@@ -91887,12 +91145,37 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
 
     classNames: ['item-picker', 'clearfix', 'row'],
 
+    isValidating: false,
+
+    shouldValidate: false,
+
+    selectAnyway: false,
+
     init: function init() {
       this._super.apply(this, arguments);
       if (this.get('searchItemsOnInit')) {
         this._doSearch(this.get('q'));
       }
     },
+
+    selectButtonText: _ember['default'].computed('isValidating', 'selectAnyway', function () {
+      var intl = this.get('intl');
+      if (this.get('isValidating')) {
+        return intl.t(this.get('_i18nScope') + 'buttons.validating');
+      } else if (this.get('selectAnyway')) {
+        return intl.t(this.get('_i18nScope') + 'buttons.selectAnyway');
+      }
+      return intl.t(this.get('_i18nScope') + 'buttons.select');
+    }),
+
+    selectButtonClass: _ember['default'].computed('isValidating', 'selectAnyway', 'errorMessage', function () {
+      var errorMessage = this.get('errorMessage');
+      if (this.get('isValidating')) {
+        return 'disabled';
+      } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+        return 'disabled';
+      }
+    }),
 
     inputElementId: _ember['default'].computed(function () {
       return this.get('elementId') + '-search-items';
@@ -91944,7 +91227,7 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
 
     noItemsFoundMsg: _ember['default'].computed('items.[]', 'q', function () {
       var result = '';
-      if (this.get('hasSearched') && this.get('items.length') === 0) {
+      if (this.get('hasSearched') && this.get('items.results.length') === 0) {
         var i18nKey = 'noItems.withoutQuery';
         if (!_ember['default'].isEmpty(this.get('q'))) {
           i18nKey = 'noItems.withQuery';
@@ -91953,6 +91236,15 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
         result = this.get('intl').t(i18nKey);
       }
       return result;
+    }),
+
+    errorMessage: _ember['default'].computed('isValidating', 'errorHash', function () {
+      var errorHash = this.get('errorHash');
+      if (!this.get('isValidating') && errorHash && errorHash.status) {
+        if (errorHash.status === 'warning' || errorHash.status === 'error') {
+          return errorHash;
+        }
+      }
     }),
 
     showNoItemsMsg: _ember['default'].computed.notEmpty('noItemsFoundMsg'),
@@ -92004,8 +91296,10 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
         num: pageSize,
         sortField: 'title'
       };
-
-      this.get('itemService').search(params).then(function (resp) {
+      // allow portalOpts to be passed in so we can access
+      // other portals besides the one our session is auth'd to
+      var opts = this.get('portalOpts') || null;
+      this.get('itemService').search(params, opts).then(function (resp) {
         _this.set('items', resp);
       }, function (err) {
         throw err;
@@ -92047,12 +91341,44 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
           if (this.get('currentItem.id') === item.id) {
             this.set('currentItem', null);
           } else {
-            this.set('currentItem', item);
+            this.setProperties({
+              errorHash: null,
+              selectAnyway: false,
+              currentItem: item
+            });
           }
         }
       },
+
+      onSelect: function onSelect(item) {
+        var _this2 = this;
+
+        var validator = this.get('onSelectionValidator');
+
+        this.set('isValidating', true);
+        if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+          validator(item).then(function (resp) {
+            _this2.set('isValidating', false);
+            _this2.set('errorHash', resp.status);
+            if (resp.status.status === 'error') {
+              return;
+            } else if (resp.status.status === 'warning') {
+              _this2.set('selectAnyway', true);
+              return;
+            } else {
+              return _this2.get('selectAction')(resp.item);
+            }
+          });
+        } else {
+          this.set('isValidating', false);
+          return this.get('selectAction')(item);
+        }
+      },
+
       cancelAction: function cancelAction() {
         this.setProperties({
+          errorHash: null,
+          selectAnyway: false,
           currentItem: null,
           itemsToAdd: []
         });
@@ -92105,6 +91431,16 @@ define('ember-arcgis-portal-components/components/item-picker/item-preview/compo
 
     description: _ember['default'].computed.reads('model.description'),
 
+    showError: _ember['default'].computed.notEmpty('errorMessage'),
+
+    messageClass: _ember['default'].computed('errorMessage', function () {
+      if (this.get('errorMessage.status') === 'warning') {
+        return 'alert-warning';
+      } else if (this.get('errorMessage.status') === 'error') {
+        return 'alert-danger';
+      }
+    }),
+
     onImageError: function onImageError() {
       _ember['default'].run(this, function () {
         if (!this.get('isDestroyed') && !this.get('isDestroying')) {
@@ -92118,7 +91454,7 @@ define('ember-arcgis-portal-components/components/item-picker/item-preview/compo
 define("ember-arcgis-portal-components/components/item-picker/item-preview/template", ["exports"], function (exports) {
   "use strict";
 
-  exports["default"] = Ember.HTMLBars.template({ "id": "1NDXop5P", "block": "{\"statements\":[[\"block\",[\"unless\"],[[\"get\",[\"showFallback\"]]],null,1,0],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"shared-by-owner\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[\"text\",\": \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-description\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"description\"]]],null],false],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-meta\"],[\"flush-element\"],[\"text\",\"\\n\\t\"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-calendar\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"helper\",[\"format-time\"],[[\"get\",[\"model\",\"modified\"]]],null],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-file\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"itemType\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"static-attr\",\"src\",\"ember-arcgis-portal-components/assets/images/default-dataset-thumb.png\"],[\"static-attr\",\"alt\",\"\"],[\"static-attr\",\"class\",\"thumbnail\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"dynamic-attr\",\"src\",[\"concat\",[[\"unknown\",[\"thumbnailUrl\"]]]]],[\"static-attr\",\"alt\",\"\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "Rh8Q3Dfs", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showError\"]]],null,2],[\"block\",[\"unless\"],[[\"get\",[\"showFallback\"]]],null,1,0],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"shared-by-owner\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[\"text\",\": \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-description\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"description\"]]],null],false],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-meta\"],[\"flush-element\"],[\"text\",\"\\n\\t\"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-calendar\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"helper\",[\"format-time\"],[[\"get\",[\"model\",\"modified\"]]],null],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-file\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"itemType\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"static-attr\",\"src\",\"ember-arcgis-portal-components/assets/images/default-dataset-thumb.png\"],[\"static-attr\",\"alt\",\"\"],[\"static-attr\",\"class\",\"thumbnail\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"dynamic-attr\",\"src\",[\"concat\",[[\"unknown\",[\"thumbnailUrl\"]]]]],[\"static-attr\",\"alt\",\"\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"p\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[\"alert \",[\"unknown\",[\"messageClass\"]]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"append\",[\"unknown\",[\"errorMessage\",\"message\"]],false],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
 });
 define('ember-arcgis-portal-components/components/item-picker/item-row/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/item-row/single/template', 'ember-arcgis-portal-components/components/item-picker/item-row/multiple/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerItemRowSingleTemplate, _emberArcgisPortalComponentsComponentsItemPickerItemRowMultipleTemplate) {
   'use strict';
@@ -92194,7 +91530,7 @@ define("ember-arcgis-portal-components/components/item-picker/item-row/single/te
 define("ember-arcgis-portal-components/components/item-picker/template", ["exports"], function (exports) {
   "use strict";
 
-  exports["default"] = Ember.HTMLBars.template({ "id": "Z5oI2S7H", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showTabs\"]]],null,10],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[[\"helper\",[\"if\"],[[\"get\",[\"showTabs\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"form\",[]],[\"modifier\",[\"action\"],[[\"get\",[null]],\"doSearch\"],[[\"on\"],[\"submit\"]]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"label\",[]],[\"dynamic-attr\",\"for\",[\"concat\",[[\"unknown\",[\"inputElementId\"]]]]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"placeholder\"]],false],[\"text\",\":\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"input\"],null,[[\"id\",\"class\",\"value\",\"placeholder\",\"key-up\"],[[\"get\",[\"inputElementId\"]],\"form-control\",[\"get\",[\"q\"]],[\"get\",[\"placeholder\"]],\"doSearch\"]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-results-container\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"results-list\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"loading\"]]],null,7,6],[\"text\",\"      \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"currentItem\"]]],null,2],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,1],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"item-pager\"],null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[\"get\",[\"_i18nScope\"]],[\"get\",[\"pageSize\"]],[\"get\",[\"totalCount\"]],[\"get\",[\"pageNumber\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"changePage\"],null]]]],false],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,0],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary pull-right\"],[\"dynamic-attr\",\"disabled\",[\"unknown\",[\"disableAddItems\"]],null],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"selectAction\"]],[\"get\",[\"itemsToAdd\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-status\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[\"get\",[\"itemsToAdd\",\"length\"]]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-current-item\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"item-picker/item-preview\"],null,[[\"_i18nScope\",\"model\"],[[\"get\",[\"_i18nScope\"]],[\"get\",[\"currentItem\"]]]]],false],[\"text\",\"\\n\\n          \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"full-width-btn\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"selectAction\"]],[\"get\",[\"currentItem\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.select\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"side-by-side\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                  \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"cancelAction\"]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\\n                  \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"href\",[\"concat\",[[\"unknown\",[\"currentItem\",\"url\"]]]]],[\"static-attr\",\"target\",\"_blank\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-default btn-block \",[\"unknown\",[\"disabledStatus\"]]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n          \"],[\"close-element\"],[\"text\",\"\\n\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"            \"],[\"append\",[\"helper\",[\"item-picker/item-row\"],null,[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"model\",\"currentItemId\",\"onClick\"],[[\"get\",[\"selectMultiple\"]],[\"get\",[\"itemsToAdd\"]],[\"get\",[\"_i18nScope\"]],[\"get\",[\"item\"]],[\"get\",[\"currentItem\",\"id\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onClick\"],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[\"item\"]},{\"statements\":[[\"block\",[\"each\"],[[\"get\",[\"items\",\"results\"]]],null,3],[\"text\",\"        \"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"noItemsFoundMsg\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"noItemsFoundMsg\"]]],null,5,4]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"loading\"],null]],null],false],[\"text\",\"...\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"span\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"appType\",\"name\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"radio-button\"],null,[[\"value\",\"groupValue\",\"changed\"],[[\"get\",[\"appType\",\"name\"]],[\"get\",[\"selectedCatalogName\"]],\"chooseCatalog\"]],8]],\"locals\":[\"appType\"]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-radio-buttons col-xs-2\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"catalog\"]]],null,9],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "rHosDomb", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showTabs\"]]],null,10],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[[\"helper\",[\"if\"],[[\"get\",[\"showTabs\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"form\",[]],[\"modifier\",[\"action\"],[[\"get\",[null]],\"doSearch\"],[[\"on\"],[\"submit\"]]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"label\",[]],[\"dynamic-attr\",\"for\",[\"concat\",[[\"unknown\",[\"inputElementId\"]]]]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"placeholder\"]],false],[\"text\",\":\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"input\"],null,[[\"id\",\"class\",\"value\",\"placeholder\",\"key-up\"],[[\"get\",[\"inputElementId\"]],\"form-control\",[\"get\",[\"q\"]],[\"get\",[\"placeholder\"]],\"doSearch\"]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-results-container\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"results-list\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"loading\"]]],null,7,6],[\"text\",\"      \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"currentItem\"]]],null,2],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,1],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"item-pager\"],null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[\"get\",[\"_i18nScope\"]],[\"get\",[\"pageSize\"]],[\"get\",[\"totalCount\"]],[\"get\",[\"pageNumber\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"changePage\"],null]]]],false],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,0],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary pull-right\"],[\"dynamic-attr\",\"disabled\",[\"unknown\",[\"disableAddItems\"]],null],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"selectAction\"]],[\"get\",[\"itemsToAdd\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-status\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[\"get\",[\"itemsToAdd\",\"length\"]]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-current-item\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"item-picker/item-preview\"],null,[[\"_i18nScope\",\"model\",\"errorMessage\"],[[\"get\",[\"_i18nScope\"]],[\"get\",[\"currentItem\"]],[\"get\",[\"errorMessage\"]]]]],false],[\"text\",\"\\n\\n          \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"full-width-btn\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-primary btn-block \",[\"unknown\",[\"selectButtonClass\"]]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],\"onSelect\",[\"get\",[\"currentItem\"]]]],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectButtonText\"]],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"side-by-side\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                  \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"cancelAction\"]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\\n                  \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"href\",[\"concat\",[[\"unknown\",[\"currentItem\",\"url\"]]]]],[\"static-attr\",\"target\",\"_blank\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-default btn-block \",[\"unknown\",[\"disabledStatus\"]]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n          \"],[\"close-element\"],[\"text\",\"\\n\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"            \"],[\"append\",[\"helper\",[\"item-picker/item-row\"],null,[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"model\",\"currentItemId\",\"onClick\"],[[\"get\",[\"selectMultiple\"]],[\"get\",[\"itemsToAdd\"]],[\"get\",[\"_i18nScope\"]],[\"get\",[\"item\"]],[\"get\",[\"currentItem\",\"id\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onClick\"],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[\"item\"]},{\"statements\":[[\"block\",[\"each\"],[[\"get\",[\"items\",\"results\"]]],null,3],[\"text\",\"        \"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"noItemsFoundMsg\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"noItemsFoundMsg\"]]],null,5,4]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"loading\"],null]],null],false],[\"text\",\"...\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"span\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"appType\",\"name\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"radio-button\"],null,[[\"value\",\"groupValue\",\"changed\"],[[\"get\",[\"appType\",\"name\"]],[\"get\",[\"selectedCatalogName\"]],\"chooseCatalog\"]],8]],\"locals\":[\"appType\"]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-radio-buttons col-xs-2\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"catalog\"]]],null,9],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/template.hbs" } });
 });
 define('ember-arcgis-portal-components/utils/query-helpers', ['exports', 'ember'], function (exports, _ember) {
   'use strict';
@@ -92363,12 +91699,18 @@ define('ember-arcgis-portal-services/mixins/service-mixin', ['exports', 'ember',
     /**
      * Fetch based request method
      */
-    request: function request(urlPath, options) {
-      var portalOpts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-      var opts = options || {};
+    request: function request(urlPath, options, portalOpts) {
       var url = '' + this.getPortalRestUrl(portalOpts) + urlPath;
+      return this.requestUrl(url, options, portalOpts);
+    },
 
+    /**
+     * Make a request using a fully-formed url. This was added to allow
+     * the hosted-fs-service to make calls to the hosted service using
+     * its fully qualifed url.
+     */
+    requestUrl: function requestUrl(url, options, portalOpts) {
+      var opts = options || {};
       if (opts.method && opts.method === 'POST') {
         // if we are POSTing, we need to manually set the content-type because AGO
         // actually does care about this header
@@ -92391,7 +91733,9 @@ define('ember-arcgis-portal-services/mixins/service-mixin', ['exports', 'ember',
       }
 
       // append in the token
-      var token = portalOpts.token || this.get('session.token');
+      // if portalOpts was provided use it even if it is undefined
+      // this is so we can make unauthenticated requests by passing portalOpts without a token
+      var token = portalOpts ? portalOpts.token : this.get('session.token');
       if (token) {
         // add a token
         if (url.indexOf('?') > -1) {
@@ -92400,8 +91744,69 @@ define('ember-arcgis-portal-services/mixins/service-mixin', ['exports', 'ember',
           url = url + '?token=' + token;
         }
       }
-      _ember['default'].debug('Portal Services making request to: ' + url);
+      // Ember.debug('Portal Services making request to: ' + url);
       return (0, _emberNetworkFetch['default'])(url, opts).then(this.checkStatusAndParseJson);
+    }
+  });
+});
+define('ember-arcgis-portal-services/services/folders-service', ['exports', 'ember', 'ember-arcgis-portal-services/mixins/service-mixin'], function (exports, _ember, _emberArcgisPortalServicesMixinsServiceMixin) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisPortalServicesMixinsServiceMixin['default'], {
+
+    /**
+     * Get users folders
+     */
+    getUserFolders: function getUserFolders(username, portalOpts) {
+      var urlPath = '/content/users/' + username + '?f=json&num=1';
+      return this.request(urlPath, { method: 'GET' }, portalOpts).then(function (response) {
+        return response.folders;
+      });
+    },
+
+    /**
+     * Check if a folder already exists...
+     */
+    folderExists: function folderExists(folderTitle, username, portalOpts) {
+      return this.getUserFolders(username, portalOpts).then(function (folders) {
+        var match = folders.find(function (folder) {
+          return folder.title === folderTitle;
+        });
+        if (match) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+    },
+
+    /**
+     * Create a new folder
+     */
+    create: function create(folderTitle, username, portalOpts) {
+      var urlPath = '/content/users/' + username + '/createFolder?f=json';
+      return this._post(urlPath, { title: folderTitle }, portalOpts).then(function (response) {
+        return response.folder;
+      });
+    },
+
+    /**
+     * Remove a folder and all it's contents
+     */
+    remove: function remove(folderId, username, portalOpts) {
+      var urlPath = '/content/users/' + username + '/' + folderId + '/delete?f=json';
+      return this.request(urlPath, { method: 'POST' }, portalOpts);
+    },
+
+    /**
+     * Shared logic for POST operations
+     */
+    _post: function _post(urlPath, folder, portalOpts) {
+      var options = {
+        method: 'POST',
+        data: folder
+      };
+      return this.request(urlPath, options, portalOpts);
     }
   });
 });
@@ -92567,7 +91972,116 @@ define('ember-arcgis-portal-services/services/groups-service', ['exports', 'embe
         method: 'POST'
       };
       return this.request(urlPath, options, portalOpts);
+    },
+    /**
+     * Is the user a group admin?
+     */
+    isUserGroupAdmin: function isUserGroupAdmin(id, username, portalOpts) {
+      this.getUserMembership(id, username, portalOpts).then(function (result) {
+        return result === 'admin';
+      });
+    },
+    /**
+     * Return the type of group membership of a user
+     */
+    getUserMembership: function getUserMembership(id, username, portalOpts) {
+      var result = 'nonmember';
+      return this.users(id, portalOpts).then(function (response) {
+        // check if username is in the admin hash...
+        if (response.owner === username) {
+          result = 'owner';
+        }
+        if (response.admins.includes(username)) {
+          result = 'admin';
+        }
+        if (response.users.includes(username)) {
+          result = 'user';
+        }
+        return result;
+      })['catch'](function (err) {
+        _ember['default'].debug('GroupService:getUserMembership ' + id + ' for ' + username + ' errored: ' + err);
+        return result;
+      });
     }
+  });
+});
+define('ember-arcgis-portal-services/services/hosted-service', ['exports', 'ember', 'ember-arcgis-portal-services/mixins/service-mixin'], function (exports, _ember, _emberArcgisPortalServicesMixinsServiceMixin) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisPortalServicesMixinsServiceMixin['default'], {
+
+    /**
+     * Feature Service names must be unique within an organization
+     */
+    serviceExists: function serviceExists(serviceName, orgId, portalOpts) {
+      var urlPath = '/' + orgId + '/isServiceNameAvailable?f=json';
+      return this.requestUrl(urlPath, {
+        method: 'GET',
+        data: {
+          name: serviceName,
+          type: 'Feature Service'
+        }
+      }, portalOpts);
+    },
+
+    /**
+     * Create a hosted service
+     */
+    create: function create(createParameters, username, folderId, portalOpts) {
+      var urlPath = '/content/users/' + username + '/createService?f=json';
+      if (folderId) {
+        urlPath = '/content/users/' + username + '/' + folderId + '/createService?f=json';
+      }
+      return this._post(urlPath, {
+        outputType: 'featureService',
+        createParameters: JSON.stringify(createParameters)
+      }, portalOpts);
+    },
+
+    /**
+     * Create a hosted service view
+     */
+    createView: function createView(createParameters, username, folderId, portalOpts) {
+      var urlPath = '/content/users/' + username + '/createService?f=json';
+      if (folderId) {
+        urlPath = '/content/users/' + username + '/' + folderId + '/createService?f=json';
+      }
+      return this._post(urlPath, {
+        outputType: 'featureService',
+        isView: true,
+        createParameters: JSON.stringify(createParameters)
+      }, portalOpts);
+    },
+
+    /**
+     * Add to the service definition
+     */
+    addToDefinition: function addToDefinition(featureServiceUrl, definition, layerId, portalOpts) {
+      var adminUrl = featureServiceUrl.replace(/\/arcgis\/rest\/services\//i, '/arcgis/rest/admin/services/');
+      var url = adminUrl + '/addToDefinition?f=json';
+      if (layerId) {
+        url = adminUrl + '/' + layerId + '/addToDefinition?f=json';
+      }
+      // since the fs has it's own url we use the requestUrl method
+      return this.requestUrl(url, {
+        method: 'POST',
+        data: {
+          'addToDefinition': JSON.stringify(definition)
+        }
+      }, portalOpts);
+    },
+
+    /**
+     * Shared logic for POST operations
+     */
+    _post: function _post(urlPath, service, portalOpts) {
+      var options = {
+        method: 'POST',
+        data: service
+      };
+      return this.request(urlPath, options, portalOpts);
+    }
+
   });
 });
 define('ember-arcgis-portal-services/services/items-service', ['exports', 'ember', 'ember-arcgis-portal-services/mixins/service-mixin'], function (exports, _ember, _emberArcgisPortalServicesMixinsServiceMixin) {
@@ -92579,7 +92093,7 @@ define('ember-arcgis-portal-services/services/items-service', ['exports', 'ember
      * Get the url for item page
      */
     getItemPageUrl: function getItemPageUrl(id, portalOpts) {
-      return this.getPortalUrl() + '/home/item.html?id=' + id;
+      return this.getPortalUrl(portalOpts) + '/home/item.html?id=' + id;
     },
 
     /**
@@ -92620,12 +92134,24 @@ define('ember-arcgis-portal-services/services/items-service', ['exports', 'ember
     },
 
     /**
+     * Create a new item in a particular folder
+     * will create the `/data` if the `.text` value is present
+     */
+    createInFolder: function createInFolder(item, folderId, portalOpts) {
+      var urlPath = '/content/users/' + item.owner + '/addItem?f=json';
+      if (folderId) {
+        urlPath = '/content/users/' + item.owner + '/' + folderId + '/addItem?f=json';
+      }
+      return this._post(urlPath, item, portalOpts);
+    },
+
+    /**
      * Create a new item
      * will create the `/data` if the `.text` value is present
      */
     create: function create(item, portalOpts) {
-      var urlPath = '/content/users/' + item.owner + '/addItem?f=json';
-      return this._post(urlPath, item, portalOpts);
+      // just call createInFolder with null folderId
+      return this.createInFolder(item, null, portalOpts);
     },
 
     /**
@@ -92715,7 +92241,51 @@ define('ember-arcgis-portal-services/services/items-service', ['exports', 'ember
      */
     removeResource: function removeResource(itemId, owner, resource, portalOpts) {
       var urlPath = '/content/users/' + owner + '/items/' + itemId + '/removeResources?f=json';
-      return this.request(urlPath, { method: 'POST', data: { resource: resource } }, portalOpts);
+      return this.request(urlPath, {
+        method: 'POST',
+        data: {
+          resource: resource
+        }
+      }, portalOpts);
+    },
+
+    /**
+     * Add a relationship between two items
+     */
+    addRelationship: function addRelationship(username, originItemId, destinationItemId, relationshipType, portalOpts) {
+      var urlPath = '/content/users/' + username + '/addRelationship?f=json';
+      return this.request(urlPath, {
+        method: 'POST',
+        data: {
+          relationshipType: relationshipType,
+          originItemId: originItemId,
+          destinationItemId: destinationItemId
+        }
+      }, portalOpts);
+    },
+
+    /**
+     * Remove a relationship
+     */
+    removeRelationship: function removeRelationship(username, originItemId, destinationItemId, relationshipType, portalOpts) {
+      var urlPath = '/content/users/' + username + '/deleteRelationship?f=json';
+      return this.request(urlPath, {
+        method: 'POST',
+        data: {
+          originItemId: originItemId,
+          destinationItemId: destinationItemId,
+          relationshipType: relationshipType
+        }
+      }, portalOpts);
+    },
+    /**
+     * Get related items
+     */
+    getRelatedItems: function getRelatedItems(itemId, relationshipType, direction, portalOpts) {
+      var urlPath = '/content/items/' + itemId + '/relatedItems?f=json&relationshipType=' + relationshipType + '&direction=' + direction;
+      return this.request(urlPath, {
+        method: 'GET'
+      }, portalOpts);
     },
 
     /**
@@ -92902,6 +92472,7 @@ define('ember-arcgis-portal-services/services/sharing-service', ['exports', 'emb
   exports['default'] = _ember['default'].Service.extend(_emberArcgisPortalServicesMixinsServiceMixin['default'], {
 
     itemService: _ember['default'].inject.service('items-service'),
+    groupService: _ember['default'].inject.service('groups-service'),
 
     /**
      * Set access
@@ -92938,41 +92509,80 @@ define('ember-arcgis-portal-services/services/sharing-service', ['exports', 'emb
 
       return this._post(urlPath, data, portalOpts);
     },
-
     /**
      * Share an item with a group, optionally with item control
-     * In order to make this more deterministic, we issue a query
-     * to check if the item is already shared to the group. If it is
-     * we short-circuit and do not make the sharing call.
      */
     shareWithGroup: function shareWithGroup(owner, itemId, groupId, confirmItemControl, portalOpts) {
+      if (confirmItemControl === undefined) confirmItemControl = false;
+
+      return this.changeGroupSharing('share', owner, itemId, groupId, confirmItemControl, portalOpts);
+    },
+    /**
+     * Unshare item with a group
+     */
+    unShareWithGroup: function unShareWithGroup(owner, itemId, groupId, portalOpts) {
+      return this.changeGroupSharing('unshare', owner, itemId, groupId, false, portalOpts);
+    },
+    /**
+     * Change sharing of an item with a group, optionally with item control
+     * In order to make this more deterministic, we issue a query
+     * to check if the item is already shared to the group.
+     * We also determine the correct url to use, and
+     * if the user is not the owner, or orgAdmin, check if the user is an groupAdmin
+     * which would allow them to change sharing of items in the group
+     */
+    changeGroupSharing: function changeGroupSharing(action, owner, itemId, groupId, confirmItemControl, portalOpts) {
       var _this = this;
 
       if (confirmItemControl === undefined) confirmItemControl = false;
 
-      var urlPath = '/content/users/' + owner + '/items/' + itemId + '/share';
       var username = this.get('session.currentUser.username');
       var isAdmin = this.get('session').isAdmin();
-      // Reject if the current user is neither the owner nor an orgAdmin
-      if (owner !== username && !isAdmin) {
-        return _ember['default'].RSVP.reject('This item can not be shared by ' + username + ' as they are neither the owner, nor an org_admin.');
-      }
-      // create a query to check if the item is already shared w/ the group...
-
+      var resultProp = action === 'share' ? 'notSharedWith' : 'notUnsharedFrom';
+      // check if the item is already shared with group...
       return this.isItemSharedWithGroup(itemId, groupId, portalOpts).then(function (result) {
-        if (result === false) {
-          // item is not shared with the group
-          var data = {
-            items: itemId,
-            f: 'json',
-            groups: groupId
-          };
-          if (confirmItemControl) {
-            data.confirmItemControl = true;
-          }
-          return _this._post(urlPath, data).then(function (result) {
-            if (result.notSharedWith.length) {
-              var msg = 'Item ' + itemId + ' could not be shared to group ' + groupId + '. This is likely because the owner ' + owner + ' is not a member of this group.';
+        // if we are sharing and result is true OR we are unsharing and result is false... short circuit
+        if (action === 'share' && result === true || action === 'unshare' && result === false) {
+          // item is shared so we can short-circuit here and send back the same structure ago would
+          var obj = { itemId: itemId, shortcut: true };
+          obj[resultProp] = [];
+          return _ember['default'].RSVP.resolve(obj);
+        } else {
+          // is the user a member of the group?
+          return _this.get('groupService').getUserMembership(groupId, username).then(function (membership) {
+            var urlPathPromise = null;
+            if (!membership) {
+              // reject the whole thing...
+              urlPathPromise = _ember['default'].RSVP.reject('This item can not be shared by ' + username + ' as they are not a member of the specified group ' + groupId + '.');
+            } else {
+              // user is a member of the group - now we figure out if/how they can share it...
+              // if user is the owner, or orgAdmin, they can share to the group using the item-owner url...
+              if (owner === username) {
+                urlPathPromise = _ember['default'].RSVP.resolve('/content/users/' + owner + '/items/' + itemId + '/' + action);
+              } else {
+                if (membership === 'admin' || isAdmin) {
+                  urlPathPromise = _ember['default'].RSVP.resolve('/content/items/' + itemId + '/' + action);
+                } else {
+                  // user can not share item to group b/c they don't own the item
+                  urlPathPromise = _ember['default'].RSVP.reject('This item can not be ' + action + ' by ' + username + ' as they are neither the owner, a groupAdmin of ' + groupId + ', nor an org_admin.');
+                }
+              }
+            }
+            return urlPathPromise;
+          }).then(function (urlPath) {
+            // actuall do the sharing...
+            var data = {
+              items: itemId,
+              f: 'json',
+              groups: groupId
+            };
+            if (confirmItemControl) {
+              data.confirmItemControl = true;
+            }
+            return _this._post(urlPath, data);
+          }).then(function (result) {
+            if (result[resultProp].length) {
+              var msg = 'Item ' + itemId + ' could not be ' + action + ' to group ' + groupId + '.';
               _ember['default'].debug(msg);
               return _ember['default'].RSVP.reject(msg);
             } else {
@@ -92980,11 +92590,8 @@ define('ember-arcgis-portal-services/services/sharing-service', ['exports', 'emb
               return result;
             }
           });
-        } else {
-          // item is shared so we can short-circuit here and send back the same structure ago would
-          return _ember['default'].RSVP.resolve({ itemId: itemId, notSharedWith: [] });
-        }
-      });
+        } // else
+      }); // then
     },
 
     /**
@@ -93034,12 +92641,12 @@ define('ember-arcgis-portal-services/services/sharing-service', ['exports', 'emb
      * Deprecated without proxies to new calls
      */
     shareItemsWithGroups: function shareItemsWithGroups() /* owner, items, groups */{
-      _ember['default'].deprecate('use .shareItemWithGroup(owner,itemId, groupId, confirmItemControl).', false, { id: 'shareItemsWithGroupsDeprecation', until: '10.0.0' });
+      _ember['default'].deprecate('use .shareWithGroup(owner,itemId, groupId, confirmItemControl).', false, { id: 'shareItemsWithGroupsDeprecation', until: '10.0.0' });
       return _ember['default'].RSVP.reject('sharing-service::shareItemsWithGroups is Deprecated. Use .shareItemWithGroup(owner,itemId, groupId, confirmItemControl).');
     },
     //
     shareItemsWithControl: function shareItemsWithControl() /* owner, items, groups */{
-      _ember['default'].deprecate('use .shareItemWithGroup(owner,itemId, groupId, confirmItemControl).', false, { id: 'shareItemsWithControlDeprecation', until: '10.0.0' });
+      _ember['default'].deprecate('use .shareWithGroup(owner,itemId, groupId, confirmItemControl).', false, { id: 'shareItemsWithControlDeprecation', until: '10.0.0' });
       return _ember['default'].RSVP.reject('sharing-service::shareItemsWithControl is Deprecated. Use .shareItemWithGroup(owner,itemId, groupId, confirmItemControl).');
     },
     //
@@ -93072,22 +92679,81 @@ define('ember-arcgis-portal-services/services/user-service', ['exports', 'ember'
     /**
      * User Search
      */
-    search: function search(form) {
-      var portalOpts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-      var qs = this.encodeForm(form);
-      var urlPath = undefined;
-      if (this.get('session.isAuthenticated') || portalOpts.portalHostname) {
-        urlPath = '/portals/self/users?' + qs + '&f=json';
+    search: function search(form, portalOpts) {
+      _ember['default'].deprecate('use .searchPortalUsers(...) or .searchCommunityUsers(...)', false, { id: 'searchDeprecation', until: '10.0.0' });
+      if (this.get('session.isAuthenticated') || portalOpts && portalOpts.portalHostname) {
+        return this.searchPortalUsers.apply(this, arguments);
       } else {
-        urlPath = '/community/users?' + qs + '&f=json';
+        return this.searchCommunityUsers.apply(this, arguments);
       }
+    },
+
+    searchPortalUsers: function searchPortalUsers(form, portalOpts) {
+      // all users in the org
+      // q is ignored!
+      // but you can do things like firstname=
+      var qs = this.encodeForm(form);
+      var urlPath = '/portals/self/users?' + qs + '&f=json';
+      return this.request(urlPath, null, portalOpts);
+    },
+
+    searchCommunityUsers: function searchCommunityUsers(form, portalOpts) {
+      // all users in the portal
+      // q works and you can do q=orgid:...
+      // but you get less info than with allUsers
+      var qs = this.encodeForm(form);
+      var urlPath = '/community/users?' + qs + '&f=json';
       return this.request(urlPath, null, portalOpts);
     },
 
     getByName: function getByName(username, portalOpts) {
       var urlPath = '/community/users/' + username + '?f=json';
       return this.request(urlPath, null, portalOpts);
+    },
+
+    /**
+     * Update an existing user
+     * will update the `/data` if the `.text` value is present
+     */
+    update: function update(user, portalOpts) {
+      var urlPath = '/community/users/' + user.username + '/update?f=json';
+      return this._post(urlPath, user, portalOpts);
+    },
+
+    /**
+     * Extra logic to transform the item prior to POSTing it
+     */
+    _serializeUser: function _serializeUser(user) {
+      var clone = _ember['default'].copy(user, true);
+
+      // groups are ignored
+      delete clone.groups;
+
+      // Array items need to become comma delim strings
+      if (user.tags && user.tags.join) {
+        clone.tags = user.tags.join(', ');
+        if (clone.tags === '') {
+          // NOTE: you can't currently reset the tags to an empty array
+          // despite what the docs say here:
+          // http://resources.arcgis.com/en/help/arcgis-rest-api/#/Update_User/02r3000000m0000000/
+          clone.tags = 'user';
+        }
+      }
+
+      return clone;
+    },
+
+    /**
+     * Shared logic for POST operations
+     */
+    _post: function _post(urlPath, item, portalOpts) {
+      var serializedItem = this._serializeUser(item);
+
+      var options = {
+        method: 'POST',
+        data: serializedItem
+      };
+      return this.request(urlPath, options, portalOpts);
     }
 
   });

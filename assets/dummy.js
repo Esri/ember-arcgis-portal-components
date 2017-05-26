@@ -61,7 +61,7 @@ define('dummy/application/route', ['exports', 'ember'], function (exports, _embe
   });
 });
 define("dummy/application/template", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "sRNA1yHV", "block": "{\"statements\":[[\"open-element\",\"nav\",[]],[\"static-attr\",\"class\",\"navbar navbar-default\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"container\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"navbar-header\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"navbar-toggle collapsed\"],[\"static-attr\",\"data-toggle\",\"collapse\"],[\"static-attr\",\"data-target\",\"#navbar\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"static-attr\",\"aria-controls\",\"navbar\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"text\",\"Toggle navigation\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"block\",[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],11],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"id\",\"navbar\"],[\"static-attr\",\"class\",\"navbar-collapse collapse\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"nav navbar-nav\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"block\",[\"active-link\"],null,null,10],[\"text\",\"\\n        \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"dropdown\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"static-attr\",\"class\",\"dropdown-toggle\"],[\"static-attr\",\"data-toggle\",\"dropdown\"],[\"static-attr\",\"role\",\"button\"],[\"static-attr\",\"aria-haspopup\",\"true\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"flush-element\"],[\"text\",\"Item Picker \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"caret\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"dropdown-menu\"],[\"flush-element\"],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,8],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,6],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,4],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"nav navbar-nav navbar-right\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"session\",\"isAuthenticated\"]]],null,2,1],[\"text\",\"        \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"https://github.com/arcgis/ember-arcgis-portal-components\"],[\"flush-element\"],[\"text\",\"Github\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"comment\",\"/.nav-collapse \"],[\"text\",\"\\n  \"],[\"close-element\"],[\"comment\",\"/.container-fluid \"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"container\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"signin\"]],[\"flush-element\"],[\"text\",\"Sign In\"],[\"close-element\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"block\",[\"active-link\"],null,null,0],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"dropdown\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"static-attr\",\"class\",\"dropdown-toggle\"],[\"static-attr\",\"data-toggle\",\"dropdown\"],[\"static-attr\",\"role\",\"button\"],[\"static-attr\",\"aria-haspopup\",\"true\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"session\",\"currentUser\",\"fullName\"]],false],[\"text\",\" \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"caret\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"dropdown-menu\"],[\"flush-element\"],[\"text\",\"\\n            \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"signout\"]],[\"flush-element\"],[\"text\",\"Sign Out\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"Facets\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.facets\"],null,3]],\"locals\":[]},{\"statements\":[[\"text\",\"Multi-Select\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.multiselect\"],null,5]],\"locals\":[]},{\"statements\":[[\"text\",\"Default Usage\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.index\"],null,7]],\"locals\":[]},{\"statements\":[[\"text\",\"Home\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"index\"],null,9]],\"locals\":[]},{\"statements\":[[\"text\",\"ember-arcgis-portal-components\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/application/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "q3eyZFpg", "block": "{\"statements\":[[\"open-element\",\"nav\",[]],[\"static-attr\",\"class\",\"navbar navbar-default\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"container\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"navbar-header\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"navbar-toggle collapsed\"],[\"static-attr\",\"data-toggle\",\"collapse\"],[\"static-attr\",\"data-target\",\"#navbar\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"static-attr\",\"aria-controls\",\"navbar\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"text\",\"Toggle navigation\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"icon-bar\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"block\",[\"link-to\"],[\"index\"],[[\"class\"],[\"navbar-brand\"]],15],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"id\",\"navbar\"],[\"static-attr\",\"class\",\"navbar-collapse collapse\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"nav navbar-nav\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"block\",[\"active-link\"],null,null,14],[\"text\",\"\\n        \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"dropdown\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"static-attr\",\"class\",\"dropdown-toggle\"],[\"static-attr\",\"data-toggle\",\"dropdown\"],[\"static-attr\",\"role\",\"button\"],[\"static-attr\",\"aria-haspopup\",\"true\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"flush-element\"],[\"text\",\"Item Picker \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"caret\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"dropdown-menu\"],[\"flush-element\"],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,12],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,10],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,8],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,6],[\"text\",\"\\n              \"],[\"block\",[\"active-link\"],null,null,4],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"nav navbar-nav navbar-right\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"session\",\"isAuthenticated\"]]],null,2,1],[\"text\",\"        \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"https://github.com/arcgis/ember-arcgis-portal-components\"],[\"flush-element\"],[\"text\",\"Github\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"comment\",\"/.nav-collapse \"],[\"text\",\"\\n  \"],[\"close-element\"],[\"comment\",\"/.container-fluid \"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"container\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"signin\"]],[\"flush-element\"],[\"text\",\"Sign In\"],[\"close-element\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"block\",[\"active-link\"],null,null,0],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"dropdown\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"static-attr\",\"class\",\"dropdown-toggle\"],[\"static-attr\",\"data-toggle\",\"dropdown\"],[\"static-attr\",\"role\",\"button\"],[\"static-attr\",\"aria-haspopup\",\"true\"],[\"static-attr\",\"aria-expanded\",\"false\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"session\",\"currentUser\",\"fullName\"]],false],[\"text\",\" \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"caret\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"dropdown-menu\"],[\"flush-element\"],[\"text\",\"\\n            \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"#\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"signout\"]],[\"flush-element\"],[\"text\",\"Sign Out\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"Cross Portal\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.portalopts\"],null,3]],\"locals\":[]},{\"statements\":[[\"text\",\"Validation\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.validation\"],null,5]],\"locals\":[]},{\"statements\":[[\"text\",\"Facets\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.facets\"],null,7]],\"locals\":[]},{\"statements\":[[\"text\",\"Multi-Select\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.multiselect\"],null,9]],\"locals\":[]},{\"statements\":[[\"text\",\"Default Usage\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"itempicker.index\"],null,11]],\"locals\":[]},{\"statements\":[[\"text\",\"Home\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"link-to\"],[\"index\"],null,13]],\"locals\":[]},{\"statements\":[[\"text\",\"ember-arcgis-portal-components\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/application/template.hbs" } });
 });
 define("dummy/cldrs/en", ["exports"], function (exports) {
   /*jslint eqeq: true*/
@@ -232,62 +232,6 @@ define('dummy/ember-arcgis-portal-components/tests/modules/ember-arcgis-portal-c
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'modules/ember-arcgis-portal-components/utils/query-helpers.js should pass ESLint.\n');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/mixins/service-mixin.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/mixins/service-mixin.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/mixins/service-mixin.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/geocode-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/geocode-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/geocode-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/groups-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/groups-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/groups-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/items-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/items-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/items-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/oauth-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/oauth-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/oauth-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/portal-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/portal-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/portal-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/sharing-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/sharing-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/sharing-service.js should pass ESLint.');
-  });
-});
-define('dummy/ember-arcgis-portal-services/tests/modules/ember-arcgis-portal-services/services/user-service.lint-test', ['exports'], function (exports) {
-  QUnit.module('ESLint - modules/ember-arcgis-portal-services/services/user-service.js');
-  QUnit.test('should pass ESLint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'modules/ember-arcgis-portal-services/services/user-service.js should pass ESLint.');
   });
 });
 define('dummy/ext/torii-provider-arcgis', ['exports', 'torii/services/torii-session', 'torii-provider-arcgis/mixins/gatekeeper'], function (exports, _toriiServicesToriiSession, _toriiProviderArcgisMixinsGatekeeper) {
@@ -810,11 +754,13 @@ define('dummy/itempicker/facets/route', ['exports', 'ember'], function (exports,
   exports['default'] = _ember['default'].Route.extend({});
 });
 define("dummy/itempicker/facets/template", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "8U1zqIUq", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Faceting by type\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"catalog\",\"rowCount\",\"searchItemsOnInit\",\"selectAction\"],[[\"get\",[\"catalog\"]],5,true,[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/facets/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "dc87nTSh", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Faceting by type\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"catalog\",\"searchItemsOnInit\",\"selectAction\"],[[\"get\",[\"catalog\"]],true,[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/facets/template.hbs" } });
 });
 define('dummy/itempicker/index/controller', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Controller.extend({
     selectedItem: null,
+
+    itemService: _ember['default'].inject.service('items-service'),
 
     actions: {
       onSelectItem: function onSelectItem(selected) {
@@ -828,7 +774,7 @@ define('dummy/itempicker/index/route', ['exports', 'ember'], function (exports, 
   exports['default'] = _ember['default'].Route.extend({});
 });
 define("dummy/itempicker/index/template", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template({ "id": "fxsJjCmA", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Picking Items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"To simply add the component into your template and wire up the \"],[\"open-element\",\"code\",[]],[\"flush-element\"],[\"text\",\"selectAction\"],[\"close-element\"],[\"text\",\" closure action.\\n      By default, the component will search public items in ArcGIS Online, or whatever portal your app is configured to use. \"],[\"close-element\"],[\"text\",\"\\n\\n      \"],[\"open-element\",\"pre\",[]],[\"flush-element\"],[\"text\",\"\\n\"],[\"append\",\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")}}\",false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Selected Item \"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectedItem\"]]],null,1,0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Modal Example \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary\"],[\"static-attr\",\"data-toggle\",\"modal\"],[\"static-attr\",\"data-target\",\"#myModal\"],[\"flush-element\"],[\"text\",\"Select an Item\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"comment\",\" Modal \"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal fade\"],[\"static-attr\",\"id\",\"myModal\"],[\"static-attr\",\"tabindex\",\"-1\"],[\"static-attr\",\"role\",\"dialog\"],[\"static-attr\",\"aria-labelledby\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-dialog modal-lg\"],[\"static-attr\",\"role\",\"document\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-content\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-header\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"close\"],[\"static-attr\",\"data-dismiss\",\"modal\"],[\"static-attr\",\"aria-label\",\"Close\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"aria-hidden\",\"true\"],[\"flush-element\"],[\"text\",\"×\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h4\",[]],[\"static-attr\",\"class\",\"modal-title\"],[\"static-attr\",\"id\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert alert-warning\"],[\"static-attr\",\"role\",\"alert\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"No Item Selected\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectedItem\",\"title\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"selectedItem\",\"description\"]]],null],false],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/index/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "jxKT5Nk1", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Picking Items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"To simply add the component into your template and wire up the \"],[\"open-element\",\"code\",[]],[\"flush-element\"],[\"text\",\"selectAction\"],[\"close-element\"],[\"text\",\" closure action.\\n      By default, the component will search public items in ArcGIS Online, or whatever portal your app is configured to use. \"],[\"close-element\"],[\"text\",\"\\n\\n      \"],[\"open-element\",\"pre\",[]],[\"flush-element\"],[\"text\",\"\\n\"],[\"append\",\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")}}\",false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"If you need to search against another portal, you can pass \"],[\"open-element\",\"code\",[]],[\"flush-element\"],[\"text\",\"portalOpts\"],[\"close-element\"],[\"text\",\" to the component.\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Selected Item \"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectedItem\"]]],null,1,0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Modal Example \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary\"],[\"static-attr\",\"data-toggle\",\"modal\"],[\"static-attr\",\"data-target\",\"#myModal\"],[\"flush-element\"],[\"text\",\"Select an Item\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"comment\",\" Modal \"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal fade\"],[\"static-attr\",\"id\",\"myModal\"],[\"static-attr\",\"tabindex\",\"-1\"],[\"static-attr\",\"role\",\"dialog\"],[\"static-attr\",\"aria-labelledby\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-dialog modal-lg\"],[\"static-attr\",\"role\",\"document\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-content\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-header\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"close\"],[\"static-attr\",\"data-dismiss\",\"modal\"],[\"static-attr\",\"aria-label\",\"Close\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"aria-hidden\",\"true\"],[\"flush-element\"],[\"text\",\"×\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h4\",[]],[\"static-attr\",\"class\",\"modal-title\"],[\"static-attr\",\"id\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert alert-warning\"],[\"static-attr\",\"role\",\"alert\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"No Item Selected\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectedItem\",\"title\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"selectedItem\",\"description\"]]],null],false],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/index/template.hbs" } });
 });
 define('dummy/itempicker/multiselect/controller', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Controller.extend({
@@ -848,11 +794,263 @@ define('dummy/itempicker/multiselect/route', ['exports', 'ember'], function (exp
 define("dummy/itempicker/multiselect/template", ["exports"], function (exports) {
   exports["default"] = Ember.HTMLBars.template({ "id": "NM4ieOD/", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Picking multiple items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectMultiple\",\"searchItemsOnInit\",\"selectAction\"],[true,true,[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/multiselect/template.hbs" } });
 });
+define('dummy/itempicker/portalopts/controller', ['exports', 'ember', 'ember-network/fetch'], function (exports, _ember, _emberNetworkFetch) {
+  exports['default'] = _ember['default'].Controller.extend({
+
+    getToken: function getToken(username, password, portalBaseUrl) {
+      var url = 'https://' + portalBaseUrl + '/sharing/rest/generateToken?f=json';
+      var referer = window.location.origin;
+      var options = {
+        method: 'POST',
+        data: {
+          username: username,
+          password: password,
+          expiration: 21600,
+          referer: referer
+        }
+      };
+      return this.requestUrl(url, options);
+    },
+
+    encodeForm: function encodeForm() {
+      var form = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      // Ember.merge(form, this.get('defaultParams'));
+      return Object.keys(form).map(function (key) {
+        return [key, form[key]].map(encodeURIComponent).join('=');
+      }).join('&');
+    },
+    /**
+     * Make a request using a fully-formed url. This was added to allow
+     * the hosted-fs-service to make calls to the hosted service using
+     * its fully qualifed url.
+     */
+    requestUrl: function requestUrl(url, options, portalOpts) {
+      var opts = options || {};
+      if (opts.method && opts.method === 'POST') {
+        // if we are POSTing, we need to manually set the content-type because AGO
+        // actually does care about this header
+        if (!opts.headers) {
+          opts.headers = {
+            'Accept': 'application/json, application/xml, text/plain, text/html, *.*',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          };
+        }
+        // if a body was passed, we need to set the content type to multipart
+        if (opts.body) {
+          delete opts.headers['Content-Type']; // = 'multipart/form-data';
+        }
+
+        // if we have a data, create a formData from it
+        if (opts.data) {
+          var form = this.encodeForm(opts.data);
+          opts.body = form;
+        }
+      }
+
+      // append in the token
+      // if portalOpts was provided use it even if it is undefined
+      // this is so we can make unauthenticated requests by passing portalOpts without a token
+      var token = portalOpts ? portalOpts.token : this.get('session.token');
+      if (token) {
+        // add a token
+        if (url.indexOf('?') > -1) {
+          url = url + '&token=' + token;
+        } else {
+          url = url + '?token=' + token;
+        }
+      }
+      // Ember.debug('Portal Services making request to: ' + url);
+      return (0, _emberNetworkFetch['default'])(url, opts).then(this.checkStatusAndParseJson);
+    },
+    /**
+     * Fetch does not reject on non-200 responses, so we need to check this manually
+     */
+    checkStatusAndParseJson: function checkStatusAndParseJson(response) {
+      var error = undefined;
+      if (response.status >= 200 && response.status < 300) {
+        // check if this is one of those groovy 200-but-a-400 things
+        return response.json().then(function (json) {
+          if (json.error) {
+            // cook an error
+            error = new Error(json.error.message);
+            error.code = json.error.code || 404;
+            error.response = response;
+            _ember['default'].debug('Error in response:  ' + json.error.message);
+            throw error;
+          } else {
+            return json;
+          }
+        });
+      } else {
+        // Response has non 200 http code
+        error = new Error('Got ' + response.status + ' ' + response.statusText);
+        throw error;
+      }
+    },
+    expires: _ember['default'].computed('model.expiresAt', function () {
+      if (this.get('model.expiresAt')) {
+        return new Date(this.get('model.expiresAt')).toISOString();
+      } else {
+        return 'Not Set';
+      }
+    }),
+
+    portalOpts: _ember['default'].computed('model.token', function () {
+      if (this.get('model.token')) {
+        return {
+          portalHostname: this.get('model.portalBaseUrl'),
+          token: this.get('model.token')
+        };
+      } else {
+        return {
+          portalHostname: this.get('session.portalHostname'),
+          token: this.get('session.token')
+        };
+      }
+    }),
+
+    actions: {
+      getToken: function getToken() {
+        var _this = this;
+
+        var un = this.get('username');
+        var pw = this.get('password');
+        var portalBaseUrl = this.get('model.portalBaseUrl');
+        return this.getToken(un, pw, portalBaseUrl).then(function (result) {
+          _this.set('model.token', result.token);
+          _this.set('model.expiresAt', result.expires);
+        });
+      },
+      onSelectItem: function onSelectItem(item) {
+        alert('wat');
+      }
+    }
+  });
+});
+define('dummy/itempicker/portalopts/route', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Route.extend({
+    model: function model() {
+      return {
+        portalBaseUrl: '',
+        username: '',
+        password: ''
+      };
+    }
+  });
+});
+define("dummy/itempicker/portalopts/template", ["exports"], function (exports) {
+  exports["default"] = Ember.HTMLBars.template({ "id": "Hvy+t3pH", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Searching other Portals\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"Sometimes it is useful to search across portals - to import items etc.\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"Portal Information\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-4 form\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n            \"],[\"open-element\",\"label\",[]],[\"static-attr\",\"for\",\"exampleInputEmail1\"],[\"flush-element\"],[\"text\",\"Username\"],[\"close-element\"],[\"text\",\"\\n            \"],[\"append\",[\"helper\",[\"input\"],null,[[\"value\",\"class\",\"placeholder\"],[[\"get\",[\"username\"]],\"form-control\",\"username\"]]],false],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n            \"],[\"open-element\",\"label\",[]],[\"static-attr\",\"for\",\"exampleInputPassword1\"],[\"flush-element\"],[\"text\",\"Password\"],[\"close-element\"],[\"text\",\"\\n            \"],[\"append\",[\"helper\",[\"input\"],null,[[\"value\",\"type\",\"class\",\"placeholder\"],[[\"get\",[\"password\"]],\"password\",\"form-control\",\"password\"]]],false],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n            \"],[\"open-element\",\"label\",[]],[\"static-attr\",\"for\",\"exampleInputPassword1\"],[\"flush-element\"],[\"text\",\"Portal Url\"],[\"close-element\"],[\"text\",\"\\n            \"],[\"append\",[\"helper\",[\"input\"],null,[[\"value\",\"class\",\"placeholder\"],[[\"get\",[\"model\",\"portalBaseUrl\"]],\"form-control\",\"www.arcgis.com\"]]],false],[\"text\",\"\\n          \"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"class\",\"btn btn-default\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"getToken\"]],[\"flush-element\"],[\"text\",\"Get Token\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-8\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"h5\",[]],[\"flush-element\"],[\"text\",\"Current Token\"],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"style\",\"word-wrap: break-word;\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"token\"]],false],[\"close-element\"],[\"text\",\"\\n          \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"small\"],[\"flush-element\"],[\"text\",\"Expires at: \"],[\"append\",[\"unknown\",[\"expires\"]],false],[\"close-element\"],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Searching against: \"],[\"append\",[\"unknown\",[\"portalOpts\",\"portalHostname\"]],false],[\"close-element\"],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"portalOpts\",\"selectAction\"],[[\"get\",[\"portalOpts\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null]]]],false],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/portalopts/template.hbs" } });
+});
 define('dummy/itempicker/route', ['exports', 'ember'], function (exports, _ember) {
   exports['default'] = _ember['default'].Route.extend({});
 });
 define("dummy/itempicker/template", ["exports"], function (exports) {
   exports["default"] = Ember.HTMLBars.template({ "id": "CareZKVd", "block": "{\"statements\":[[\"append\",[\"unknown\",[\"outlet\"]],false],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/template.hbs" } });
+});
+define('dummy/itempicker/validation/controller', ['exports', 'ember', 'ember-network/fetch'], function (exports, _ember, _emberNetworkFetch) {
+  exports['default'] = _ember['default'].Controller.extend({
+    selectedItem: null,
+
+    itemService: _ember['default'].inject.service('items-service'),
+
+    _isPublic: function _isPublic(copyItem) {
+      if (copyItem.access && copyItem.access !== 'public') {
+        return {
+          item: copyItem,
+          status: {
+            status: 'warning',
+            message: 'Warning! This dataset is privately shared. Your applications and data will not be visible to the public'
+          }
+        };
+      } else {
+        return {
+          item: copyItem,
+          status: 'ok'
+        };
+      }
+    },
+
+    _validator: function _validator(item) {
+      var _this = this;
+
+      var copyItem = _ember['default'].copy(item, true);
+      var isHttp = /^(http:)\/\//;
+      var url = copyItem.url.replace(/\s+/g, '') + '?f=json';
+
+      if (isHttp.test(url)) {
+        var state = this._isPublic(copyItem);
+        state.item.url = url;
+        return this._useHttpsIfPossible(state);
+      }
+      return this._request(url).then(function (resp) {
+        return _this._isPublic(copyItem);
+      }, function (err) {
+        if (err) {
+          if (err.code === 499) {
+            return {
+              item: copyItem,
+              status: {
+                status: 'error',
+                message: 'Error! The underlying service is secured. At this time we do not support secured datasets.'
+              }
+            };
+          } else {
+            return {
+              item: copyItem,
+              status: {
+                status: 'error',
+                message: 'Error! Requests to this dataset are timing out. Please check the service'
+              }
+            };
+          }
+        }
+      });
+    },
+
+    _useHttpsIfPossible: function _useHttpsIfPossible(state) {
+      var tempState = _ember['default'].copy(state, true);
+      var httpsUrl = 'https' + tempState.item.url.substring(4);
+      return this._request(httpsUrl).then(function (response) {
+        tempState.item.url = httpsUrl;
+        return tempState;
+      }, function (err) {
+        if (err.code === 499) {
+          tempState.status = {
+            status: 'error',
+            message: 'Error! The underlying service is secured. At this time we do not support secured datasets.'
+          };
+        } else {
+          tempState.status = {
+            status: 'error',
+            message: 'Error! This dataset uses HTTP. We only support using HTTPS'
+          };
+        }
+        return tempState;
+      });
+    },
+
+    _request: function _request(url) {
+      return (0, _emberNetworkFetch['default'])(url).then(this.get('itemService').checkStatusAndParseJson);
+    },
+
+    actions: {
+      onSelectItem: function onSelectItem(selected) {
+        _ember['default'].$('#myModal').modal('hide');
+        this.set('selectedItem', selected);
+      },
+
+      selectionValidator: function selectionValidator(item) {
+        return this._validator(item);
+      }
+    }
+  });
+});
+define('dummy/itempicker/validation/route', ['exports', 'ember'], function (exports, _ember) {
+  exports['default'] = _ember['default'].Route.extend({});
+});
+define("dummy/itempicker/validation/template", ["exports"], function (exports) {
+  exports["default"] = Ember.HTMLBars.template({ "id": "tm13kHPv", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"row\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"text\",\"Validate Items\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Validator\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"p\",[]],[\"flush-element\"],[\"text\",\"To validate items simply add an action \"],[\"open-element\",\"code\",[]],[\"flush-element\"],[\"text\",\"onSelectionValidator\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\\n      \"],[\"open-element\",\"pre\",[]],[\"flush-element\"],[\"text\",\"\\n\"],[\"append\",\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")\\n      onSelectionValidator=(action \\\"selectionValidator\\\") }}\",false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-6\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Selected Item \"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectedItem\"]]],null,1,0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Modal Example \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary\"],[\"static-attr\",\"data-toggle\",\"modal\"],[\"static-attr\",\"data-target\",\"#myModal\"],[\"flush-element\"],[\"text\",\"Select an Item\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"col-sm-12\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"text\",\"Inline Panel Example\"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"text\",\"Search ArcGIS.com for Items\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\",\"onSelectionValidator\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null],[\"helper\",[\"action\"],[[\"get\",[null]],\"selectionValidator\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"comment\",\" Modal \"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal fade\"],[\"static-attr\",\"id\",\"myModal\"],[\"static-attr\",\"tabindex\",\"-1\"],[\"static-attr\",\"role\",\"dialog\"],[\"static-attr\",\"aria-labelledby\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-dialog modal-lg\"],[\"static-attr\",\"role\",\"document\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-content\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-header\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"close\"],[\"static-attr\",\"data-dismiss\",\"modal\"],[\"static-attr\",\"aria-label\",\"Close\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"aria-hidden\",\"true\"],[\"flush-element\"],[\"text\",\"×\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"h4\",[]],[\"static-attr\",\"class\",\"modal-title\"],[\"static-attr\",\"id\",\"myModalLabel\"],[\"flush-element\"],[\"text\",\"Default Usage\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"modal-body\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"item-picker\"],null,[[\"selectAction\",\"onSelectionValidator\"],[[\"helper\",[\"action\"],[[\"get\",[null]],\"onSelectItem\"],null],[\"helper\",[\"action\"],[[\"get\",[null]],\"selectionValidator\"],null]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"alert alert-warning\"],[\"static-attr\",\"role\",\"alert\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"p\",[]],[\"static-attr\",\"class\",\"text-center\"],[\"flush-element\"],[\"text\",\"No Item Selected\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel panel-default\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-heading\"],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"static-attr\",\"class\",\"panel-title\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectedItem\",\"title\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"panel-body\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"selectedItem\",\"description\"]]],null],false],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "dummy/itempicker/validation/template.hbs" } });
 });
 define('dummy/mixins/active-link', ['exports', 'ember-cli-active-link-wrapper/mixins/active-link'], function (exports, _emberCliActiveLinkWrapperMixinsActiveLink) {
   exports['default'] = _emberCliActiveLinkWrapperMixinsActiveLink['default'];
@@ -871,16 +1069,18 @@ define('dummy/router', ['exports', 'ember', 'dummy/config/environment'], functio
     this.route('itempicker', function () {
       this.route('multiselect');
       this.route('facets');
+      this.route('validation');
+      this.route('portalopts');
     });
   });
 
   exports['default'] = Router;
 });
-define('dummy/services/ajax', ['exports', 'ember-ajax/services/ajax'], function (exports, _emberAjaxServicesAjax) {
+define('dummy/services/folders-service', ['exports', 'ember-arcgis-portal-services/services/folders-service'], function (exports, _emberArcgisPortalServicesServicesFoldersService) {
   Object.defineProperty(exports, 'default', {
     enumerable: true,
     get: function get() {
-      return _emberAjaxServicesAjax['default'];
+      return _emberArcgisPortalServicesServicesFoldersService['default'];
     }
   });
 });
@@ -897,6 +1097,14 @@ define('dummy/services/groups-service', ['exports', 'ember-arcgis-portal-service
     enumerable: true,
     get: function get() {
       return _emberArcgisPortalServicesServicesGroupsService['default'];
+    }
+  });
+});
+define('dummy/services/hosted-service', ['exports', 'ember-arcgis-portal-services/services/hosted-service'], function (exports, _emberArcgisPortalServicesServicesHostedService) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberArcgisPortalServicesServicesHostedService['default'];
     }
   });
 });
@@ -1353,7 +1561,7 @@ define('dummy/torii-providers/arcgis-oauth-bearer', ['exports', 'torii/providers
  * torii provider that works with ArcGIS.com oauth
  */
 define("dummy/translations/en-us", ["exports"], function (exports) {
-  exports["default"] = { "ember-arcgis-portal-components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "back": "Back", "preview": "Preview", "select": "Select", "selectMultiple": "Select" }, "datasets": "Datasets", "itemDetails": "Item Details", "items": "Items", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "noDatasets": { "withQuery": "No datasets matched your search.", "withoutQuery": "No datasets found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Datasets Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" } } };
+  exports["default"] = { "ember-arcgis-portal-components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "back": "Back", "preview": "Preview", "select": "Select", "selectAnyway": "Select Anyway", "selectMultiple": "Select", "validating": "Validating data..." }, "datasets": "Datasets", "itemDetails": "Item Details", "items": "Items", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "noItems": { "withQuery": "No items matched your search.", "withoutQuery": "No items found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Datasets Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" } } };
 });
 define('dummy/utils/intl/missing-message', ['exports', 'ember', 'ember-intl/utils/links'], function (exports, _ember, _emberIntlUtilsLinks) {
   exports['default'] = missingMessage;
@@ -1413,7 +1621,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"0.0.0+5038cac3"});
+  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"0.3.0"});
 }
 
 /* jshint ignore:end */
