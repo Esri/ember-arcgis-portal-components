@@ -1,6 +1,6 @@
 {
   "name": "ember-arcgis-portal-components",
-  "version": "0.0.0",
+  "version": "0.2.1",
   "description": "The default blueprint for ember-cli addons.",
   "keywords": [
     "ember-addon"
@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "broccoli-asset-rev": "^2.4.5",
-    "ember-arcgis-portal-services": "0.10.3",
+    "ember-arcgis-portal-services": "0.13.5",
     "ember-cli": "2.11.1",
     "ember-cli-active-link-wrapper": "0.3.2",
     "ember-cli-app-version": "^2.0.0",

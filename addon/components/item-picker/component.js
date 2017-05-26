@@ -16,12 +16,37 @@ export default Ember.Component.extend({
 
   classNames: [ 'item-picker', 'clearfix', 'row' ],
 
+  isValidating: false,
+
+  shouldValidate: false,
+
+  selectAnyway: false,
+
   init () {
     this._super(...arguments);
     if (this.get('searchItemsOnInit')) {
       this._doSearch(this.get('q'));
     }
   },
+
+  selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {
+    const intl = this.get('intl');
+    if (this.get('isValidating')) {
+      return intl.t(`${this.get('_i18nScope')}buttons.validating`);
+    } else if (this.get('selectAnyway')) {
+      return intl.t(`${this.get('_i18nScope')}buttons.selectAnyway`);
+    }
+    return intl.t(`${this.get('_i18nScope')}buttons.select`);
+  }),
+
+  selectButtonClass: Ember.computed('isValidating', 'selectAnyway', 'errorMessage', function () {
+    const errorMessage = this.get('errorMessage');
+    if (this.get('isValidating')) {
+      return 'disabled';
+    } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+      return 'disabled';
+    }
+  }),
 
   inputElementId: Ember.computed(function () {
     return `${this.get('elementId')}-search-items`;
@@ -73,7 +98,7 @@ export default Ember.Component.extend({
 
   noItemsFoundMsg: Ember.computed('items.[]', 'q', function () {
     let result = '';
-    if (this.get('hasSearched') && this.get('items.length') === 0) {
+    if (this.get('hasSearched') && this.get('items.results.length') === 0) {
       let i18nKey = 'noItems.withoutQuery';
       if (!Ember.isEmpty(this.get('q'))) {
         i18nKey = 'noItems.withQuery';
@@ -82,6 +107,15 @@ export default Ember.Component.extend({
       result = this.get('intl').t(i18nKey);
     }
     return result;
+  }),
+
+  errorMessage: Ember.computed('isValidating', 'errorHash', function () {
+    const errorHash = this.get('errorHash');
+    if (!this.get('isValidating') && errorHash && errorHash.status) {
+      if (errorHash.status === 'warning' || errorHash.status === 'error') {
+        return errorHash;
+      }
+    }
   }),
 
   showNoItemsMsg: Ember.computed.notEmpty('noItemsFoundMsg'),
@@ -174,12 +208,43 @@ export default Ember.Component.extend({
         if (this.get('currentItem.id') === item.id) {
           this.set('currentItem', null);
         } else {
-          this.set('currentItem', item);
+          this.setProperties({
+            errorHash: null,
+            selectAnyway: false,
+            currentItem: item
+          });
         }
       }
     },
+
+    onSelect (item) {
+      const validator = this.get('onSelectionValidator');
+
+      this.set('isValidating', true);
+      if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+        validator(item)
+          .then((resp) => {
+            this.set('isValidating', false);
+            this.set('errorHash', resp.status);
+            if (resp.status.status === 'error') {
+              return;
+            } else if (resp.status.status === 'warning') {
+              this.set('selectAnyway', true);
+              return;
+            } else {
+              return this.get('selectAction')(resp.item);
+            }
+          });
+      } else {
+        this.set('isValidating', false);
+        return this.get('selectAction')(item);
+      }
+    },
+
     cancelAction () {
       this.setProperties({
+        errorHash: null,
+        selectAnyway: false,
         currentItem: null,
         itemsToAdd: []
       });

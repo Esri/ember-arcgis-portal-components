@@ -43,13 +43,15 @@
         <section class="item-picker-current-item">
           {{item-picker/item-preview
             _i18nScope=_i18nScope
-            model=currentItem}}
+            model=currentItem
+            errorMessage=errorMessage
+          }}
 
           <section class="item-picker-controls">
 
               <div class="full-width-btn">
                 <div>
-                <button type="button" class="btn btn-primary btn-block" {{action selectAction currentItem}}>{{t (concat _i18nScope "buttons.select")}}</button>
+                <button type="button" class="btn btn-primary btn-block {{selectButtonClass}}" {{action "onSelect" currentItem}}>{{selectButtonText}}</button>
                 </div>
               </div>
 

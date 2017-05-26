@@ -10,6 +10,7 @@ Router.map(function () {
   this.route('itempicker', function () {
     this.route('multiselect');
     this.route('facets');
+    this.route('validation');
   });
 });
 

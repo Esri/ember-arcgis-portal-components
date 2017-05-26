@@ -14,13 +14,15 @@
         "none": "No license specified",
         "custom": "Custom License"
       },
-      "noDatasets": {
-        "withQuery": "No datasets matched your search.",
-        "withoutQuery": "No datasets found."
+      "noItems": {
+        "withQuery": "No items matched your search.",
+        "withoutQuery": "No items found."
       },
       "buttons": {
         "back": "Back",
         "select": "Select",
+        "validating": "Validating data...",
+        "selectAnyway": "Select Anyway",
         "selectMultiple": "Select",
         "preview": "Preview"
       },
