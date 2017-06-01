@@ -165,7 +165,7 @@ export default Ember.Component.extend({
     };
     // allow portalOpts to be passed in so we can access
     // other portals besides the one our session is auth'd to
-    let opts = this.get('portalOpts') || null;
+    let opts = this.get('portalOpts') || {};
     this.get('itemService').search(params, opts)
       .then((resp) => {
         this.set('items', resp);
