@@ -2,9 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.3.1]
+## [0.3.3]
+### Fixed
+- if `portalOpts === {}` is passed from `item-picker` into search, it would issue an unauthenticated search. Changed so it sends `undefined` and thus the search is executed using the current user's token
+
+## [0.3.2]
 ### Changed
 - if no `portalOpts` passed to `item-picker`, call item-service::search with portalOpts = `{}`
+
+## [0.3.1] -- yanked
 
 ## [0.3.0]
 ### Changed
