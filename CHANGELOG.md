@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## unreleased
 ### Changed
-- `item-picker` now accepts a `baseUrl` property which can define where the preview button links out to
+- `item-picker` now accepts a `portalHostName` property which can define where the preview button links out to
+- The preview pane will now jump to the top if scrolled down on error message.
 
 ## [0.3.4]
 ### Changed

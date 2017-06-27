@@ -48,8 +48,8 @@ export default Ember.Component.extend({
     }
   }),
 
-  previewUrl: Ember.computed('baseUrl', 'currentItem.id', 'currentItem.url', function () {
-    const url = this.get('baseUrl');
+  previewUrl: Ember.computed('portalHostName', 'currentItem.id', 'currentItem.url', function () {
+    const url = this.get('portalHostName');
     if (url) {
       return `${url}/home/item.html?id=${this.get('currentItem.id')}`;
     } else {
