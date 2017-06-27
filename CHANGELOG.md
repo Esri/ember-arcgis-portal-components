@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## unreleased
+### Changed
+- `item-picker` now accepts a `baseUrl` property which can define where the preview button links out to
+
 ## [0.3.4]
 ### Changed
 - Selected item preview pane slightly re-ordered and style for description cutoff slightly changed as well
