@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## unreleased
+### Changed
+- `item-picker` now accepts a `portalHostName` property which can define where the preview button links out to
+- The preview pane will now jump to the top if scrolled down on error message.
+
 ## [0.3.4]
 ### Changed
 - Selected item preview pane slightly re-ordered and style for description cutoff slightly changed as well

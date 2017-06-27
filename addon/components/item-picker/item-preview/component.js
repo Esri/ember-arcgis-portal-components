@@ -17,6 +17,13 @@ export default Ember.Component.extend({
     this.$('img').off();
   },
 
+  didRender () {
+    // Needed to jump to error message
+    if (this.get('showError')) {
+      this.$().scrollTop(0);
+    }
+  },
+
   itemType: Ember.computed('_i18nScope', 'model.type', function () {
     const itemType = this.get('model.type');
     let result = itemType;
