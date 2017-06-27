@@ -3,6 +3,8 @@ import Ember from 'ember';
 export default Ember.Controller.extend({
   selectedItem: null,
 
+  url: 'http://dc.mapsqa.arcgis.com',
+
   catalog: Ember.A([
     {
       name: 'All',
