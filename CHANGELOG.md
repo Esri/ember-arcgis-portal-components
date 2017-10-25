@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `item-picker` now accepts a `portalHostName` property which can define where the preview button links out to
 - The preview pane will now jump to the top if scrolled down on error message.
+- Add classnames to facet radio button labels to facilitate testing
 
 ## [0.3.4]
 ### Changed
