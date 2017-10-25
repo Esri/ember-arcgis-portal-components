@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleaed
+### Fixed
+- issue with facet classnames
+
 ## [0.3.6]
 ### Changed
 - `item-picker` now accepts a `portalHostName` property which can define where the preview button links out to
