@@ -25,11 +25,10 @@ export default Ember.Component.extend({
   init () {
     this._super(...arguments);
 
-    if (this.get('catalog')) {
-      this._setInitialCatalog(this.get('catalog'));
-    }
-
     if (this.get('searchItemsOnInit')) {
+      if (this.get('catalog')) {
+        this._setInitialCatalog(this.get('catalog'));
+      }
       this._doSearch(this.get('q'));
     }
   },
