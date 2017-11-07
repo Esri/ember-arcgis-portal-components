@@ -24,6 +24,11 @@ export default Ember.Component.extend({
 
   init () {
     this._super(...arguments);
+
+    if (this.get('catalog')) {
+      this._setInitialCatalog(this.get('catalog'));
+    }
+
     if (this.get('searchItemsOnInit')) {
       this._doSearch(this.get('q'));
     }
@@ -186,6 +191,29 @@ export default Ember.Component.extend({
           hasSearched: true,
         });
       });
+  },
+
+  _setInitialCatalog (catalog) {
+    let startingCatalog;
+
+    // Search through the catalog to see if
+    // there is one that has the active flag
+    catalog.forEach(function (catalogPiece) {
+      if (catalogPiece.active) {
+        startingCatalog = catalogPiece;
+      }
+    });
+
+    // Is there an active flag?
+    if (startingCatalog) {
+      // Set it to the selected catalog
+      this.set('selectedCatalog', startingCatalog);
+      this.set('selectedCatalogName', startingCatalog.name);
+    } else {
+      // Otherwise, use the first item in the catalog as the starting point
+      this.set('selectedCatalog', catalog[0]);
+      this.set('selectedCatalogName', catalog[0].name);
+    }
   },
 
   actions: {
