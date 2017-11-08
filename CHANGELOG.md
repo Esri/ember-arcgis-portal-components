@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Added
+- Users can search by ID if they know the item ID. [Example](https://arcgis.github.io/ember-arcgis-portal-components/#/itempicker/specificid)
+
+
 ## [0.3.7]
 ### Fixed
 - issue with facet classnames
