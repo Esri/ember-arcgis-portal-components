@@ -144,10 +144,14 @@ export default Ember.Component.extend({
     return false;
   },
 
-  _defaultSearch (q) {
+  _defaultSearch (q, isHex) {
     let parts = [];
     if (q) {
-      parts.push(`title:${q}`);
+      if (isHex) {
+        parts.push(`id:${q}`);
+      } else {
+        parts.push(`title:${q}`);
+      }
     }
     let defaultQuery = this.get('defaultQuery');
     if (defaultQuery) {
@@ -173,8 +177,8 @@ export default Ember.Component.extend({
     const selectedCatalog = this.get('selectedCatalog') || this.get('onlyOneCataEntry');
 
     let query = selectedCatalog // If we have a catalog selected
-      ? queryHelpers.createQuery(selectedCatalog, q) // Create a query for that tab.
-      : this._defaultSearch(q); // Otherwise perform a normal search
+      ? queryHelpers.createQuery(selectedCatalog, q, isHex) // Create a query for that tab.
+      : this._defaultSearch(q, isHex); // Otherwise perform a normal search
 
     const pageSize = this.get('pageSize');
     let params = {
