@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Fixed
+-
+
+### Added
+- Users can now add the `active: true` flag to the facet (catalog) they'd like to start as the default. [Example](https://arcgis.github.io/ember-arcgis-portal-components/#/itempicker/defaultcatalog)
+
+
 ## [0.3.7]
 ### Fixed
 - issue with facet classnames
