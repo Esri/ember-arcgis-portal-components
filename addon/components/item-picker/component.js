@@ -135,6 +135,15 @@ export default Ember.Component.extend({
 
   disableAddItems: Ember.computed.not('hasItemsToAdd'),
 
+  _checkForHex (string) {
+    // Use Regex to make sure it's exactly a 32 character hex code
+    var re = /^[0-9A-Fa-f]{32}$/g;
+    if (re.test(string)) {
+      return true;
+    }
+    return false;
+  },
+
   _defaultSearch (q) {
     let parts = [];
     if (q) {
@@ -153,6 +162,8 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
+    let isHex = this._checkForHex(q);
+
     this.setProperties({
       loading: true,
       currentItem: null,
@@ -172,6 +183,7 @@ export default Ember.Component.extend({
       num: pageSize,
       sortField: 'title'
     };
+
     // allow portalOpts to be passed in so we can access
     // other portals besides the one our session is auth'd to
     this.get('itemService').search(params, this.get('portalOpts'))
