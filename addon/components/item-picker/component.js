@@ -24,7 +24,11 @@ export default Ember.Component.extend({
 
   init () {
     this._super(...arguments);
+
     if (this.get('searchItemsOnInit')) {
+      if (this.get('catalog')) {
+        this._setInitialCatalog(this.get('catalog'));
+      }
       this._doSearch(this.get('q'));
     }
   },
@@ -195,6 +199,20 @@ export default Ember.Component.extend({
           hasSearched: true,
         });
       });
+  },
+
+  _setInitialCatalog (catalog) {
+    let startingCatalog = catalog[0];
+
+    let selectedCatalog = catalog.reduce((acc, entry) => {
+      if (entry.active) {
+        acc = entry;
+      }
+      return acc;
+    }, startingCatalog);
+
+    this.set('selectedCatalog', selectedCatalog);
+    this.set('selectedCatalogName', selectedCatalog.name);
   },
 
   actions: {
