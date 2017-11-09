@@ -12,6 +12,7 @@ Router.map(function () {
     this.route('facets');
     this.route('validation');
     this.route('portalopts');
+    this.route('defaultcatalog');
     this.route('specificid');
   });
 });
