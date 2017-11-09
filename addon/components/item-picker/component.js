@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
+import guidUtils from 'ember-arcgis-portal-components/utils/is-guid';
 
 export default Ember.Component.extend({
 
@@ -139,10 +140,14 @@ export default Ember.Component.extend({
 
   disableAddItems: Ember.computed.not('hasItemsToAdd'),
 
-  _defaultSearch (q) {
+  _defaultSearch (q, isValidGuid) {
     let parts = [];
     if (q) {
-      parts.push(`title:${q}`);
+      if (isValidGuid) {
+        parts.push(`id:${q}`);
+      } else {
+        parts.push(`title:${q}`);
+      }
     }
     let defaultQuery = this.get('defaultQuery');
     if (defaultQuery) {
@@ -157,6 +162,8 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
+    let isValidGuid = guidUtils.checkForGuid(q);
+
     this.setProperties({
       loading: true,
       currentItem: null,
@@ -166,8 +173,8 @@ export default Ember.Component.extend({
     const selectedCatalog = this.get('selectedCatalog') || this.get('onlyOneCataEntry');
 
     let query = selectedCatalog // If we have a catalog selected
-      ? queryHelpers.createQuery(selectedCatalog, q) // Create a query for that tab.
-      : this._defaultSearch(q); // Otherwise perform a normal search
+      ? queryHelpers.createQuery(selectedCatalog, q, isValidGuid) // Create a query for that tab.
+      : this._defaultSearch(q, isValidGuid); // Otherwise perform a normal search
 
     const pageSize = this.get('pageSize');
     let params = {
@@ -176,6 +183,7 @@ export default Ember.Component.extend({
       num: pageSize,
       sortField: 'title'
     };
+
     // allow portalOpts to be passed in so we can access
     // other portals besides the one our session is auth'd to
     this.get('itemService').search(params, this.get('portalOpts'))

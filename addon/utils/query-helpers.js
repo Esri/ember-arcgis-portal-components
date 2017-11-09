@@ -2,12 +2,16 @@ import Ember from 'ember';
 /**
  * blah
  */
-function createQuery (catalog, searchString) {
+function createQuery (catalog, searchString, isHex) {
   const queryParts = Ember.A([]);
   const queryObj = catalog.params.query;
 
   if (searchString) {
-    queryParts.push(`title:${searchString}`);
+    if (isHex) {
+      queryParts.push(`id:${searchString}`);
+    } else {
+      queryParts.push(`title:${searchString}`);
+    }
   }
 
   for (let prop in queryObj) {
