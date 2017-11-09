@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Users can now add the `active: true` flag to the facet (catalog) they'd like to start as the default. [Example](https://arcgis.github.io/ember-arcgis-portal-components/#/itempicker/defaultcatalog)
 
 ### Added
--
+- Users can search by ID if they know the item ID. [Example](https://arcgis.github.io/ember-arcgis-portal-components/#/itempicker/specificid)
 
 ### Changed
 - The `Preview` button is now active for all types
