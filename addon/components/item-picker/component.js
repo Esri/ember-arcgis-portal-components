@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
+import guidUtils from 'ember-arcgis-portal-components/utils/is-guid';
 
 export default Ember.Component.extend({
 
@@ -135,19 +136,10 @@ export default Ember.Component.extend({
 
   disableAddItems: Ember.computed.not('hasItemsToAdd'),
 
-  _checkForHex (string) {
-    // Use Regex to make sure it's exactly a 32 character hex code
-    var re = /^[0-9A-Fa-f]{32}$/g;
-    if (re.test(string)) {
-      return true;
-    }
-    return false;
-  },
-
-  _defaultSearch (q, isHex) {
+  _defaultSearch (q, isValidGuid) {
     let parts = [];
     if (q) {
-      if (isHex) {
+      if (isValidGuid) {
         parts.push(`id:${q}`);
       } else {
         parts.push(`title:${q}`);
@@ -166,7 +158,7 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
-    let isHex = this._checkForHex(q);
+    let isValidGuid = guidUtils.checkForGuid(q);
 
     this.setProperties({
       loading: true,
@@ -177,8 +169,8 @@ export default Ember.Component.extend({
     const selectedCatalog = this.get('selectedCatalog') || this.get('onlyOneCataEntry');
 
     let query = selectedCatalog // If we have a catalog selected
-      ? queryHelpers.createQuery(selectedCatalog, q, isHex) // Create a query for that tab.
-      : this._defaultSearch(q, isHex); // Otherwise perform a normal search
+      ? queryHelpers.createQuery(selectedCatalog, q, isValidGuid) // Create a query for that tab.
+      : this._defaultSearch(q, isValidGuid); // Otherwise perform a normal search
 
     const pageSize = this.get('pageSize');
     let params = {
