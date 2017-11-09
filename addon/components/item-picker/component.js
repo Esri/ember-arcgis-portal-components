@@ -193,26 +193,17 @@ export default Ember.Component.extend({
   },
 
   _setInitialCatalog (catalog) {
-    let startingCatalog;
+    let startingCatalog = catalog[0];
 
-    // Search through the catalog to see if
-    // there is one that has the active flag
-    catalog.forEach(function (catalogPiece) {
-      if (catalogPiece.active) {
-        startingCatalog = catalogPiece;
+    let selectedCatalog = catalog.reduce((acc, entry) => {
+      if (entry.active) {
+        acc = entry;
       }
-    });
+      return acc;
+    }, startingCatalog);
 
-    // Is there an active flag?
-    if (startingCatalog) {
-      // Set it to the selected catalog
-      this.set('selectedCatalog', startingCatalog);
-      this.set('selectedCatalogName', startingCatalog.name);
-    } else {
-      // Otherwise, use the first item in the catalog as the starting point
-      this.set('selectedCatalog', catalog[0]);
-      this.set('selectedCatalogName', catalog[0].name);
-    }
+    this.set('selectedCatalog', selectedCatalog);
+    this.set('selectedCatalogName', selectedCatalog.name);
   },
 
   actions: {
