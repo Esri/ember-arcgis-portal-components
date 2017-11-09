@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 ### Fixed
+- Filter from input now persists across catalogs when switching between them
 -
 
 ### Added
