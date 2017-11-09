@@ -53,19 +53,23 @@ export default Ember.Component.extend({
     const id = this.get('currentItem.id');
     const type = this.get('currentItem.type');
     const url = this.get('currentItem.url');
+    let previewURL;
 
-    // Is there a URL? If so, use it
-    if (url) {
-      return this.get('currentItem.url');
+    switch (true) {
+      // Is there a URL? If so, use it
+      case url !== null:
+        previewURL = this.get('currentItem.url');
+        break;
+      // Is it a webmap? If so, send a webmap specific link
+      case type.toLowerCase() === 'web map':
+        previewURL = `${portalHostName}/home/webmap/viewer.html?webmap=${id}`;
+        break;
+      // Otherwise, just return the item page
+      default:
+        previewURL = `${portalHostName}/home/item.html?id=${id}`;
     }
 
-    // Is it a webmap? If so, send a webmap specific link
-    if (type.toLowerCase() === 'web map') {
-      return `${portalHostName}/home/webmap/viewer.html?webmap=${id}`;
-    }
-
-    // Otherwise, just return the item page
-    return `${portalHostName}/home/item.html?id=${id}`;
+    return previewURL;
   }),
 
   inputElementId: Ember.computed(function () {
