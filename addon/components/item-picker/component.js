@@ -194,7 +194,7 @@ export default Ember.Component.extend({
       this.set('selectedCatalogName', selectedCatalog.name);
       this.set('selectedCatalog', selectedCatalog);
       // Run search..
-      this._doSearch();
+      this._doSearch(this.get('q'));
     },
 
     doSearch () {
