@@ -54,12 +54,27 @@ export default Ember.Component.extend({
   }),
 
   previewUrl: Ember.computed('portalHostName', 'currentItem.id', 'currentItem.url', function () {
-    const url = this.get('portalHostName');
-    if (url) {
-      return `${url}/home/item.html?id=${this.get('currentItem.id')}`;
-    } else {
-      return this.get('currentItem.url');
+    const portalHostName = this.get('portalHostName');
+    const id = this.get('currentItem.id');
+    const type = this.get('currentItem.type');
+    const url = this.get('currentItem.url');
+    let previewURL;
+
+    switch (true) {
+      // Is there a URL? If so, use it
+      case url !== null:
+        previewURL = this.get('currentItem.url');
+        break;
+      // Is it a webmap? If so, send a webmap specific link
+      case type.toLowerCase() === 'web map':
+        previewURL = `${portalHostName}/home/webmap/viewer.html?webmap=${id}`;
+        break;
+      // Otherwise, just return the item page
+      default:
+        previewURL = `${portalHostName}/home/item.html?id=${id}`;
     }
+
+    return previewURL;
   }),
 
   inputElementId: Ember.computed(function () {
@@ -74,12 +89,6 @@ export default Ember.Component.extend({
 
   pageSize: Ember.computed(function () {
     return this.get('rowCount') || 10;
-  }),
-
-  disabledStatus: Ember.computed('currentItem', function () {
-    if (!this.get('currentItem.url')) {
-      return 'disabled';
-    }
   }),
 
   items: Ember.A([]),

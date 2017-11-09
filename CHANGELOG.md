@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Users can search by ID if they know the item ID. [Example](https://arcgis.github.io/ember-arcgis-portal-components/#/itempicker/specificid)
 
+### Changed
+- The `Preview` button is now active for all types
 
 ## [0.3.7]
 ### Fixed
