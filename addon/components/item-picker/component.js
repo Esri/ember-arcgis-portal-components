@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
-import guidUtils from 'ember-arcgis-portal-components/utils/is-guid';
+import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
 
 export default Ember.Component.extend({
 
@@ -25,7 +25,6 @@ export default Ember.Component.extend({
 
   init () {
     this._super(...arguments);
-
     if (this.get('searchItemsOnInit')) {
       if (this.get('catalog')) {
         this._setInitialCatalog(this.get('catalog'));
@@ -58,6 +57,8 @@ export default Ember.Component.extend({
     const id = this.get('currentItem.id');
     const type = this.get('currentItem.type');
     const url = this.get('currentItem.url');
+    const protocol = '//';
+    let host = (portalHostName === undefined) ? this.get('session.portalHostname') : portalHostName;
     let previewURL;
 
     switch (true) {
@@ -67,11 +68,11 @@ export default Ember.Component.extend({
         break;
       // Is it a webmap? If so, send a webmap specific link
       case type.toLowerCase() === 'web map':
-        previewURL = `${portalHostName}/home/webmap/viewer.html?webmap=${id}`;
+        previewURL = `${protocol}${host}/home/webmap/viewer.html?webmap=${id}`;
         break;
       // Otherwise, just return the item page
       default:
-        previewURL = `${portalHostName}/home/item.html?id=${id}`;
+        previewURL = `${protocol}${host}/home/item.html?id=${id}`;
     }
 
     return previewURL;
@@ -171,8 +172,7 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
-    let isValidGuid = guidUtils.checkForGuid(q);
-
+    let isValidGuid = isGuid(q);
     this.setProperties({
       loading: true,
       currentItem: null,
@@ -211,7 +211,6 @@ export default Ember.Component.extend({
 
   _setInitialCatalog (catalog) {
     let startingCatalog = catalog[0];
-
     let selectedCatalog = catalog.reduce((acc, entry) => {
       if (entry.active) {
         acc = entry;
