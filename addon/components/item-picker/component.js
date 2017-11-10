@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
-import guidUtils from 'ember-arcgis-portal-components/utils/is-guid';
+import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
 
 export default Ember.Component.extend({
 
@@ -171,7 +171,7 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
-    let isValidGuid = guidUtils.isGuid(q);
+    let isValidGuid = isGuid(q);
     this.setProperties({
       loading: true,
       currentItem: null,
