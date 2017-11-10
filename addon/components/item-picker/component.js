@@ -171,8 +171,7 @@ export default Ember.Component.extend({
   },
 
   _doSearch (q, page = 1) {
-    let isValidGuid = guidUtils.checkForGuid(q);
-
+    let isValidGuid = guidUtils.isGuid(q);
     this.setProperties({
       loading: true,
       currentItem: null,
