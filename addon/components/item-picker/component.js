@@ -57,8 +57,8 @@ export default Ember.Component.extend({
     const id = this.get('currentItem.id');
     const type = this.get('currentItem.type');
     const url = this.get('currentItem.url');
-    const protocol = window.location.protocol + '//';
-    let host = (portalHostName === undefined) ? this.get('session.content.portal.portalHostname') : portalHostName;
+    const protocol = '//';
+    let host = (portalHostName === undefined) ? this.get('session.portalHostname') : portalHostName;
     let previewURL;
 
     switch (true) {
