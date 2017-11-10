@@ -7,6 +7,10 @@ div.panel-body:has(.item-picker) {
   padding: 15px 15px 0px 15px;
 }
 
+.modal-content {
+  min-height: 450px;
+}
+
 .item-picker {
   position: relative;
   .item-picker-datasets-pane, .item-picker-items-pane {
@@ -118,6 +122,7 @@ div.panel-body:has(.item-picker) {
       top: 1em;
       bottom: 10%;
       overflow: auto;
+      min-height: 400px;
       img {
         height: 133px;
       }
