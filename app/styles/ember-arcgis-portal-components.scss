@@ -8,11 +8,12 @@ $table-bg-hover: #d9edf7 !default;
   margin-top: 20px;
   border-bottom: 1px solid $calcite-gray-light;
 
-  .form-group {
+  .form-group-tsf {
     margin-bottom: 0px;
   }
-  .form-control {
+  .form-control-tsf {
     height: 33px;
+    width:100%;
   }
   input {
     border: 0px;
