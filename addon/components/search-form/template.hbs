@@ -1,0 +1,10 @@
+<form class="form-group" {{action onSearch q on="submit"}}>
+  <div class="input-group pull-left">
+    <label for="{{inputElementId}}" class="sr-only">{{t placholderi18nKey}}:</label>
+    <input id={{inputElementId}} value={{readonly q}} class="form-control" placeholder={{t placholderi18nKey}} oninput={{action (mut q) value="target.value"}} />
+    <span class="input-group-btn">
+      <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
+    </span>
+  </div>
+  <div class="clearfix"></div>
+</form>

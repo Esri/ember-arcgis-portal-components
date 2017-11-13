@@ -14,12 +14,7 @@
   {{/if}}
 
   <div class="{{if showTabs "col-xs-10" "col-xs-12"}}">
-    <form {{action "doSearch" on="submit"}}>
-      <div class="form-group">
-        <label for="{{inputElementId}}" class="sr-only">{{placeholder}}:</label>
-        {{input id=inputElementId class="form-control" value=q placeholder=placeholder key-up="doSearch"}}
-      </div>
-    </form>
+    {{search-form q=q onSearch=(action "doSearch")}}
 
     <div class="item-picker-results-container">
       <ul class="results-list">
