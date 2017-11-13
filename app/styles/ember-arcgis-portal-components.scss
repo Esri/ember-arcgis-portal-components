@@ -7,12 +7,9 @@ div.panel-body:has(.item-picker) {
   padding: 15px 15px 0px 15px;
 }
 
-.modal-content {
-  min-height: 450px;
-}
-
 .item-picker {
   position: relative;
+  min-height: 45rem;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
@@ -109,7 +106,7 @@ div.panel-body:has(.item-picker) {
     left: 55%;
     right: 0;
     bottom: 0;
-    min-height: 355px;
+    min-height: 45rem;
     margin-bottom: -15px;
     background-color: $body-bg;
     border-top: solid 1px $midrange-border-color;
