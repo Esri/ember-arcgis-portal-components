@@ -4,7 +4,14 @@ var EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
 
 module.exports = function (defaults) {
   var app = new EmberAddon(defaults, {
-    snippetPaths: ['snippets']
+    snippetPaths: ['snippets'],
+    sassOptions: {
+      includePaths: [
+        'node_modules/bootstrap-sass/assets/stylesheets',
+        'node_modules/calcite-bootstrap/dist/sass'
+      ],
+      sourceMap: true,
+    },
   });
 
   /*

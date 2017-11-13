@@ -3,6 +3,28 @@ $row-color: #efefef !default;
 $midrange-border-color:#cccccc !default;
 $table-bg-hover: #d9edf7 !default;
 
+.table-search-form {
+  margin-bottom: 20px;
+  margin-top: 20px;
+  border-bottom: 1px solid $calcite-gray-light;
+
+  .form-group {
+    margin-bottom: 0px;
+  }
+  .form-control {
+    height: 33px;
+  }
+  input {
+    border: 0px;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+  }
+  button {
+    background-color: transparent;
+    border: 0px;
+  }
+}
+
 div.panel-body:has(.item-picker) {
   padding: 15px 15px 0px 15px;
 }
