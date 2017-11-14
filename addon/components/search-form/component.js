@@ -4,7 +4,7 @@ import layout from './template';
 export default Ember.Component.extend({
   layout,
   tagName: 'form',
-  classNames: ['table-search-form', 'form-group-tsf'],
+  classNames: ['portal-search-form', 'form-group-tsf'],
 
   i18nBase: 'ember-arcgis-portal-components.',
 
