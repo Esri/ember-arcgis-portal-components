@@ -1,10 +1,8 @@
-<form class="form-group-tsf" submit={{action onSearch}}>
-  <div class="input-group pull-left">
-    <label for="{{inputElementId}}" class="sr-only">{{t placeholderi18nKey}}:</label>
-    <input id={{inputElementId}} value={{readonly q}} class="form-control-tsf" placeholder={{t placeholderi18nKey}} oninput={{action (mut _q) value="target.value"}} />
-    <span class="input-group-btn">
-      <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
-    </span>
-  </div>
-  <div class="clearfix"></div>
-</form>
+<div class="input-group pull-left">
+  <label for="{{inputElementId}}" class="sr-only">{{t placeholderi18nKey}}:</label>
+  <input id={{inputElementId}} value={{readonly q}} class="form-control-tsf" placeholder={{t placeholderi18nKey}} oninput={{action (mut _q) value="target.value"}} />
+  <span class="input-group-btn">
+    <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
+  </span>
+</div>
+<div class="clearfix"></div>
