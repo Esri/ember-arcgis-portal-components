@@ -2,24 +2,28 @@ import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
 
 moduleForComponent('search-form', 'Integration | Component | search form', {
-  integration: true
+  integration: true,
+  beforeEach () {
+    let intl = this.container.lookup('service:intl');
+    intl.setLocale('en-us');
+    this.inject.service('intl', {as: 'intl'});
+  }
 });
 
-test('it renders', function(assert) {
+test('it renders', function (assert) {
+  assert.expect(2);
 
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });
+  this.set('q', undefined);
+  this.on('search', function (val) {
+    assert.equal(val, 'test', 'it should have passed the value on submit');
+  });
 
-  this.render(hbs`{{search-form}}`);
+  this.render(hbs`{{search-form _q=q onSearch=(action 'search')}}`);
 
-  assert.equal(this.$().text().trim(), '');
+  let $input = this.$('input');
+  assert.equal($input.val(), '', 'input should be empty');
 
-  // Template block usage:
-  this.render(hbs`
-    {{#search-form}}
-      template block text
-    {{/search-form}}
-  `);
-
-  assert.equal(this.$().text().trim(), 'template block text');
+  // enter term and search
+  $input.val('test').trigger('change');
+  assert.equal(this.get('q'), undefined, 'should not mutate q property');
 });
