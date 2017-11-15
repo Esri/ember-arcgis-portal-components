@@ -2,7 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased - Soon to be [0.4.1]
+## Unreleased
+
+## [0.4.1]
 ### Fixed
 - Adjusted min height for the item-container [Link](https://esriarlington.tpondemand.com/entity/81443)
 
