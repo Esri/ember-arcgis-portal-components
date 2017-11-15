@@ -11,7 +11,7 @@ module.exports = function (defaults) {
         'node_modules/calcite-bootstrap/dist/sass'
       ],
       sourceMap: true,
-    },
+    }
   });
 
   /*
