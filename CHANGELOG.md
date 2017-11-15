@@ -4,10 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased - Soon to be [0.4.1]
 ### Fixed
-- Adjusted min height for the item-container [Link]()
+- Adjusted min height for the item-container [Link](https://esriarlington.tpondemand.com/entity/81443)
 
 ### Added
-- Search bar component was moved from ember-arcgis-opendata-components to ember-arcgis-portal-components
+- Search bar component was moved from ember-arcgis-opendata-components to ember-arcgis-portal-components and adjust styling [Link](https://esriarlington.tpondemand.com/entity/81443)
 
 ## [0.4.0]
 ### Fixed
