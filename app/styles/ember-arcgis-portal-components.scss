@@ -1,3 +1,34 @@
+<<<<<<< HEAD
+=======
+$body-bg: white !default;
+$row-color: #efefef !default;
+$midrange-border-color:#cccccc !default;
+$table-bg-hover: #d9edf7 !default;
+
+.portal-search-form {
+  margin-bottom: 20px;
+  margin-top: 20px;
+  border-bottom: 1px solid $calcite-gray-light;
+
+  .form-group-tsf {
+    margin-bottom: 0px;
+  }
+  .form-control-tsf {
+    height: 33px;
+    width:100%;
+  }
+  input {
+    border: 0px;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+  }
+  button {
+    background-color: transparent;
+    border: 0px;
+  }
+}
+
+>>>>>>> c3298ed50d3b91da8ee8c13d4670563b27373bd5
 div.panel-body:has(.item-picker) {
   padding: 15px 15px 0px 15px;
 }
