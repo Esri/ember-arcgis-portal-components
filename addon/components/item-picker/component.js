@@ -233,6 +233,7 @@ export default Ember.Component.extend({
 
     doSearch (query) {
       const q = query;
+      this.set('q', q);
       Ember.run.debounce(this, this._doSearch, q, 150);
     },
     changePage (page) {
