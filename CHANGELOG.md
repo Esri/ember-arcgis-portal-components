@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased - [0.4.2]
 ### Fixed
-- Filter now persists when changing pages
+- Filter now persists when changing pages [Link](https://esriarlington.tpondemand.com/entity/81552)
+- Fix issue where the search button was overlaid on top of the side panel [Link](https://esriarlington.tpondemand.com/entity/81552)
 
 ## [0.4.1]
 ### Fixed
