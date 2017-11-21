@@ -5,8 +5,6 @@
 {{/if}}
 {{#unless showFallback}}
   <img src="{{thumbnailUrl}}" alt="" />
-{{else}}
-  <img src="ember-arcgis-portal-components/assets/images/default-dataset-thumb.png" alt="" class="thumbnail" />
 {{/unless}}
 <h2>{{model.title}}</h2>
 <span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.owner}}</span>
