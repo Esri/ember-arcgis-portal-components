@@ -258,3 +258,74 @@ div.panel-body:has(.item-picker) {
 
   }
 }
+
+.layer-picker-list {
+  margin-top:15px;
+  .magic-radio{
+    position: absolute;
+    display: none; }
+
+  .magic-radio[disabled] {
+    cursor: not-allowed;}
+
+  .magic-radio + label {
+    position: relative;
+    display: block;
+    padding-left: 30px;
+    cursor: pointer;
+    vertical-align: middle; }
+    .magic-radio + label:hover:before {
+      animation-duration: 0.4s;
+      animation-fill-mode: both;
+      animation-name: hover-color; }
+    .magic-radio + label:before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      content: '';
+      border: 1px solid $calcite-gray-darker; }
+    .magic-radio + label:after {
+      position: absolute;
+      display: none;
+      content: ''; }
+
+  .magic-radio[disabled] + label {
+    cursor: not-allowed;
+    color: $calcite-gray-core; }
+    .magic-radio[disabled] + label:hover, .magic-radio[disabled] + label:before, .magic-radio[disabled] + label:after {
+      cursor: not-allowed; }
+    .magic-radio[disabled] + label:hover:before {
+      border: 1px solid $calcite-gray-core;
+      animation-name: none; }
+    .magic-radio[disabled] + label:before {
+      border-color: $calcite-gray-core; }
+
+  .magic-radio:checked + label:before {
+    animation-name: none; }
+
+  .magic-radio:checked + label:after {
+    display: block; }
+
+  .magic-radio + label:before {
+    border-radius: 50%; }
+
+  .magic-radio + label:after {
+    top: 6px;
+    left: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 80%;
+    background: $calcite-blue-dark; }
+
+  .magic-radio:checked + label:before {
+    border: 1px solid $calcite-blue-dark; }
+
+  .magic-radio:checked[disabled] + label:before {
+    border: 1px solid $calcite-blue-dark; }
+
+  .magic-radio:checked[disabled] + label:after {
+    background: $calcite-blue-dark; }
+}
