@@ -1,1 +1,17 @@
-{{yield}}
+<div class="layer-picker-list">
+  <ul class="nav nav-pills nav-stacked">
+    {{#each model as |layer|}}
+      <input
+        type="radio"
+        name="selectedLayer"
+        checked={{layer.checked}}
+        value={{layer.name}}
+        class="magic-radio"
+        id={{layer.name}}
+        onchange={{action 'test' layer.name}}
+      />
+
+      <label for="{{layer.name}}">{{layer.name}}</label>
+    {{/each}}
+  </ul>
+</div>
