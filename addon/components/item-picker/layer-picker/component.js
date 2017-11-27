@@ -5,9 +5,10 @@ export default Ember.Component.extend({
   layout,
 
   actions: {
-    test: function (value) {
-      console.log(value);
-      console.log(this);
+    selectLayer: function (value) {
+      const model = this.get('model');
+      let selectedLayer = model.filter(layer => layer.name === value);
+      this.set('model.selectedLayer', selectedLayer[0]);
     }
   }
 });
