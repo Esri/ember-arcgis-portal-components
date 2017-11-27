@@ -262,7 +262,10 @@ export default Ember.Component.extend({
       }
     },
 
-    onSelect (item) {
+    onSelect () {
+      debugger;
+      const item = this.get('selectedItem');
+      const layer = this.get('selectedLayer');
       const validator = this.get('onSelectionValidator');
 
       this.set('isValidating', true);
@@ -284,6 +287,18 @@ export default Ember.Component.extend({
         this.set('isValidating', false);
         return this.get('selectAction')(item);
       }
+    },
+
+    onSet (selectedItem, selectedLayerIdx) {
+      debugger;
+      const layers = Ember.get(selectedItem, 'layers');
+      const selectedLayer = layers.filter(layer => layer.id === selectedLayerIdx);
+      // this.set('model.selectedLayer', selectedLayer[0]);
+      // Ember.tryInvoke(this, 'onSelect', [item, selectedLayer]);
+      this.setProperties({
+        selectedItem,
+        selectedLayer
+      });
     },
 
     cancelAction () {

@@ -1,14 +1,14 @@
 <div class="layer-picker-list">
   <ul class="nav nav-pills nav-stacked">
-    {{#each model as |layer|}}
+    {{#each model.layers as |layer|}}
       <input
         type="radio"
         name="selectedLayer"
         checked={{layer.checked}}
-        value={{layer.name}}
+        value={{layer.id}}
         class="magic-radio"
         id={{layer.name}}
-        onchange={{action 'selectLayer' layer.name}}
+        onchange={{action onSet model layer.id}}
       />
 
       <label for="{{layer.name}}">{{layer.name}}</label>
