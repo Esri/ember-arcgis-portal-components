@@ -247,7 +247,9 @@ div.panel-body:has(.item-picker) {
   }
 }
 .layer-picker-list {
-  margin-top:15px;
+  margin-top: 15px;
+  overflow: scroll;
+  max-height: 125px;
   .magic-radio {
     position: absolute;
     display: none;
