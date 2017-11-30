@@ -71,6 +71,8 @@ export default Ember.Component.extend({
           });
 
           this.set('model.layers', resp.layers);
+        } else if (resp.fields) {
+          this.set('model.fields', resp.fields);
         } else {
           throw err;
         }

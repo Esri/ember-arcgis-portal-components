@@ -223,14 +223,12 @@ export default Ember.Component.extend({
   },
 
   _setInitialItemAndLayer (selectedItem, selectedLayerId) {
-    const layers = Ember.get(selectedItem, 'layers');
-    const selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
-    // this.set('model.selectedLayer', selectedLayer[0]);
-    // Ember.tryInvoke(this, 'onSelect', [item, selectedLayer]);
-    this.setProperties({
-      selectedItem,
-      selectedLayer
-    });
+    if (!selectedItem.fields) {
+      let layers = Ember.get(selectedItem, 'layers');
+      let selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
+      this.set('selectedLayer', selectedLayer);
+    }
+    this.set('selectedItem', selectedItem);
   },
 
   actions: {
@@ -252,7 +250,8 @@ export default Ember.Component.extend({
       this._doSearch(q, page);
     },
     onClick (item) {
-      this._setInitialItemAndLayer(item, 0)
+      this._setInitialItemAndLayer(item, 0);
+
       if (this.get('selectMultiple')) {
         const itemsToAdd = this.get('itemsToAdd');
         const existingObj = itemsToAdd.findBy('id', item.id);
