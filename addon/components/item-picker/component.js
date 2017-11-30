@@ -222,6 +222,17 @@ export default Ember.Component.extend({
     this.set('selectedCatalogName', selectedCatalog.name);
   },
 
+  _setInitialItemAndLayer (selectedItem, selectedLayerId) {
+    const layers = Ember.get(selectedItem, 'layers');
+    const selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
+    // this.set('model.selectedLayer', selectedLayer[0]);
+    // Ember.tryInvoke(this, 'onSelect', [item, selectedLayer]);
+    this.setProperties({
+      selectedItem,
+      selectedLayer
+    });
+  },
+
   actions: {
     chooseCatalog (val) {
       const selectedCatalog = this.get('catalog').findBy('name', val);
@@ -241,6 +252,7 @@ export default Ember.Component.extend({
       this._doSearch(q, page);
     },
     onClick (item) {
+      this._setInitialItemAndLayer(item, 0)
       if (this.get('selectMultiple')) {
         const itemsToAdd = this.get('itemsToAdd');
         const existingObj = itemsToAdd.findBy('id', item.id);
@@ -279,25 +291,17 @@ export default Ember.Component.extend({
               this.set('selectAnyway', true);
               return;
             } else {
-              return this.get('selectAction')(resp.item);
+              return this.get('selectAction')(resp.item, 0);
             }
           });
       } else {
         this.set('isValidating', false);
-        return this.get('selectAction')(item);
+        return this.get('selectAction')(item, layer);
       }
     },
 
-    onSet (selectedItem, selectedLayerIdx) {
-      debugger;
-      const layers = Ember.get(selectedItem, 'layers');
-      const selectedLayer = layers.filter(layer => layer.id === selectedLayerIdx);
-      // this.set('model.selectedLayer', selectedLayer[0]);
-      // Ember.tryInvoke(this, 'onSelect', [item, selectedLayer]);
-      this.setProperties({
-        selectedItem,
-        selectedLayer
-      });
+    onSet (item, layerId) {
+      this._setInitialItemAndLayer(item, layerId);
     },
 
     cancelAction () {
