@@ -263,7 +263,6 @@ export default Ember.Component.extend({
     },
 
     onSelect () {
-      debugger;
       const item = this.get('selectedItem');
       const layer = this.get('selectedLayer');
       const validator = this.get('onSelectionValidator');
