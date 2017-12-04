@@ -62,23 +62,27 @@ export default Ember.Component.extend({
 
   actions: {
     selectItem (item) {
-      this.request(item.url)
-      .then((resp, err) => {
-        if (resp.layers) {
-          resp.layers.forEach(function (layer) {
-            let active = (layer.id === 0);
-            layer.checked = active;
-          });
 
-          this.set('model.layers', resp.layers);
-        } else if (resp.fields) {
-          this.set('model.fields', resp.fields);
-        } else {
-          throw err;
-        }
-        Ember.run.next(this, () => {
-          this.get('onClick')(item);
+      if (item.url) {
+        this.request(item.url)
+        .then((resp, err) => {
+          if (resp.layers) {
+            resp.layers.forEach(function (layer) {
+              let active = (layer.id === 0);
+              layer.checked = active;
+            });
+
+            this.set('model.layers', resp.layers);
+          } else if (resp.fields) {
+            this.set('model.fields', resp.fields);
+          } else {
+            throw err;
+          }
         });
+      }
+
+      Ember.run.next(this, () => {
+        this.get('onClick')(item);
       });
     },
   }

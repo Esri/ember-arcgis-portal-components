@@ -250,7 +250,11 @@ export default Ember.Component.extend({
       this._doSearch(q, page);
     },
     onClick (item) {
-      this._setInitialItemAndLayer(item, 0);
+      if (item.url) {
+        this._setInitialItemAndLayer(item, 0);
+      } else {
+        this.set('selectedItem', item);
+      }
 
       if (this.get('selectMultiple')) {
         const itemsToAdd = this.get('itemsToAdd');
@@ -277,6 +281,8 @@ export default Ember.Component.extend({
       const item = this.get('selectedItem');
       const layer = this.get('selectedLayer');
       const validator = this.get('onSelectionValidator');
+
+      console.log(item);
 
       this.set('isValidating', true);
       if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
