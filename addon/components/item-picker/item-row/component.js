@@ -62,7 +62,6 @@ export default Ember.Component.extend({
 
   actions: {
     selectItem (item) {
-
       if (item.url) {
         this.request(item.url)
         .then((resp, err) => {

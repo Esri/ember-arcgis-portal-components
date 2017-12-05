@@ -282,8 +282,6 @@ export default Ember.Component.extend({
       const layer = this.get('selectedLayer');
       const validator = this.get('onSelectionValidator');
 
-      console.log(item);
-
       this.set('isValidating', true);
       if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
         validator(item)
