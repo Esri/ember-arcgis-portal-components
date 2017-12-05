@@ -1,5 +1,4 @@
 import Ember from 'ember';
-import fetch from 'ember-network/fetch';
 import singleTemplate from './single/template';
 import multipleTemplate from './multiple/template';
 
@@ -50,36 +49,8 @@ export default Ember.Component.extend({
     return `https://${this.get('session.portalHostname')}/home/item.html?id=${this.get('model.id')}`;
   }),
 
-  request (url) {
-    if (url.includes('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-
-    let jsonUrl = url + '?f=json';
-    return fetch(jsonUrl)
-      .then(this.get('itemService').checkStatusAndParseJson);
-  },
-
   actions: {
     selectItem (item) {
-      if (item.url) {
-        this.request(item.url)
-        .then((resp, err) => {
-          if (resp.layers) {
-            resp.layers.forEach(function (layer) {
-              let active = (layer.id === 0);
-              layer.checked = active;
-            });
-
-            this.set('model.layers', resp.layers);
-          } else if (resp.fields) {
-            this.set('model.fields', resp.fields);
-          } else {
-            throw err;
-          }
-        });
-      }
-
       Ember.run.next(this, () => {
         this.get('onClick')(item);
       });
