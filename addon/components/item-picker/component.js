@@ -52,6 +52,17 @@ export default Ember.Component.extend({
     }
   }),
 
+  sidebarComponent: Ember.computed('currentItem', function () {
+    let type = this.get('currentItem.type');
+
+    switch (type.toLowerCase()) {
+      case 'feature service':
+        return 'item-picker/feature-service-preview';
+      default:
+        return 'item-picker/item-preview';
+    }
+  }),
+
   previewUrl: Ember.computed('portalHostName', 'currentItem.id', 'currentItem.url', function () {
     const portalHostName = this.get('portalHostName');
     const id = this.get('currentItem.id');
