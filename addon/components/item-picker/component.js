@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import layout from './template';
+import fetch from 'ember-network/fetch';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
 import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
 
@@ -233,6 +234,16 @@ export default Ember.Component.extend({
     this.set('selectedCatalogName', selectedCatalog.name);
   },
 
+  _request (url) {
+    if (url.includes('http://')) {
+      url = url.replace('http://', 'https://');
+    }
+
+    let jsonUrl = url + '?f=json';
+    return fetch(jsonUrl)
+      .then(this.get('itemService').checkStatusAndParseJson);
+  },
+
   _setInitialItemAndLayer (selectedItem, selectedLayerId) {
     if (!selectedItem.fields) {
       let layers = Ember.get(selectedItem, 'layers');
@@ -261,10 +272,30 @@ export default Ember.Component.extend({
       this._doSearch(q, page);
     },
     onClick (item) {
-      if (item.url) {
-        this._setInitialItemAndLayer(item, 0);
-      } else {
-        this.set('selectedItem', item);
+      let lowercaseType = item.type.toLowerCase();
+      switch (lowercaseType) {
+        case 'feature service':
+          this._request(item.url)
+          .then((resp, err) => {
+            if (resp.layers) {
+              resp.layers.forEach(function (layer) {
+                let active = (layer.id === 0);
+                layer.checked = active;
+              });
+              Ember.set(item, 'layers', resp.layers);
+            } else if (resp.fields) {
+              Ember.set(item, 'fields', resp.fields);
+            } else {
+              throw err;
+            }
+
+            this._setInitialItemAndLayer(item, 0);
+          });
+
+          break;
+        default:
+          this.set('selectedItem', item);
+          break;
       }
 
       if (this.get('selectMultiple')) {
@@ -305,12 +336,22 @@ export default Ember.Component.extend({
               this.set('selectAnyway', true);
               return;
             } else {
-              return this.get('selectAction')(resp.item, 0);
+              switch (item.type.toLowerCase()) {
+                case 'feature service':
+                  return this.get('selectAction')(resp.item, 0);
+                default:
+                  return this.get('selectAction')(resp.item);
+              }
             }
           });
       } else {
         this.set('isValidating', false);
-        return this.get('selectAction')(item, layer);
+        switch (item.type.toLowerCase()) {
+          case 'feature service':
+            return this.get('selectAction')(item, layer);
+          default:
+            return this.get('selectAction')(item);
+        }
       }
     },
 
