@@ -7,8 +7,8 @@ export default Ember.Component.extend({
 
   layout,
 
-  isLoading:true,
-  
+  isLoading: true,
+
   itemService: Ember.inject.service('items-service'),
 
   classNames: [ 'item-picker-current-item-preview' ],
