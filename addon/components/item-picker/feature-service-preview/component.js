@@ -14,7 +14,6 @@ export default Ember.Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
 
   didInsertElement () {
-    this.$('img').on('error', Ember.run.bind(this, this.onImageError));
     let item = this.get('model');
     let lowercaseType = item.type.toLowerCase();
     switch (lowercaseType) {
@@ -45,10 +44,6 @@ export default Ember.Component.extend({
     }
   },
 
-  willDestroyElement () {
-    this.$('img').off();
-  },
-
   didRender () {
     // Needed to jump to error message
     if (this.get('showError')) {
@@ -66,18 +61,6 @@ export default Ember.Component.extend({
       result = intl.t(key);
     }
     return result;
-  }),
-
-  thumbnailUrl: Ember.computed('model.thumbnail', function () {
-    const ENV = Ember.getOwner(this).resolveRegistration('config:environment');
-    const portal = ENV.APP.portalRestUrl;
-    return `${portal}/content/items/${this.get('model.id')}/info/${this.get('model.thumbnail')}`;
-  }),
-
-  thumbnailIsBroken: false,
-
-  showFallback: Ember.computed('thumbnailIsBroken', 'model.thumbnail', function () {
-    return Ember.isEmpty(this.get('model.thumbnail')) || this.get('thumbnailIsBroken');
   }),
 
   description: Ember.computed.reads('model.description'),
@@ -100,14 +83,6 @@ export default Ember.Component.extend({
     let jsonUrl = url + '?f=json';
     return fetch(jsonUrl)
       .then(this.get('itemService').checkStatusAndParseJson);
-  },
-
-  onImageError () {
-    Ember.run(this, function () {
-      if (!this.get('isDestroyed') && !this.get('isDestroying')) {
-        this.set('thumbnailIsBroken', true);
-      }
-    });
-  },
+  }
 
 });
