@@ -19,7 +19,7 @@
 
 
 {{#if isLoading}}
-  {{loading-indicator msg="Loading Layers"}}
+  {{loading-indicator msg=(t "ember-arcgis-portal-components.itemPicker.loadingLayers")}}
 {{else}}
   {{item-picker/layer-picker model=model selectItemAndLayer=selectItemAndLayer}}
 {{/if}}
