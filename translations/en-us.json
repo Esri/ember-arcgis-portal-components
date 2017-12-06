@@ -9,6 +9,7 @@
       "itemDetails": "Item Details",
       "loading": "loading",
       "loadingLayers": "Loading Layers...",
+      "layerList": "Layers and Tables",
       "sharedBy": "Shared by",
       "selectedCount": "Total Datasets Selected: {count}",
       "licenses": {

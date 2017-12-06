@@ -1,13 +1,8 @@
-{{#if showError}}
-  <p class="alert {{messageClass}}" id="val-error">
-    {{errorMessage.message}}
-  </p>
-{{/if}}
 <h2>{{model.title}}</h2>
 <span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.owner}}</span>
 
 <div class="item-picker-current-item-preview-meta">
-  <div><i class="glyphicon icon-layers"></i>{{ model.layers.length }}</div>
+  <div><i class="glyphicon icon-layers"></i>{{ layerList.length }}</div>
   <div><i class="glyphicon glyphicon-calendar"></i>{{ format-time model.modified }}</div>
   <div><i class="glyphicon glyphicon-file"></i>{{ itemType }}</div>
 </div>
@@ -16,10 +11,33 @@
   {{sanitize-html description}}
   <div class="text-fade"></div>
 </div>
-
+{{#if showLayers}}
+<section class="layer-picker-controls">
+<h5>{{t (concat _i18nScope "layerList")}}</h5>
 
 {{#if isLoading}}
-  {{loading-indicator msg=(t "ember-arcgis-portal-components.itemPicker.loadingLayers")}}
+  {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
 {{else}}
-  {{item-picker/layer-picker model=model selectItemAndLayer=selectItemAndLayer}}
+  {{#if showError}}
+    <p class="alert {{messageClass}}" id="val-error">
+      {{errorMessage.message}}
+    </p>
+  {{else}}
+    {{item-picker/layer-picker model=layerList selectable=forceLayerSelection onLayerSelected=(action "onLayerSelected")}}
+  {{/if}}
 {{/if}}
+</section>
+{{/if}}
+<section class="item-picker-controls">
+  <div class="full-width-btn">
+    <div>
+    <button type="button" class="btn btn-primary btn-block {{selectButtonClass}}" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
+    </div>
+  </div>
+  <div class="side-by-side">
+    <div>
+      <button type="button" class="btn btn-default btn-block" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
+      <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block">{{t (concat _i18nScope "buttons.preview")}}</a>
+    </div>
+  </div>
+</section>

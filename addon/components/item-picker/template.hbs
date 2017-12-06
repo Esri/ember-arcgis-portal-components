@@ -1,4 +1,4 @@
-  {{#if showTabs}}
+  {{#if showFacets}}
     <div class="item-picker-radio-buttons col-xs-2">
       {{#each catalog as |appType|}}
         {{#radio-button
@@ -13,7 +13,7 @@
     </div>
   {{/if}}
 
-  <div class="{{if showTabs "col-xs-10" "col-xs-12"}}">
+  <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
     {{search-form q=q onSearch=(action "doSearch")}}
 
     <div class="item-picker-results-container">
@@ -29,39 +29,23 @@
               itemsToAdd=itemsToAdd
               _i18nScope=_i18nScope
               model=item
+
               currentItemId=currentItem.id
-              onClick=(action "onClick")}}
+              onClick=(action "onItemClick")}}
           {{/each}}
         {{/if}}
       </ul>
 
       {{#if currentItem}}
         <section class="item-picker-current-item">
-          {{component sidebarComponent
+          {{component previewComponent
             _i18nScope=_i18nScope
             model=currentItem
-            errorMessage=errorMessage
-            selectItemAndLayer=(action 'selectItemAndLayer')
+            params=previewParams
+            onSelectionValidator=onSelectionValidator
+            onItemSelected=(action 'onPreviewSelected')
+            onCancel=(action 'cancelAction')
           }}
-
-          <section class="item-picker-controls">
-
-              <div class="full-width-btn">
-                <div>
-                <button type="button" class="btn btn-primary btn-block {{selectButtonClass}}" {{action "onSelect" currentItem}}>{{selectButtonText}}</button>
-                </div>
-              </div>
-
-              <div class="side-by-side">
-                <div>
-                  <button type="button" class="btn btn-default btn-block" {{action "cancelAction"}}>{{t (concat _i18nScope "buttons.back")}}</button>
-
-                  <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block">{{t (concat _i18nScope "buttons.preview")}}</a>
-                </div>
-              </div>
-
-          </section>
-
         </section>
       {{/if}}
     </div>

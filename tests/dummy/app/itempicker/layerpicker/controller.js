@@ -1,10 +1,35 @@
 import Ember from 'ember';
-import fetch from 'ember-network/fetch';
 
 export default Ember.Controller.extend({
   selectedItem: null,
-
   itemService: Ember.inject.service('items-service'),
+  url: 'http://dc.mapsqa.arcgis.com',
+  catalog: [
+    {
+      name: 'Map Services',
+      params: {
+        query: {
+          type: [
+            'Map Service'
+          ]
+        }
+      }
+    },
+    {
+      name: 'Feature Services',
+      params: {
+        query: {
+          type: [
+            'Feature Service'
+          ]
+        }
+      }
+    }
+  ],
+  previewParams: {
+    showLayers: true,
+    forceLayerSelection: true
+  },
 
   _isPublic (item) {
     if (item.access && item.access !== 'public') {
@@ -86,13 +111,11 @@ export default Ember.Controller.extend({
     return fetch(url)
       .then(this.get('itemService').checkStatusAndParseJson);
   },
-
   actions: {
     onSelectItem (selected) {
       Ember.$('#myModal').modal('hide');
       this.set('selectedItem', selected);
     },
-
     selectionValidator (item) {
       return this._validator(item);
     }

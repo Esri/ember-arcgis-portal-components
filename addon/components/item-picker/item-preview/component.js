@@ -3,19 +3,14 @@ import layout from './template';
 
 export default Ember.Component.extend({
 
-  intl: Ember.inject.service(),
-
-  layout,
-
   classNames: [ 'item-picker-current-item-preview' ],
-
-  didInsertElement () {
-    this.$('img').on('error', Ember.run.bind(this, this.onImageError));
-  },
-
-  willDestroyElement () {
-    this.$('img').off();
-  },
+  description: Ember.computed.reads('model.description'),
+  isValidating: false,
+  intl: Ember.inject.service(),
+  layout,
+  selectAnyway: false,
+  shouldValidate: false,
+  showError: Ember.computed.notEmpty('errorMessage'),
 
   didRender () {
     // Needed to jump to error message
@@ -24,6 +19,35 @@ export default Ember.Component.extend({
     }
   },
 
+  /**
+   * What should the select button text be? we have variations depending on status
+   */
+  selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {
+    const intl = this.get('intl');
+    let key = 'buttons.select';
+    if (this.get('isValidating')) {
+      key = 'buttons.validating';
+    } else if (this.get('selectAnyway')) {
+      key = 'buttons.selectAnyway';
+    }
+    return intl.t(`${this.get('_i18nScope')}${key}`);
+  }),
+
+  /**
+   * Select button class. Basically disabling the button
+   */
+  selectButtonClass: Ember.computed('isValidating', 'selectAnyway', 'errorMessage', function () {
+    const errorMessage = this.get('errorMessage');
+    if (this.get('isValidating')) {
+      return 'disabled';
+    } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+      return 'disabled';
+    }
+  }),
+
+  /**
+   * Get the translated form of the Item Type
+   */
   itemType: Ember.computed('_i18nScope', 'model.type', function () {
     const itemType = this.get('model.type');
     let result = itemType;
@@ -36,22 +60,33 @@ export default Ember.Component.extend({
     return result;
   }),
 
-  thumbnailUrl: Ember.computed('model.thumbnail', function () {
-    const ENV = Ember.getOwner(this).resolveRegistration('config:environment');
-    const portal = ENV.APP.portalRestUrl;
-    return `${portal}/content/items/${this.get('model.id')}/info/${this.get('model.thumbnail')}`;
+  /**
+   * Construct the preview url
+   */
+  previewUrl: Ember.computed('model', function () {
+    const item = this.get('model');
+    let previewURL;
+    // if the item has a url property, use that...
+    if (item.url) {
+      previewURL = item.url;
+    } else {
+      // compute a url based on the type...
+      const protocol = '//';
+      let host = this.get('session.portalHostname');
+      switch (item.type.toLowerCase()) {
+        case 'web map':
+          previewURL = `${protocol}${host}/home/webmap/viewer.html?webmap=${item.id}`;
+          break;
+        default:
+          previewURL = `${protocol}${host}/home/item.html?id=${item.id}`;
+      }
+    }
+    return previewURL;
   }),
 
-  thumbnailIsBroken: false,
-
-  showFallback: Ember.computed('thumbnailIsBroken', 'model.thumbnail', function () {
-    return Ember.isEmpty(this.get('model.thumbnail')) || this.get('thumbnailIsBroken');
-  }),
-
-  description: Ember.computed.reads('model.description'),
-
-  showError: Ember.computed.notEmpty('errorMessage'),
-
+  /**
+   * What class should be used for any messages
+   */
   messageClass: Ember.computed('errorMessage', function () {
     if (this.get('errorMessage.status') === 'warning') {
       return 'alert-warning';
@@ -60,12 +95,29 @@ export default Ember.Component.extend({
     }
   }),
 
-  onImageError () {
-    Ember.run(this, function () {
-      if (!this.get('isDestroyed') && !this.get('isDestroying')) {
-        this.set('thumbnailIsBroken', true);
+  actions: {
+    onItemSelected (item) {
+      const validator = this.get('onSelectionValidator');
+
+      if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+        this.set('isValidating', true);
+        validator(item)
+          .then((resp) => {
+            this.set('isValidating', false);
+            this.set('errorHash', resp.status);
+            if (resp.status.status === 'error') {
+              return;
+            } else if (resp.status.status === 'warning') {
+              this.set('selectAnyway', true);
+              return;
+            } else {
+              this.get('onItemSelected')(item);
+            }
+          });
+      } else {
+        this.get('onItemSelected')(item);
       }
-    });
-  },
+    }
+  }
 
 });

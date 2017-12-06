@@ -1,6 +1,8 @@
 <div class="row">
   <div class="col-sm-12">
-    <h2>Validate Items</h2>
+    <h2>Layer Picker with Validator</h2>
+    <p>We can force the item picker to return an item and a layer. To do this, we setup a catalog that only returns Map or Feature Service items.
+    We also pass it <code>previewParams</code> which tell the feature-service-preview component to force a layer selection.</p>
   </div>
   <div class="col-sm-6">
     <h3>Validator</h3>
@@ -8,7 +10,9 @@
 
       <pre>
 {{ '{{item-picker
+      catalog=catalog
       selectAction=(action "onSelectItem")
+      previewParams=previewParams
       onSelectionValidator=(action "selectionValidator") }}' }}
     </pre>
   </div>
@@ -40,7 +44,9 @@
       </div>
       <div class="panel-body">
         {{item-picker
+          catalog=catalog
           selectAction=(action "onSelectItem")
+          previewParams=previewParams
           onSelectionValidator=(action "selectionValidator")
           rowCount=5}}
       </div>
@@ -57,8 +63,10 @@
         <h4 class="modal-title" id="myModalLabel">Default Usage</h4>
       </div>
       <div class="modal-body">
-        {{item-picker 
+        {{item-picker
+          catalog=catalog
           selectAction=(action "onSelectItem")
+          previewParams=previewParams
           onSelectionValidator=(action "selectionValidator")}}
       </div>
     </div>

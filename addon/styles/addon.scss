@@ -1,0 +1,10 @@
+/**
+ * NOTE: We do not include the component scss files in this file
+ * because of how the main opendata-ui app needs to manage it's
+ * sass customization.
+ *
+ * You should setup sass includePath in your ember-cli-build.js file
+ * that references `'node_modules/ember-arcgis-portal-components/addon/styles` and then
+ * include the needed component scss files in your app.scss file.
+ *
+ */

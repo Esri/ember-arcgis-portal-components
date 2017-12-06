@@ -14,7 +14,10 @@ Router.map(function () {
     this.route('portalopts');
     this.route('defaultcatalog');
     this.route('specificid');
+    this.route('layerpicker');
   });
+
+  this.route('itemPicker', function() {});
 });
 
 export default Router;

@@ -123,7 +123,7 @@ div.panel-body:has(.item-picker) {
     box-shadow: -6px 0px 6px -6px $calcite-gray-lighter;
     .item-picker-current-item-preview {
       position: absolute;
-      height: calc(85% - 70px);
+      height: calc(100% - 70px);
       width: calc(100% - 30px);
       top: 1em;
       bottom: 10%;
