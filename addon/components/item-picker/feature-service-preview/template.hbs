@@ -17,4 +17,9 @@
   <div class="text-fade"></div>
 </div>
 
-{{item-picker/layer-picker model=model onSet=onSet}}
+
+{{#if isLoading}}
+  {{loading-indicator msg="Loading Layers"}}
+{{else}}
+  {{item-picker/layer-picker model=model selectItemAndLayer=selectItemAndLayer}}
+{{/if}}
