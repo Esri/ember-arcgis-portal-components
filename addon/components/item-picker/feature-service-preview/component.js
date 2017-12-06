@@ -88,6 +88,16 @@ export default Ember.Component.extend({
     }
   }),
 
+  _request (url) {
+    if (url.includes('http://')) {
+      url = url.replace('http://', 'https://');
+    }
+
+    let jsonUrl = url + '?f=json';
+    return fetch(jsonUrl)
+      .then(this.get('itemService').checkStatusAndParseJson);
+  },
+
   onImageError () {
     Ember.run(this, function () {
       if (!this.get('isDestroyed') && !this.get('isDestroying')) {
