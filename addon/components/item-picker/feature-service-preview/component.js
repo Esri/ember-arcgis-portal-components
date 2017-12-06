@@ -11,6 +11,34 @@ export default Ember.Component.extend({
 
   didInsertElement () {
     this.$('img').on('error', Ember.run.bind(this, this.onImageError));
+    let item = this.get('model');
+    let lowercaseType = item.type.toLowerCase();
+    switch (lowercaseType) {
+      case 'feature service':
+        this._request(item.url)
+        .then((resp, err) => {
+          if (resp.layers) {
+            resp.layers.forEach(function (layer) {
+              let active = (layer.id === 0);
+              layer.checked = active;
+            });
+            Ember.set(item, 'layers', resp.layers);
+          } else if (resp.fields) {
+            Ember.set(item, 'fields', resp.fields);
+          } else {
+            throw err;
+          }
+
+          this.set('isLoading', false);
+
+          this.get('selectItemAndLayer')(item, 0);
+        });
+
+        break;
+      default:
+        this.set('selectedItem', item);
+        break;
+    }
   },
 
   willDestroyElement () {

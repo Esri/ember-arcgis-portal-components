@@ -272,32 +272,6 @@ export default Ember.Component.extend({
       this._doSearch(q, page);
     },
     onClick (item) {
-      let lowercaseType = item.type.toLowerCase();
-      switch (lowercaseType) {
-        case 'feature service':
-          this._request(item.url)
-          .then((resp, err) => {
-            if (resp.layers) {
-              resp.layers.forEach(function (layer) {
-                let active = (layer.id === 0);
-                layer.checked = active;
-              });
-              Ember.set(item, 'layers', resp.layers);
-            } else if (resp.fields) {
-              Ember.set(item, 'fields', resp.fields);
-            } else {
-              throw err;
-            }
-
-            this._setInitialItemAndLayer(item, 0);
-          });
-
-          break;
-        default:
-          this.set('selectedItem', item);
-          break;
-      }
-
       if (this.get('selectMultiple')) {
         const itemsToAdd = this.get('itemsToAdd');
         const existingObj = itemsToAdd.findBy('id', item.id);
