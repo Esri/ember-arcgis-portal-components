@@ -234,8 +234,7 @@ export default Ember.Component.extend({
     this.set('selectedCatalogName', selectedCatalog.name);
   },
 
-
-  _setInitialItemAndLayer (selectedItem, selectedLayerId) {
+  _setItemAndLayer (selectedItem, selectedLayerId) {
     if (!selectedItem.fields) {
       let layers = Ember.get(selectedItem, 'layers');
       let selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
@@ -320,8 +319,8 @@ export default Ember.Component.extend({
       }
     },
 
-    onSet (item, layerId) {
-      this._setInitialItemAndLayer(item, layerId);
+    selectItemAndLayer (item, layerId) {
+      this._setItemAndLayer(item, layerId);
     },
 
     cancelAction () {
