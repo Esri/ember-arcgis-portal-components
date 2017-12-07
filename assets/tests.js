@@ -292,6 +292,44 @@ define('dummy/tests/integration/components/item-picker/component-test.lint-test'
     assert.ok(true, 'integration/components/item-picker/component-test.js should pass ESLint.\n');
   });
 });
+define('dummy/tests/integration/components/item-picker/feature-service-preview/component-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForComponent)('item-picker/feature-service-preview', 'Integration | Component | item picker/feature service preview', {
+    integration: true
+  });
+
+  (0, _emberQunit.test)('it renders', function (assert) {
+
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+
+    this.render(Ember.HTMLBars.template({
+      'id': 'GOJ6fRji',
+      'block': '{"statements":[["append",["unknown",["item-picker/feature-service-preview"]],false]],"locals":[],"named":[],"yields":[],"blocks":[],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), '');
+
+    // Template block usage:
+    this.render(Ember.HTMLBars.template({
+      'id': '2qi9AS95',
+      'block': '{"statements":[["text","\\n"],["block",["item-picker/feature-service-preview"],null,null,0],["text","  "]],"locals":[],"named":[],"yields":[],"blocks":[{"statements":[["text","      template block text\\n"]],"locals":[]}],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), 'template block text');
+  });
+});
+define('dummy/tests/integration/components/item-picker/feature-service-preview/component-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - integration/components/item-picker/feature-service-preview/component-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(false, 'integration/components/item-picker/feature-service-preview/component-test.js should pass ESLint.\n8:28  - Missing space before function parentheses. (space-before-function-paren)\n8:37  - Block must not be padded by blank lines. (padded-blocks)');
+  });
+});
 define('dummy/tests/integration/components/item-picker/item-preview/component-test', ['exports', 'ember-qunit', 'dummy/instance-initializers/ember-intl'], function (exports, _emberQunit, _dummyInstanceInitializersEmberIntl) {
 
   (0, _emberQunit.moduleForComponent)('item-picker/item-preview', 'Integration | Component | item picker/item preview', {
@@ -493,6 +531,180 @@ define('dummy/tests/integration/components/item-picker/item-row/component-test.l
     assert.ok(true, 'integration/components/item-picker/item-row/component-test.js should pass ESLint.\n');
   });
 });
+define('dummy/tests/integration/components/item-picker/layer-picker/component-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForComponent)('item-picker/layer-picker', 'Integration | Component | item picker/layer picker', {
+    integration: true
+  });
+
+  (0, _emberQunit.test)('it renders', function (assert) {
+
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+
+    this.render(Ember.HTMLBars.template({
+      'id': '4bQ8Mrhv',
+      'block': '{"statements":[["append",["unknown",["item-picker/layer-picker"]],false]],"locals":[],"named":[],"yields":[],"blocks":[],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), '');
+
+    // Template block usage:
+    this.render(Ember.HTMLBars.template({
+      'id': 'wey9EZaF',
+      'block': '{"statements":[["text","\\n"],["block",["item-picker/layer-picker"],null,null,0],["text","  "]],"locals":[],"named":[],"yields":[],"blocks":[{"statements":[["text","      template block text\\n"]],"locals":[]}],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), 'template block text');
+  });
+});
+define('dummy/tests/integration/components/item-picker/layer-picker/component-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - integration/components/item-picker/layer-picker/component-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(false, 'integration/components/item-picker/layer-picker/component-test.js should pass ESLint.\n8:28  - Missing space before function parentheses. (space-before-function-paren)\n8:37  - Block must not be padded by blank lines. (padded-blocks)');
+  });
+});
+define('dummy/tests/integration/components/item-thumbnail/component-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForComponent)('item-thumbnail', 'Integration | Component | item thumbnail', {
+    integration: true
+  });
+
+  (0, _emberQunit.test)('it renders', function (assert) {
+
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+
+    this.render(Ember.HTMLBars.template({
+      'id': 'GhWmW+FF',
+      'block': '{"statements":[["append",["unknown",["item-thumbnail"]],false]],"locals":[],"named":[],"yields":[],"blocks":[],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), '');
+
+    // Template block usage:
+    this.render(Ember.HTMLBars.template({
+      'id': 'vMOQJZUL',
+      'block': '{"statements":[["text","\\n"],["block",["item-thumbnail"],null,null,0],["text","  "]],"locals":[],"named":[],"yields":[],"blocks":[{"statements":[["text","      template block text\\n"]],"locals":[]}],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), 'template block text');
+  });
+});
+define('dummy/tests/integration/components/item-thumbnail/component-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - integration/components/item-thumbnail/component-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(false, 'integration/components/item-thumbnail/component-test.js should pass ESLint.\n8:28  - Missing space before function parentheses. (space-before-function-paren)\n8:37  - Block must not be padded by blank lines. (padded-blocks)');
+  });
+});
+define('dummy/tests/integration/components/loading-indicator/component-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForComponent)('loading-indicator', 'Integration | Component | loading indicator', {
+    integration: true
+  });
+
+  (0, _emberQunit.test)('it renders', function (assert) {
+
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+
+    this.render(Ember.HTMLBars.template({
+      'id': 'mLN+FKG3',
+      'block': '{"statements":[["append",["unknown",["loading-indicator"]],false]],"locals":[],"named":[],"yields":[],"blocks":[],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), '');
+
+    // Template block usage:
+    this.render(Ember.HTMLBars.template({
+      'id': 'xTguKqVg',
+      'block': '{"statements":[["text","\\n"],["block",["loading-indicator"],null,null,0],["text","  "]],"locals":[],"named":[],"yields":[],"blocks":[{"statements":[["text","      template block text\\n"]],"locals":[]}],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    assert.equal(this.$().text().trim(), 'template block text');
+  });
+});
+define('dummy/tests/integration/components/loading-indicator/component-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - integration/components/loading-indicator/component-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(false, 'integration/components/loading-indicator/component-test.js should pass ESLint.\n8:28  - Missing space before function parentheses. (space-before-function-paren)\n8:37  - Block must not be padded by blank lines. (padded-blocks)');
+  });
+});
+define('dummy/tests/integration/components/search-form/component-test', ['exports', 'ember-qunit'], function (exports, _emberQunit) {
+
+  (0, _emberQunit.moduleForComponent)('search-form', 'Integration | Component | search form', {
+    integration: true,
+    beforeEach: function beforeEach() {
+      var intl = this.container.lookup('service:intl');
+      intl.setLocale('en-us');
+      this.inject.service('intl', { as: 'intl' });
+    }
+  });
+
+  (0, _emberQunit.test)('it renders', function (assert) {
+    assert.expect(2);
+
+    this.set('q', undefined);
+    this.on('search', function (val) {
+      assert.equal(val, 'test', 'it should have passed the value on submit');
+    });
+
+    this.render(Ember.HTMLBars.template({
+      'id': 'DhxrJKzG',
+      'block': '{"statements":[["append",["helper",["search-form"],null,[["_q","onSearch"],[["get",["q"]],["helper",["action"],[["get",[null]],"search"],null]]]],false]],"locals":[],"named":[],"yields":[],"blocks":[],"hasPartials":false}',
+      'meta': {}
+    }));
+
+    var $input = this.$('input');
+    assert.equal($input.val(), '', 'input should be empty');
+
+    // enter term and search
+    $input.val('test').trigger('change');
+    assert.equal(this.get('q'), undefined, 'should not mutate q property');
+  });
+});
+define('dummy/tests/integration/components/search-form/component-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - integration/components/search-form/component-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'integration/components/search-form/component-test.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/defaultcatalog/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/defaultcatalog/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/defaultcatalog/controller.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/defaultcatalog/route.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/defaultcatalog/route.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/defaultcatalog/route.js should pass ESLint.\n');
+  });
+});
 define('dummy/tests/itempicker/facets/controller.lint-test', ['exports'], function (exports) {
   'use strict';
 
@@ -527,6 +739,24 @@ define('dummy/tests/itempicker/index/route.lint-test', ['exports'], function (ex
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'itempicker/index/route.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/layerpicker/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/layerpicker/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/layerpicker/controller.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/layerpicker/route.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/layerpicker/route.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/layerpicker/route.js should pass ESLint.\n');
   });
 });
 define('dummy/tests/itempicker/multiselect/controller.lint-test', ['exports'], function (exports) {
@@ -574,6 +804,24 @@ define('dummy/tests/itempicker/route.lint-test', ['exports'], function (exports)
     assert.ok(true, 'itempicker/route.js should pass ESLint.\n');
   });
 });
+define('dummy/tests/itempicker/specificid/controller.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/specificid/controller.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/specificid/controller.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/itempicker/specificid/route.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - itempicker/specificid/route.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'itempicker/specificid/route.js should pass ESLint.\n');
+  });
+});
 define('dummy/tests/itempicker/validation/controller.lint-test', ['exports'], function (exports) {
   'use strict';
 
@@ -607,7 +855,7 @@ define('dummy/tests/router.lint-test', ['exports'], function (exports) {
   QUnit.module('ESLint - router.js');
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
-    assert.ok(true, 'router.js should pass ESLint.\n');
+    assert.ok(false, 'router.js should pass ESLint.\n20:36  - Missing space before function parentheses. (space-before-function-paren)');
   });
 });
 define('dummy/tests/test-helper', ['exports', 'dummy/tests/helpers/resolver', 'ember-qunit'], function (exports, _dummyTestsHelpersResolver, _emberQunit) {
@@ -621,6 +869,28 @@ define('dummy/tests/test-helper.lint-test', ['exports'], function (exports) {
   QUnit.test('should pass ESLint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'test-helper.js should pass ESLint.\n');
+  });
+});
+define('dummy/tests/unit/utils/is-guid-test', ['exports', 'dummy/utils/is-guid', 'qunit'], function (exports, _dummyUtilsIsGuid, _qunit) {
+
+  (0, _qunit.module)('Unit | Utility | is guid');
+
+  // Replace this with your real tests.
+  (0, _qunit.test)('it works', function (assert) {
+    assert.notOk((0, _dummyUtilsIsGuid['default'])(1234));
+    assert.notOk((0, _dummyUtilsIsGuid['default'])('1234'));
+    assert.notOk((0, _dummyUtilsIsGuid['default'])('imnotaguid'));
+    assert.ok((0, _dummyUtilsIsGuid['default'])('76c3db4812d44f0087850093837e7a90'));
+    assert.ok((0, _dummyUtilsIsGuid['default'])('{371acc8b-85cf-4251-8c01-7d0e48bac7e3}'));
+  });
+});
+define('dummy/tests/unit/utils/is-guid-test.lint-test', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('ESLint - unit/utils/is-guid-test.js');
+  QUnit.test('should pass ESLint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'unit/utils/is-guid-test.js should pass ESLint.\n');
   });
 });
 define('dummy/tests/unit/utils/query-helpers-test', ['exports', 'dummy/utils/query-helpers', 'qunit'], function (exports, _dummyUtilsQueryHelpers, _qunit) {

@@ -12,8 +12,6 @@ var runningTests = false;
 (function (global) {
   'use strict';
 
-  var heimdall = global.heimdall;
-
   function dict() {
     var obj = Object.create(null);
     obj['__'] = undefined;
@@ -30,9 +28,9 @@ var runningTests = false;
     requirejs: requirejs
   };
 
-  requirejs = require = requireModule = function (name) {
+  requirejs = require = requireModule = function (id) {
     var pending = [];
-    var mod = findModule(name, '(require)', pending);
+    var mod = findModule(id, '(require)', pending);
 
     for (var i = pending.length - 1; i >= 0; i--) {
       pending[i].exports();
@@ -55,17 +53,10 @@ var runningTests = false;
           }
         }
       }
-    }
+    },
+    // Option to enable or disable the generation of default exports
+    makeDefaultExport: true
   };
-
-  var _isArray;
-  if (!Array.isArray) {
-    _isArray = function (x) {
-      return Object.prototype.toString.call(x) === '[object Array]';
-    };
-  } else {
-    _isArray = Array.isArray;
-  }
 
   var registry = dict();
   var seen = dict();
@@ -73,14 +64,14 @@ var runningTests = false;
   var uuid = 0;
 
   function unsupportedModule(length) {
-    throw new Error('an unsupported module was defined, expected `define(name, deps, module)` instead got: `' + length + '` arguments to define`');
+    throw new Error('an unsupported module was defined, expected `define(id, deps, module)` instead got: `' + length + '` arguments to define`');
   }
 
   var defaultDeps = ['require', 'exports', 'module'];
 
-  function Module(name, deps, callback, alias) {
-    this.id = uuid++;
-    this.name = name;
+  function Module(id, deps, callback, alias) {
+    this.uuid = uuid++;
+    this.id = id;
     this.deps = !deps.length && callback.length ? defaultDeps : deps;
     this.module = { exports: {} };
     this.callback = callback;
@@ -114,19 +105,23 @@ var runningTests = false;
       return this.module.exports;
     }
 
+
     if (loader.wrapModules) {
-      this.callback = loader.wrapModules(this.name, this.callback);
+      this.callback = loader.wrapModules(this.id, this.callback);
     }
 
     this.reify();
 
     var result = this.callback.apply(this, this.reified);
+    this.reified.length = 0;
     this.state = 'finalized';
 
     if (!(this.hasExportsAsDep && result === undefined)) {
       this.module.exports = result;
     }
-    this.makeDefaultExport();
+    if (loader.makeDefaultExport) {
+      this.makeDefaultExport();
+    }
     return this.module.exports;
   };
 
@@ -179,27 +174,28 @@ var runningTests = false;
       } else if (dep === 'module') {
         entry.exports = this.module;
       } else {
-        entry.module = findModule(resolve(dep, this.name), this.name, pending);
+        entry.module = findModule(resolve(dep, this.id), this.id, pending);
       }
     }
   };
 
   Module.prototype.makeRequire = function () {
-    var name = this.name;
+    var id = this.id;
     var r = function (dep) {
-      return require(resolve(dep, name));
+      return require(resolve(dep, id));
     };
     r['default'] = r;
+    r.moduleId = id;
     r.has = function (dep) {
-      return has(resolve(dep, name));
+      return has(resolve(dep, id));
     };
     return r;
   };
 
-  define = function (name, deps, callback) {
-    var module = registry[name];
+  define = function (id, deps, callback) {
+    var module = registry[id];
 
-    // If a module for this name has already been defined and is in any state
+    // If a module for this id has already been defined and is in any state
     // other than `new` (meaning it has been or is currently being required),
     // then we return early to avoid redefinition.
     if (module && module.state !== 'new') {
@@ -210,42 +206,65 @@ var runningTests = false;
       unsupportedModule(arguments.length);
     }
 
-    if (!_isArray(deps)) {
+    if (!Array.isArray(deps)) {
       callback = deps;
       deps = [];
     }
 
     if (callback instanceof Alias) {
-      registry[name] = new Module(callback.name, deps, callback, true);
+      registry[id] = new Module(callback.id, deps, callback, true);
     } else {
-      registry[name] = new Module(name, deps, callback, false);
+      registry[id] = new Module(id, deps, callback, false);
     }
   };
 
+  define.exports = function (name, defaultExport) {
+    var module = registry[name];
+
+    // If a module for this name has already been defined and is in any state
+    // other than `new` (meaning it has been or is currently being required),
+    // then we return early to avoid redefinition.
+    if (module && module.state !== 'new') {
+      return;
+    }
+
+    module = new Module(name, [], noop, null);
+    module.module.exports = defaultExport;
+    module.state = 'finalized';
+    registry[name] = module;
+
+    return module;
+  };
+
+  function noop() {}
   // we don't support all of AMD
   // define.amd = {};
 
-  function Alias(path) {
-    this.name = path;
+  function Alias(id) {
+    this.id = id;
   }
 
-  define.alias = function (path) {
-    return new Alias(path);
+  define.alias = function (id, target) {
+    if (arguments.length === 2) {
+      return define(target, new Alias(id));
+    }
+
+    return new Alias(id);
   };
 
-  function missingModule(name, referrer) {
-    throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
+  function missingModule(id, referrer) {
+    throw new Error('Could not find module `' + id + '` imported from `' + referrer + '`');
   }
 
-  function findModule(name, referrer, pending) {
-    var mod = registry[name] || registry[name + '/index'];
+  function findModule(id, referrer, pending) {
+    var mod = registry[id] || registry[id + '/index'];
 
     while (mod && mod.isAlias) {
-      mod = registry[mod.name];
+      mod = registry[mod.id];
     }
 
     if (!mod) {
-      missingModule(name, referrer);
+      missingModule(id, referrer);
     }
 
     if (pending && mod.state !== 'pending' && mod.state !== 'finalized') {
@@ -255,13 +274,14 @@ var runningTests = false;
     return mod;
   }
 
-  function resolve(child, name) {
+  function resolve(child, id) {
     if (child.charAt(0) !== '.') {
       return child;
     }
 
+
     var parts = child.split('/');
-    var nameParts = name.split('/');
+    var nameParts = id.split('/');
     var parentBase = nameParts.slice(0, -1);
 
     for (var i = 0, l = parts.length; i < l; i++) {
@@ -282,14 +302,14 @@ var runningTests = false;
     return parentBase.join('/');
   }
 
-  function has(name) {
-    return !!(registry[name] || registry[name + '/index']);
+  function has(id) {
+    return !!(registry[id] || registry[id + '/index']);
   }
 
   requirejs.entries = requirejs._eak_seen = registry;
   requirejs.has = has;
-  requirejs.unsee = function (moduleName) {
-    findModule(moduleName, '(unsee)', false).unsee();
+  requirejs.unsee = function (id) {
+    findModule(id, '(unsee)', false).unsee();
   };
 
   requirejs.clear = function () {
@@ -308,9 +328,12 @@ var runningTests = false;
   });
   define('foo/baz', [], define.alias('foo'));
   define('foo/quz', define.alias('foo'));
+  define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
+  define.exports('foo/exports', {});
 
+  require('foo/exports');
   require('foo/main');
   require.unsee('foo/bar');
 
@@ -74224,19 +74247,11 @@ https://highlightjs.org/
     languages: undefined
   };
 
-  // Object map that is used to escape some common HTML characters.
-  var escapeRegexMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;'
-  };
 
   /* Utility functions */
 
   function escape(value) {
-    return value.replace(/[&<>]/gm, function(character) {
-      return escapeRegexMap[character];
-    });
+    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function tag(node) {
@@ -74353,7 +74368,7 @@ https://highlightjs.org/
     }
 
     function open(node) {
-      function attr_str(a) {return ' ' + a.nodeName + '="' + escape(a.value) + '"';}
+      function attr_str(a) {return ' ' + a.nodeName + '="' + escape(a.value).replace('"', '&quot;') + '"';}
       result += '<' + tag(node) + ArrayProto.map.call(node.attributes, attr_str).join('') + '>';
     }
 
@@ -74914,7 +74929,7 @@ https://highlightjs.org/
     contains: [hljs.BACKSLASH_ESCAPE]
   };
   hljs.PHRASAL_WORDS_MODE = {
-    begin: /\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|like)\b/
+    begin: /\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|they|like|more)\b/
   };
   hljs.COMMENT = function (begin, end, inherits) {
     var mode = hljs.inherit(
@@ -74996,6 +75011,8 @@ https://highlightjs.org/
   return hljs;
 }));
 
+},{}],"highlight.js":[function(require,module,exports){
+module.exports=require('bRhrlU');
 },{}],"bRhrlU":[function(require,module,exports){
 var hljs = require('./highlight');
 
@@ -75082,8 +75099,10 @@ hljs.registerLanguage('ini', require('./languages/ini'));
 hljs.registerLanguage('irpf90', require('./languages/irpf90'));
 hljs.registerLanguage('java', require('./languages/java'));
 hljs.registerLanguage('javascript', require('./languages/javascript'));
+hljs.registerLanguage('jboss-cli', require('./languages/jboss-cli'));
 hljs.registerLanguage('json', require('./languages/json'));
 hljs.registerLanguage('julia', require('./languages/julia'));
+hljs.registerLanguage('julia-repl', require('./languages/julia-repl'));
 hljs.registerLanguage('kotlin', require('./languages/kotlin'));
 hljs.registerLanguage('lasso', require('./languages/lasso'));
 hljs.registerLanguage('ldif', require('./languages/ldif'));
@@ -75133,6 +75152,7 @@ hljs.registerLanguage('qml', require('./languages/qml'));
 hljs.registerLanguage('r', require('./languages/r'));
 hljs.registerLanguage('rib', require('./languages/rib'));
 hljs.registerLanguage('roboconf', require('./languages/roboconf'));
+hljs.registerLanguage('routeros', require('./languages/routeros'));
 hljs.registerLanguage('rsl', require('./languages/rsl'));
 hljs.registerLanguage('ruleslanguage', require('./languages/ruleslanguage'));
 hljs.registerLanguage('rust', require('./languages/rust'));
@@ -75140,6 +75160,7 @@ hljs.registerLanguage('scala', require('./languages/scala'));
 hljs.registerLanguage('scheme', require('./languages/scheme'));
 hljs.registerLanguage('scilab', require('./languages/scilab'));
 hljs.registerLanguage('scss', require('./languages/scss'));
+hljs.registerLanguage('shell', require('./languages/shell'));
 hljs.registerLanguage('smali', require('./languages/smali'));
 hljs.registerLanguage('smalltalk', require('./languages/smalltalk'));
 hljs.registerLanguage('sml', require('./languages/sml'));
@@ -75173,86 +75194,515 @@ hljs.registerLanguage('xquery', require('./languages/xquery'));
 hljs.registerLanguage('zephir', require('./languages/zephir'));
 
 module.exports = hljs;
-},{"./highlight":1,"./languages/1c":4,"./languages/abnf":5,"./languages/accesslog":6,"./languages/actionscript":7,"./languages/ada":8,"./languages/apache":9,"./languages/applescript":10,"./languages/arduino":11,"./languages/armasm":12,"./languages/asciidoc":13,"./languages/aspectj":14,"./languages/autohotkey":15,"./languages/autoit":16,"./languages/avrasm":17,"./languages/awk":18,"./languages/axapta":19,"./languages/bash":20,"./languages/basic":21,"./languages/bnf":22,"./languages/brainfuck":23,"./languages/cal":24,"./languages/capnproto":25,"./languages/ceylon":26,"./languages/clean":27,"./languages/clojure":29,"./languages/clojure-repl":28,"./languages/cmake":30,"./languages/coffeescript":31,"./languages/coq":32,"./languages/cos":33,"./languages/cpp":34,"./languages/crmsh":35,"./languages/crystal":36,"./languages/cs":37,"./languages/csp":38,"./languages/css":39,"./languages/d":40,"./languages/dart":41,"./languages/delphi":42,"./languages/diff":43,"./languages/django":44,"./languages/dns":45,"./languages/dockerfile":46,"./languages/dos":47,"./languages/dsconfig":48,"./languages/dts":49,"./languages/dust":50,"./languages/ebnf":51,"./languages/elixir":52,"./languages/elm":53,"./languages/erb":54,"./languages/erlang":56,"./languages/erlang-repl":55,"./languages/excel":57,"./languages/fix":58,"./languages/flix":59,"./languages/fortran":60,"./languages/fsharp":61,"./languages/gams":62,"./languages/gauss":63,"./languages/gcode":64,"./languages/gherkin":65,"./languages/glsl":66,"./languages/go":67,"./languages/golo":68,"./languages/gradle":69,"./languages/groovy":70,"./languages/haml":71,"./languages/handlebars":72,"./languages/haskell":73,"./languages/haxe":74,"./languages/hsp":75,"./languages/htmlbars":76,"./languages/http":77,"./languages/hy":78,"./languages/inform7":79,"./languages/ini":80,"./languages/irpf90":81,"./languages/java":82,"./languages/javascript":83,"./languages/json":84,"./languages/julia":85,"./languages/kotlin":86,"./languages/lasso":87,"./languages/ldif":88,"./languages/leaf":89,"./languages/less":90,"./languages/lisp":91,"./languages/livecodeserver":92,"./languages/livescript":93,"./languages/llvm":94,"./languages/lsl":95,"./languages/lua":96,"./languages/makefile":97,"./languages/markdown":98,"./languages/mathematica":99,"./languages/matlab":100,"./languages/maxima":101,"./languages/mel":102,"./languages/mercury":103,"./languages/mipsasm":104,"./languages/mizar":105,"./languages/mojolicious":106,"./languages/monkey":107,"./languages/moonscript":108,"./languages/n1ql":109,"./languages/nginx":110,"./languages/nimrod":111,"./languages/nix":112,"./languages/nsis":113,"./languages/objectivec":114,"./languages/ocaml":115,"./languages/openscad":116,"./languages/oxygene":117,"./languages/parser3":118,"./languages/perl":119,"./languages/pf":120,"./languages/php":121,"./languages/pony":122,"./languages/powershell":123,"./languages/processing":124,"./languages/profile":125,"./languages/prolog":126,"./languages/protobuf":127,"./languages/puppet":128,"./languages/purebasic":129,"./languages/python":130,"./languages/q":131,"./languages/qml":132,"./languages/r":133,"./languages/rib":134,"./languages/roboconf":135,"./languages/rsl":136,"./languages/ruby":137,"./languages/ruleslanguage":138,"./languages/rust":139,"./languages/scala":140,"./languages/scheme":141,"./languages/scilab":142,"./languages/scss":143,"./languages/smali":144,"./languages/smalltalk":145,"./languages/sml":146,"./languages/sqf":147,"./languages/sql":148,"./languages/stan":149,"./languages/stata":150,"./languages/step21":151,"./languages/stylus":152,"./languages/subunit":153,"./languages/swift":154,"./languages/taggerscript":155,"./languages/tap":156,"./languages/tcl":157,"./languages/tex":158,"./languages/thrift":159,"./languages/tp":160,"./languages/twig":161,"./languages/typescript":162,"./languages/vala":163,"./languages/vbnet":164,"./languages/vbscript":166,"./languages/vbscript-html":165,"./languages/verilog":167,"./languages/vhdl":168,"./languages/vim":169,"./languages/x86asm":170,"./languages/xl":171,"./languages/xml":172,"./languages/xquery":173,"./languages/yaml":174,"./languages/zephir":175}],"highlight.js":[function(require,module,exports){
-module.exports=require('bRhrlU');
-},{}],4:[function(require,module,exports){
+},{"./highlight":1,"./languages/1c":4,"./languages/abnf":5,"./languages/accesslog":6,"./languages/actionscript":7,"./languages/ada":8,"./languages/apache":9,"./languages/applescript":10,"./languages/arduino":11,"./languages/armasm":12,"./languages/asciidoc":13,"./languages/aspectj":14,"./languages/autohotkey":15,"./languages/autoit":16,"./languages/avrasm":17,"./languages/awk":18,"./languages/axapta":19,"./languages/bash":20,"./languages/basic":21,"./languages/bnf":22,"./languages/brainfuck":23,"./languages/cal":24,"./languages/capnproto":25,"./languages/ceylon":26,"./languages/clean":27,"./languages/clojure":29,"./languages/clojure-repl":28,"./languages/cmake":30,"./languages/coffeescript":31,"./languages/coq":32,"./languages/cos":33,"./languages/cpp":34,"./languages/crmsh":35,"./languages/crystal":36,"./languages/cs":37,"./languages/csp":38,"./languages/css":39,"./languages/d":40,"./languages/dart":41,"./languages/delphi":42,"./languages/diff":43,"./languages/django":44,"./languages/dns":45,"./languages/dockerfile":46,"./languages/dos":47,"./languages/dsconfig":48,"./languages/dts":49,"./languages/dust":50,"./languages/ebnf":51,"./languages/elixir":52,"./languages/elm":53,"./languages/erb":54,"./languages/erlang":56,"./languages/erlang-repl":55,"./languages/excel":57,"./languages/fix":58,"./languages/flix":59,"./languages/fortran":60,"./languages/fsharp":61,"./languages/gams":62,"./languages/gauss":63,"./languages/gcode":64,"./languages/gherkin":65,"./languages/glsl":66,"./languages/go":67,"./languages/golo":68,"./languages/gradle":69,"./languages/groovy":70,"./languages/haml":71,"./languages/handlebars":72,"./languages/haskell":73,"./languages/haxe":74,"./languages/hsp":75,"./languages/htmlbars":76,"./languages/http":77,"./languages/hy":78,"./languages/inform7":79,"./languages/ini":80,"./languages/irpf90":81,"./languages/java":82,"./languages/javascript":83,"./languages/jboss-cli":84,"./languages/json":85,"./languages/julia":87,"./languages/julia-repl":86,"./languages/kotlin":88,"./languages/lasso":89,"./languages/ldif":90,"./languages/leaf":91,"./languages/less":92,"./languages/lisp":93,"./languages/livecodeserver":94,"./languages/livescript":95,"./languages/llvm":96,"./languages/lsl":97,"./languages/lua":98,"./languages/makefile":99,"./languages/markdown":100,"./languages/mathematica":101,"./languages/matlab":102,"./languages/maxima":103,"./languages/mel":104,"./languages/mercury":105,"./languages/mipsasm":106,"./languages/mizar":107,"./languages/mojolicious":108,"./languages/monkey":109,"./languages/moonscript":110,"./languages/n1ql":111,"./languages/nginx":112,"./languages/nimrod":113,"./languages/nix":114,"./languages/nsis":115,"./languages/objectivec":116,"./languages/ocaml":117,"./languages/openscad":118,"./languages/oxygene":119,"./languages/parser3":120,"./languages/perl":121,"./languages/pf":122,"./languages/php":123,"./languages/pony":124,"./languages/powershell":125,"./languages/processing":126,"./languages/profile":127,"./languages/prolog":128,"./languages/protobuf":129,"./languages/puppet":130,"./languages/purebasic":131,"./languages/python":132,"./languages/q":133,"./languages/qml":134,"./languages/r":135,"./languages/rib":136,"./languages/roboconf":137,"./languages/routeros":138,"./languages/rsl":139,"./languages/ruby":140,"./languages/ruleslanguage":141,"./languages/rust":142,"./languages/scala":143,"./languages/scheme":144,"./languages/scilab":145,"./languages/scss":146,"./languages/shell":147,"./languages/smali":148,"./languages/smalltalk":149,"./languages/sml":150,"./languages/sqf":151,"./languages/sql":152,"./languages/stan":153,"./languages/stata":154,"./languages/step21":155,"./languages/stylus":156,"./languages/subunit":157,"./languages/swift":158,"./languages/taggerscript":159,"./languages/tap":160,"./languages/tcl":161,"./languages/tex":162,"./languages/thrift":163,"./languages/tp":164,"./languages/twig":165,"./languages/typescript":166,"./languages/vala":167,"./languages/vbnet":168,"./languages/vbscript":170,"./languages/vbscript-html":169,"./languages/verilog":171,"./languages/vhdl":172,"./languages/vim":173,"./languages/x86asm":174,"./languages/xl":175,"./languages/xml":176,"./languages/xquery":177,"./languages/yaml":178,"./languages/zephir":179}],4:[function(require,module,exports){
 module.exports = function(hljs){
-  var IDENT_RE_RU = '[a-zA-Zа-яА-Я][a-zA-Z0-9_а-яА-Я]*';
-  var OneS_KEYWORDS = 'возврат дата для если и или иначе иначеесли исключение конецесли ' +
-    'конецпопытки конецпроцедуры конецфункции конеццикла константа не перейти перем ' +
-    'перечисление по пока попытка прервать продолжить процедура строка тогда фс функция цикл ' +
-    'число экспорт';
-  var OneS_BUILT_IN = 'ansitooem oemtoansi ввестивидсубконто ввестидату ввестизначение ' +
-    'ввестиперечисление ввестипериод ввестиплансчетов ввестистроку ввестичисло вопрос ' +
-    'восстановитьзначение врег выбранныйплансчетов вызватьисключение датагод датамесяц ' +
-    'датачисло добавитьмесяц завершитьработусистемы заголовоксистемы записьжурналарегистрации ' +
-    'запуститьприложение зафиксироватьтранзакцию значениевстроку значениевстрокувнутр ' +
-    'значениевфайл значениеизстроки значениеизстрокивнутр значениеизфайла имякомпьютера ' +
-    'имяпользователя каталогвременныхфайлов каталогиб каталогпользователя каталогпрограммы ' +
-    'кодсимв командасистемы конгода конецпериодаби конецрассчитанногопериодаби ' +
-    'конецстандартногоинтервала конквартала конмесяца коннедели лев лог лог10 макс ' +
-    'максимальноеколичествосубконто мин монопольныйрежим названиеинтерфейса названиенабораправ ' +
-    'назначитьвид назначитьсчет найти найтипомеченныенаудаление найтиссылки началопериодаби ' +
-    'началостандартногоинтервала начатьтранзакцию начгода начквартала начмесяца начнедели ' +
-    'номерднягода номерднянедели номернеделигода нрег обработкаожидания окр описаниеошибки ' +
-    'основнойжурналрасчетов основнойплансчетов основнойязык открытьформу открытьформумодально ' +
-    'отменитьтранзакцию очиститьокносообщений периодстр полноеимяпользователя получитьвремята ' +
-    'получитьдатута получитьдокументта получитьзначенияотбора получитьпозициюта ' +
-    'получитьпустоезначение получитьта прав праводоступа предупреждение префиксавтонумерации ' +
-    'пустаястрока пустоезначение рабочаядаттьпустоезначение рабочаядата разделительстраниц ' +
-    'разделительстрок разм разобратьпозициюдокумента рассчитатьрегистрына ' +
-    'рассчитатьрегистрыпо сигнал симв символтабуляции создатьобъект сокрл сокрлп сокрп ' +
-    'сообщить состояние сохранитьзначение сред статусвозврата стрдлина стрзаменить ' +
-    'стрколичествострок стрполучитьстроку  стрчисловхождений сформироватьпозициюдокумента ' +
-    'счетпокоду текущаядата текущеевремя типзначения типзначениястр удалитьобъекты ' +
-    'установитьтана установитьтапо фиксшаблон формат цел шаблон';
-  var DQUOTE =  {begin: '""'};
-  var STR_START = {
-      className: 'string',
-      begin: '"', end: '"|$',
-      contains: [DQUOTE]
-    };
-  var STR_CONT = {
+
+  // общий паттерн для определения идентификаторов
+  var UNDERSCORE_IDENT_RE = '[A-Za-zА-Яа-яёЁ_][A-Za-zА-Яа-яёЁ_0-9]+';
+  
+  // v7 уникальные ключевые слова, отсутствующие в v8 ==> keyword
+  var v7_keywords =
+  'далее ';
+
+  // v8 ключевые слова ==> keyword
+  var v8_keywords =
+  'возврат вызватьисключение выполнить для если и из или иначе иначеесли исключение каждого конецесли ' +
+  'конецпопытки конеццикла не новый перейти перем по пока попытка прервать продолжить тогда цикл экспорт ';
+
+  // keyword : ключевые слова
+  var KEYWORD = v7_keywords + v8_keywords;
+  
+  // v7 уникальные директивы, отсутствующие в v8 ==> meta-keyword
+  var v7_meta_keywords =
+  'загрузитьизфайла ';
+
+  // v8 ключевые слова в инструкциях препроцессора, директивах компиляции, аннотациях ==> meta-keyword
+  var v8_meta_keywords =
+  'вебклиент вместо внешнеесоединение клиент конецобласти мобильноеприложениеклиент мобильноеприложениесервер ' +
+  'наклиенте наклиентенасервере наклиентенасерверебезконтекста насервере насерверебезконтекста область перед ' +
+  'после сервер толстыйклиентобычноеприложение толстыйклиентуправляемоеприложение тонкийклиент ';
+
+  // meta-keyword : ключевые слова в инструкциях препроцессора, директивах компиляции, аннотациях
+  var METAKEYWORD = v7_meta_keywords + v8_meta_keywords;
+
+  // v7 системные константы ==> built_in
+  var v7_system_constants =
+  'разделительстраниц разделительстрок символтабуляции ';
+  
+  // v7 уникальные методы глобального контекста, отсутствующие в v8 ==> built_in
+  var v7_global_context_methods =
+  'ansitooem oemtoansi ввестивидсубконто ввестиперечисление ввестипериод ввестиплансчетов выбранныйплансчетов ' +
+  'датагод датамесяц датачисло заголовоксистемы значениевстроку значениеизстроки каталогиб каталогпользователя ' +
+  'кодсимв конгода конецпериодаби конецрассчитанногопериодаби конецстандартногоинтервала конквартала конмесяца ' +
+  'коннедели лог лог10 максимальноеколичествосубконто названиеинтерфейса названиенабораправ назначитьвид ' +
+  'назначитьсчет найтиссылки началопериодаби началостандартногоинтервала начгода начквартала начмесяца ' +
+  'начнедели номерднягода номерднянедели номернеделигода обработкаожидания основнойжурналрасчетов ' +
+  'основнойплансчетов основнойязык очиститьокносообщений периодстр получитьвремята получитьдатута ' +
+  'получитьдокументта получитьзначенияотбора получитьпозициюта получитьпустоезначение получитьта ' +
+  'префиксавтонумерации пропись пустоезначение разм разобратьпозициюдокумента рассчитатьрегистрына ' +
+  'рассчитатьрегистрыпо симв создатьобъект статусвозврата стрколичествострок сформироватьпозициюдокумента ' +
+  'счетпокоду текущеевремя типзначения типзначениястр установитьтана установитьтапо фиксшаблон шаблон ';
+  
+  // v8 методы глобального контекста ==> built_in
+  var v8_global_context_methods =
+  'acos asin atan base64значение base64строка cos exp log log10 pow sin sqrt tan xmlзначение xmlстрока ' +
+  'xmlтип xmlтипзнч активноеокно безопасныйрежим безопасныйрежимразделенияданных булево ввестидату ввестизначение ' +
+  'ввестистроку ввестичисло возможностьчтенияxml вопрос восстановитьзначение врег выгрузитьжурналрегистрации ' +
+  'выполнитьобработкуоповещения выполнитьпроверкуправдоступа вычислить год данныеформывзначение дата день деньгода ' +
+  'деньнедели добавитьмесяц заблокироватьданныедляредактирования заблокироватьработупользователя завершитьработусистемы ' +
+  'загрузитьвнешнююкомпоненту закрытьсправку записатьjson записатьxml записатьдатуjson записьжурналарегистрации ' +
+  'заполнитьзначениясвойств запроситьразрешениепользователя запуститьприложение запуститьсистему зафиксироватьтранзакцию ' +
+  'значениевданныеформы значениевстрокувнутр значениевфайл значениезаполнено значениеизстрокивнутр значениеизфайла ' +
+  'изxmlтипа импортмоделиxdto имякомпьютера имяпользователя инициализироватьпредопределенныеданные информацияобошибке ' +
+  'каталогбиблиотекимобильногоустройства каталогвременныхфайлов каталогдокументов каталогпрограммы кодироватьстроку ' +
+  'кодлокализацииинформационнойбазы кодсимвола командасистемы конецгода конецдня конецквартала конецмесяца конецминуты ' +
+  'конецнедели конецчаса конфигурациябазыданныхизмененадинамически конфигурацияизменена копироватьданныеформы ' +
+  'копироватьфайл краткоепредставлениеошибки лев макс местноевремя месяц мин минута монопольныйрежим найти ' +
+  'найтинедопустимыесимволыxml найтиокнопонавигационнойссылке найтипомеченныенаудаление найтипоссылкам найтифайлы ' +
+  'началогода началодня началоквартала началомесяца началоминуты началонедели началочаса начатьзапросразрешенияпользователя ' +
+  'начатьзапускприложения начатькопированиефайла начатьперемещениефайла начатьподключениевнешнейкомпоненты ' +
+  'начатьподключениерасширенияработыскриптографией начатьподключениерасширенияработысфайлами начатьпоискфайлов ' +
+  'начатьполучениекаталогавременныхфайлов начатьполучениекаталогадокументов начатьполучениерабочегокаталогаданныхпользователя ' +
+  'начатьполучениефайлов начатьпомещениефайла начатьпомещениефайлов начатьсозданиедвоичныхданныхизфайла начатьсозданиекаталога ' +
+  'начатьтранзакцию начатьудалениефайлов начатьустановкувнешнейкомпоненты начатьустановкурасширенияработыскриптографией ' +
+  'начатьустановкурасширенияработысфайлами неделягода необходимостьзавершениясоединения номерсеансаинформационнойбазы ' +
+  'номерсоединенияинформационнойбазы нрег нстр обновитьинтерфейс обновитьнумерациюобъектов обновитьповторноиспользуемыезначения ' +
+  'обработкапрерыванияпользователя объединитьфайлы окр описаниеошибки оповестить оповеститьобизменении ' +
+  'отключитьобработчикзапросанастроекклиенталицензирования отключитьобработчикожидания отключитьобработчикоповещения ' +
+  'открытьзначение открытьиндекссправки открытьсодержаниесправки открытьсправку открытьформу открытьформумодально ' +
+  'отменитьтранзакцию очиститьжурналрегистрации очиститьнастройкипользователя очиститьсообщения параметрыдоступа ' +
+  'перейтипонавигационнойссылке переместитьфайл подключитьвнешнююкомпоненту ' +
+  'подключитьобработчикзапросанастроекклиенталицензирования подключитьобработчикожидания подключитьобработчикоповещения ' +
+  'подключитьрасширениеработыскриптографией подключитьрасширениеработысфайлами подробноепредставлениеошибки ' +
+  'показатьвводдаты показатьвводзначения показатьвводстроки показатьвводчисла показатьвопрос показатьзначение ' +
+  'показатьинформациюобошибке показатьнакарте показатьоповещениепользователя показатьпредупреждение полноеимяпользователя ' +
+  'получитьcomобъект получитьxmlтип получитьадреспоместоположению получитьблокировкусеансов получитьвремязавершенияспящегосеанса ' +
+  'получитьвремязасыпанияпассивногосеанса получитьвремяожиданияблокировкиданных получитьданныевыбора ' +
+  'получитьдополнительныйпараметрклиенталицензирования получитьдопустимыекодылокализации получитьдопустимыечасовыепояса ' +
+  'получитьзаголовокклиентскогоприложения получитьзаголовоксистемы получитьзначенияотборажурналарегистрации ' +
+  'получитьидентификаторконфигурации получитьизвременногохранилища получитьимявременногофайла ' +
+  'получитьимяклиенталицензирования получитьинформациюэкрановклиента получитьиспользованиежурналарегистрации ' +
+  'получитьиспользованиесобытияжурналарегистрации получитькраткийзаголовокприложения получитьмакетоформления ' +
+  'получитьмаскувсефайлы получитьмаскувсефайлыклиента получитьмаскувсефайлысервера получитьместоположениепоадресу ' +
+  'получитьминимальнуюдлинупаролейпользователей получитьнавигационнуюссылку получитьнавигационнуюссылкуинформационнойбазы ' +
+  'получитьобновлениеконфигурациибазыданных получитьобновлениепредопределенныхданныхинформационнойбазы получитьобщиймакет ' +
+  'получитьобщуюформу получитьокна получитьоперативнуюотметкувремени получитьотключениебезопасногорежима ' +
+  'получитьпараметрыфункциональныхопцийинтерфейса получитьполноеимяпредопределенногозначения ' +
+  'получитьпредставлениянавигационныхссылок получитьпроверкусложностипаролейпользователей получитьразделительпути ' +
+  'получитьразделительпутиклиента получитьразделительпутисервера получитьсеансыинформационнойбазы ' +
+  'получитьскоростьклиентскогосоединения получитьсоединенияинформационнойбазы получитьсообщенияпользователю ' +
+  'получитьсоответствиеобъектаиформы получитьсоставстандартногоинтерфейсаodata получитьструктурухранениябазыданных ' +
+  'получитьтекущийсеансинформационнойбазы получитьфайл получитьфайлы получитьформу получитьфункциональнуюопцию ' +
+  'получитьфункциональнуюопциюинтерфейса получитьчасовойпоясинформационнойбазы пользователиос поместитьвовременноехранилище ' +
+  'поместитьфайл поместитьфайлы прав праводоступа предопределенноезначение представлениекодалокализации представлениепериода ' +
+  'представлениеправа представлениеприложения представлениесобытияжурналарегистрации представлениечасовогопояса предупреждение ' +
+  'прекратитьработусистемы привилегированныйрежим продолжитьвызов прочитатьjson прочитатьxml прочитатьдатуjson пустаястрока ' +
+  'рабочийкаталогданныхпользователя разблокироватьданныедляредактирования разделитьфайл разорватьсоединениесвнешнимисточникомданных ' +
+  'раскодироватьстроку рольдоступна секунда сигнал символ скопироватьжурналрегистрации смещениелетнеговремени ' +
+  'смещениестандартноговремени соединитьбуферыдвоичныхданных создатькаталог создатьфабрикуxdto сокрл сокрлп сокрп сообщить ' +
+  'состояние сохранитьзначение сохранитьнастройкипользователя сред стрдлина стрзаканчиваетсяна стрзаменить стрнайти стрначинаетсяс ' +
+  'строка строкасоединенияинформационнойбазы стрполучитьстроку стрразделить стрсоединить стрсравнить стрчисловхождений '+
+  'стрчислострок стршаблон текущаядата текущаядатасеанса текущаяуниверсальнаядата текущаяуниверсальнаядатавмиллисекундах ' +
+  'текущийвариантинтерфейсаклиентскогоприложения текущийвариантосновногошрифтаклиентскогоприложения текущийкодлокализации ' +
+  'текущийрежимзапуска текущийязык текущийязыксистемы тип типзнч транзакцияактивна трег удалитьданныеинформационнойбазы ' +
+  'удалитьизвременногохранилища удалитьобъекты удалитьфайлы универсальноевремя установитьбезопасныйрежим ' +
+  'установитьбезопасныйрежимразделенияданных установитьблокировкусеансов установитьвнешнююкомпоненту ' +
+  'установитьвремязавершенияспящегосеанса установитьвремязасыпанияпассивногосеанса установитьвремяожиданияблокировкиданных ' +
+  'установитьзаголовокклиентскогоприложения установитьзаголовоксистемы установитьиспользованиежурналарегистрации ' +
+  'установитьиспользованиесобытияжурналарегистрации установитькраткийзаголовокприложения ' +
+  'установитьминимальнуюдлинупаролейпользователей установитьмонопольныйрежим установитьнастройкиклиенталицензирования ' +
+  'установитьобновлениепредопределенныхданныхинформационнойбазы установитьотключениебезопасногорежима ' +
+  'установитьпараметрыфункциональныхопцийинтерфейса установитьпривилегированныйрежим ' +
+  'установитьпроверкусложностипаролейпользователей установитьрасширениеработыскриптографией ' +
+  'установитьрасширениеработысфайлами установитьсоединениесвнешнимисточникомданных установитьсоответствиеобъектаиформы ' +
+  'установитьсоставстандартногоинтерфейсаodata установитьчасовойпоясинформационнойбазы установитьчасовойпояссеанса ' +
+  'формат цел час часовойпояс часовойпояссеанса число числопрописью этоадресвременногохранилища ';
+
+  // v8 свойства глобального контекста ==> built_in
+  var v8_global_context_property =
+  'wsссылки библиотекакартинок библиотекамакетовоформлениякомпоновкиданных библиотекастилей бизнеспроцессы ' +
+  'внешниеисточникиданных внешниеобработки внешниеотчеты встроенныепокупки главныйинтерфейс главныйстиль ' +
+  'документы доставляемыеуведомления журналыдокументов задачи информацияобинтернетсоединении использованиерабочейдаты ' +
+  'историяработыпользователя константы критерииотбора метаданные обработки отображениерекламы отправкадоставляемыхуведомлений ' +
+  'отчеты панельзадачос параметрзапуска параметрысеанса перечисления планывидоврасчета планывидовхарактеристик ' +
+  'планыобмена планысчетов полнотекстовыйпоиск пользователиинформационнойбазы последовательности проверкавстроенныхпокупок ' +
+  'рабочаядата расширенияконфигурации регистрыбухгалтерии регистрынакопления регистрырасчета регистрысведений ' +
+  'регламентныезадания сериализаторxdto справочники средствагеопозиционирования средствакриптографии средствамультимедиа ' +
+  'средстваотображениярекламы средствапочты средствателефонии фабрикаxdto файловыепотоки фоновыезадания хранилищанастроек ' +
+  'хранилищевариантовотчетов хранилищенастроекданныхформ хранилищеобщихнастроек хранилищепользовательскихнастроекдинамическихсписков ' +
+  'хранилищепользовательскихнастроекотчетов хранилищесистемныхнастроек ';
+
+  // built_in : встроенные или библиотечные объекты (константы, классы, функции)
+  var BUILTIN =
+  v7_system_constants +
+  v7_global_context_methods + v8_global_context_methods +
+  v8_global_context_property;
+  
+  // v8 системные наборы значений ==> class
+  var v8_system_sets_of_values =
+  'webцвета windowsцвета windowsшрифты библиотекакартинок рамкистиля символы цветастиля шрифтыстиля ';
+
+  // v8 системные перечисления - интерфейсные ==> class
+  var v8_system_enums_interface =
+  'автоматическоесохранениеданныхформывнастройках автонумерациявформе автораздвижениесерий ' +
+  'анимациядиаграммы вариантвыравниванияэлементовизаголовков вариантуправлениявысотойтаблицы ' +
+  'вертикальнаяпрокруткаформы вертикальноеположение вертикальноеположениеэлемента видгруппыформы ' +
+  'виддекорацииформы виддополненияэлементаформы видизмененияданных видкнопкиформы видпереключателя ' +
+  'видподписейкдиаграмме видполяформы видфлажка влияниеразмеранапузырекдиаграммы горизонтальноеположение ' +
+  'горизонтальноеположениеэлемента группировкаколонок группировкаподчиненныхэлементовформы ' +
+  'группыиэлементы действиеперетаскивания дополнительныйрежимотображения допустимыедействияперетаскивания ' +
+  'интервалмеждуэлементамиформы использованиевывода использованиеполосыпрокрутки ' +
+  'используемоезначениеточкибиржевойдиаграммы историявыборапривводе источникзначенийоситочекдиаграммы ' +
+  'источникзначенияразмерапузырькадиаграммы категориягруппыкоманд максимумсерий начальноеотображениедерева ' +
+  'начальноеотображениесписка обновлениетекстаредактирования ориентациядендрограммы ориентациядиаграммы ' +
+  'ориентацияметокдиаграммы ориентацияметоксводнойдиаграммы ориентацияэлементаформы отображениевдиаграмме ' +
+  'отображениевлегендедиаграммы отображениегруппыкнопок отображениезаголовкашкалыдиаграммы ' +
+  'отображениезначенийсводнойдиаграммы отображениезначенияизмерительнойдиаграммы ' +
+  'отображениеинтерваладиаграммыганта отображениекнопки отображениекнопкивыбора отображениеобсужденийформы ' +
+  'отображениеобычнойгруппы отображениеотрицательныхзначенийпузырьковойдиаграммы отображениепанелипоиска ' +
+  'отображениеподсказки отображениепредупрежденияприредактировании отображениеразметкиполосырегулирования ' +
+  'отображениестраницформы отображениетаблицы отображениетекстазначениядиаграммыганта ' +
+  'отображениеуправленияобычнойгруппы отображениефигурыкнопки палитрацветовдиаграммы поведениеобычнойгруппы ' +
+  'поддержкамасштабадендрограммы поддержкамасштабадиаграммыганта поддержкамасштабасводнойдиаграммы ' +
+  'поисквтаблицепривводе положениезаголовкаэлементаформы положениекартинкикнопкиформы ' +
+  'положениекартинкиэлементаграфическойсхемы положениекоманднойпанелиформы положениекоманднойпанелиэлементаформы ' +
+  'положениеопорнойточкиотрисовки положениеподписейкдиаграмме положениеподписейшкалызначенийизмерительнойдиаграммы ' +
+  'положениесостоянияпросмотра положениестрокипоиска положениетекстасоединительнойлинии положениеуправленияпоиском ' +
+  'положениешкалывремени порядокотображенияточекгоризонтальнойгистограммы порядоксерийвлегендедиаграммы ' +
+  'размеркартинки расположениезаголовкашкалыдиаграммы растягиваниеповертикалидиаграммыганта ' +
+  'режимавтоотображениясостояния режимвводастроктаблицы режимвыборанезаполненного режимвыделениядаты ' +
+  'режимвыделениястрокитаблицы режимвыделениятаблицы режимизмененияразмера режимизменениясвязанногозначения ' +
+  'режимиспользованиядиалогапечати режимиспользованияпараметракоманды режиммасштабированияпросмотра ' +
+  'режимосновногоокнаклиентскогоприложения режимоткрытияокнаформы режимотображениявыделения ' +
+  'режимотображениягеографическойсхемы режимотображениязначенийсерии режимотрисовкисеткиграфическойсхемы ' +
+  'режимполупрозрачностидиаграммы режимпробеловдиаграммы режимразмещениянастранице режимредактированияколонки ' +
+  'режимсглаживаниядиаграммы режимсглаживанияиндикатора режимсписказадач сквозноевыравнивание ' +
+  'сохранениеданныхформывнастройках способзаполнениятекстазаголовкашкалыдиаграммы ' +
+  'способопределенияограничивающегозначениядиаграммы стандартнаягруппакоманд стандартноеоформление ' +
+  'статусоповещенияпользователя стильстрелки типаппроксимациилиниитрендадиаграммы типдиаграммы ' +
+  'типединицышкалывремени типимпортасерийслоягеографическойсхемы типлиниигеографическойсхемы типлиниидиаграммы ' +
+  'типмаркерагеографическойсхемы типмаркерадиаграммы типобластиоформления ' +
+  'типорганизацииисточникаданныхгеографическойсхемы типотображениясериислоягеографическойсхемы ' +
+  'типотображенияточечногообъектагеографическойсхемы типотображенияшкалыэлементалегендыгеографическойсхемы ' +
+  'типпоискаобъектовгеографическойсхемы типпроекциигеографическойсхемы типразмещенияизмерений ' +
+  'типразмещенияреквизитовизмерений типрамкиэлементауправления типсводнойдиаграммы ' +
+  'типсвязидиаграммыганта типсоединениязначенийпосериямдиаграммы типсоединенияточекдиаграммы ' +
+  'типсоединительнойлинии типстороныэлементаграфическойсхемы типформыотчета типшкалырадарнойдиаграммы ' +
+  'факторлиниитрендадиаграммы фигуракнопки фигурыграфическойсхемы фиксациявтаблице форматдняшкалывремени ' +
+  'форматкартинки ширинаподчиненныхэлементовформы ';
+
+  // v8 системные перечисления - свойства прикладных объектов ==> class
+  var v8_system_enums_objects_properties =
+  'виддвижениябухгалтерии виддвижениянакопления видпериодарегистрарасчета видсчета видточкимаршрутабизнеспроцесса ' +
+  'использованиеагрегатарегистранакопления использованиегруппиэлементов использованиережимапроведения ' +
+  'использованиесреза периодичностьагрегатарегистранакопления режимавтовремя режимзаписидокумента режимпроведениядокумента ';
+
+  // v8 системные перечисления - планы обмена ==> class
+  var v8_system_enums_exchange_plans =
+  'авторегистрацияизменений допустимыйномерсообщения отправкаэлементаданных получениеэлементаданных ';
+
+  // v8 системные перечисления - табличный документ ==> class
+  var v8_system_enums_tabular_document =
+  'использованиерасшифровкитабличногодокумента ориентациястраницы положениеитоговколоноксводнойтаблицы ' +
+  'положениеитоговстроксводнойтаблицы положениетекстаотносительнокартинки расположениезаголовкагруппировкитабличногодокумента ' +
+  'способчтениязначенийтабличногодокумента типдвустороннейпечати типзаполненияобластитабличногодокумента ' +
+  'типкурсоровтабличногодокумента типлиниирисункатабличногодокумента типлинииячейкитабличногодокумента ' +
+  'типнаправленияпереходатабличногодокумента типотображениявыделениятабличногодокумента типотображениялинийсводнойтаблицы ' +
+  'типразмещениятекстатабличногодокумента типрисункатабличногодокумента типсмещениятабличногодокумента ' +
+  'типузоратабличногодокумента типфайлатабличногодокумента точностьпечати чередованиерасположениястраниц ';
+
+  // v8 системные перечисления - планировщик ==> class
+  var v8_system_enums_sheduler =
+  'отображениевремениэлементовпланировщика ';
+
+  // v8 системные перечисления - форматированный документ ==> class
+  var v8_system_enums_formatted_document =
+  'типфайлаформатированногодокумента ';
+
+  // v8 системные перечисления - запрос ==> class
+  var v8_system_enums_query =
+  'обходрезультатазапроса типзаписизапроса ';
+
+  // v8 системные перечисления - построитель отчета ==> class
+  var v8_system_enums_report_builder =
+  'видзаполнениярасшифровкипостроителяотчета типдобавленияпредставлений типизмеренияпостроителяотчета типразмещенияитогов ';
+
+  // v8 системные перечисления - работа с файлами ==> class
+  var v8_system_enums_files =
+  'доступкфайлу режимдиалогавыборафайла режимоткрытияфайла ';
+
+  // v8 системные перечисления - построитель запроса ==> class
+  var v8_system_enums_query_builder =
+  'типизмеренияпостроителязапроса ';
+
+  // v8 системные перечисления - анализ данных ==> class
+  var v8_system_enums_data_analysis =
+  'видданныханализа методкластеризации типединицыинтервалавременианализаданных типзаполнениятаблицырезультатаанализаданных ' +
+  'типиспользованиячисловыхзначенийанализаданных типисточникаданныхпоискаассоциаций типколонкианализаданныхдереворешений ' +
+  'типколонкианализаданныхкластеризация типколонкианализаданныхобщаястатистика типколонкианализаданныхпоискассоциаций ' +
+  'типколонкианализаданныхпоискпоследовательностей типколонкимоделипрогноза типмерырасстоянияанализаданных ' +
+  'типотсеченияправилассоциации типполяанализаданных типстандартизациианализаданных типупорядочиванияправилассоциациианализаданных ' +
+  'типупорядочиванияшаблоновпоследовательностейанализаданных типупрощениядереварешений ';
+
+  // v8 системные перечисления - xml, json, xs, dom, xdto, web-сервисы ==> class
+  var v8_system_enums_xml_json_xs_dom_xdto_ws =
+  'wsнаправлениепараметра вариантxpathxs вариантзаписидатыjson вариантпростоготипаxs видгруппымоделиxs видфасетаxdto ' +
+  'действиепостроителяdom завершенностьпростоготипаxs завершенностьсоставноготипаxs завершенностьсхемыxs запрещенныеподстановкиxs ' +
+  'исключениягруппподстановкиxs категорияиспользованияатрибутаxs категорияограниченияидентичностиxs категорияограниченияпространствименxs ' +
+  'методнаследованияxs модельсодержимогоxs назначениетипаxml недопустимыеподстановкиxs обработкапробельныхсимволовxs обработкасодержимогоxs ' +
+  'ограничениезначенияxs параметрыотбораузловdom переносстрокjson позициявдокументеdom пробельныесимволыxml типатрибутаxml типзначенияjson ' +
+  'типканоническогоxml типкомпонентыxs типпроверкиxml типрезультатаdomxpath типузлаdom типузлаxml формаxml формапредставленияxs ' +
+  'форматдатыjson экранированиесимволовjson ';
+
+  // v8 системные перечисления - система компоновки данных ==> class
+  var v8_system_enums_data_composition_system =
+  'видсравнениякомпоновкиданных действиеобработкирасшифровкикомпоновкиданных направлениесортировкикомпоновкиданных ' +
+  'расположениевложенныхэлементоврезультатакомпоновкиданных расположениеитоговкомпоновкиданных расположениегруппировкикомпоновкиданных ' +
+  'расположениеполейгруппировкикомпоновкиданных расположениеполякомпоновкиданных расположениереквизитовкомпоновкиданных ' +
+  'расположениересурсовкомпоновкиданных типбухгалтерскогоостаткакомпоновкиданных типвыводатекстакомпоновкиданных ' +
+  'типгруппировкикомпоновкиданных типгруппыэлементовотборакомпоновкиданных типдополненияпериодакомпоновкиданных ' +
+  'типзаголовкаполейкомпоновкиданных типмакетагруппировкикомпоновкиданных типмакетаобластикомпоновкиданных типостаткакомпоновкиданных ' +
+  'типпериодакомпоновкиданных типразмещениятекстакомпоновкиданных типсвязинаборовданныхкомпоновкиданных типэлементарезультатакомпоновкиданных ' +
+  'расположениелегендыдиаграммыкомпоновкиданных типпримененияотборакомпоновкиданных режимотображенияэлементанастройкикомпоновкиданных ' +
+  'режимотображениянастроеккомпоновкиданных состояниеэлементанастройкикомпоновкиданных способвосстановлениянастроеккомпоновкиданных ' +
+  'режимкомпоновкирезультата использованиепараметракомпоновкиданных автопозицияресурсовкомпоновкиданных '+
+  'вариантиспользованиягруппировкикомпоновкиданных расположениересурсоввдиаграммекомпоновкиданных фиксациякомпоновкиданных ' +
+  'использованиеусловногооформлениякомпоновкиданных ';
+
+  // v8 системные перечисления - почта ==> class
+  var v8_system_enums_email =
+  'важностьинтернетпочтовогосообщения обработкатекстаинтернетпочтовогосообщения способкодированияинтернетпочтовоговложения ' +
+  'способкодированиянеasciiсимволовинтернетпочтовогосообщения типтекстапочтовогосообщения протоколинтернетпочты ' +
+  'статусразборапочтовогосообщения ';
+
+  // v8 системные перечисления - журнал регистрации ==> class
+  var v8_system_enums_logbook =
+  'режимтранзакциизаписижурналарегистрации статустранзакциизаписижурналарегистрации уровеньжурналарегистрации ';
+
+  // v8 системные перечисления - криптография ==> class
+  var v8_system_enums_cryptography =
+  'расположениехранилищасертификатовкриптографии режимвключениясертификатовкриптографии режимпроверкисертификатакриптографии ' +
+  'типхранилищасертификатовкриптографии ';
+
+  // v8 системные перечисления - ZIP ==> class
+  var v8_system_enums_zip =
+  'кодировкаименфайловвzipфайле методсжатияzip методшифрованияzip режимвосстановленияпутейфайловzip режимобработкиподкаталоговzip ' +
+  'режимсохраненияпутейzip уровеньсжатияzip ';
+
+  // v8 системные перечисления - 
+  // Блокировка данных, Фоновые задания, Автоматизированное тестирование,
+  // Доставляемые уведомления, Встроенные покупки, Интернет, Работа с двоичными данными ==> class
+  var v8_system_enums_other =
+  'звуковоеоповещение направлениепереходакстроке позициявпотоке порядокбайтов режимблокировкиданных режимуправленияблокировкойданных ' +
+  'сервисвстроенныхпокупок состояниефоновогозадания типподписчикадоставляемыхуведомлений уровеньиспользованиязащищенногосоединенияftp ';
+
+  // v8 системные перечисления - схема запроса ==> class
+  var v8_system_enums_request_schema =
+  'направлениепорядкасхемызапроса типдополненияпериодамисхемызапроса типконтрольнойточкисхемызапроса типобъединениясхемызапроса ' +
+  'типпараметрадоступнойтаблицысхемызапроса типсоединениясхемызапроса ';
+
+  // v8 системные перечисления - свойства объектов метаданных ==> class
+  var v8_system_enums_properties_of_metadata_objects =
+  'httpметод автоиспользованиеобщегореквизита автопрефиксномеразадачи вариантвстроенногоязыка видиерархии видрегистранакопления ' +
+  'видтаблицывнешнегоисточникаданных записьдвиженийприпроведении заполнениепоследовательностей индексирование ' +
+  'использованиебазыпланавидоврасчета использованиебыстроговыбора использованиеобщегореквизита использованиеподчинения ' +
+  'использованиеполнотекстовогопоиска использованиеразделяемыхданныхобщегореквизита использованиереквизита ' +
+  'назначениеиспользованияприложения назначениерасширенияконфигурации направлениепередачи обновлениепредопределенныхданных ' +
+  'оперативноепроведение основноепредставлениевидарасчета основноепредставлениевидахарактеристики основноепредставлениезадачи ' +
+  'основноепредставлениепланаобмена основноепредставлениесправочника основноепредставлениесчета перемещениеграницыприпроведении ' +
+  'периодичностьномерабизнеспроцесса периодичностьномерадокумента периодичностьрегистрарасчета периодичностьрегистрасведений ' +
+  'повторноеиспользованиевозвращаемыхзначений полнотекстовыйпоискпривводепостроке принадлежностьобъекта проведение ' +
+  'разделениеаутентификацииобщегореквизита разделениеданныхобщегореквизита разделениерасширенийконфигурацииобщегореквизита '+
+  'режимавтонумерацииобъектов режимзаписирегистра режимиспользованиямодальности ' +
+  'режимиспользованиясинхронныхвызововрасширенийплатформыивнешнихкомпонент режимповторногоиспользованиясеансов ' +
+  'режимполученияданныхвыборапривводепостроке режимсовместимости режимсовместимостиинтерфейса ' +
+  'режимуправленияблокировкойданныхпоумолчанию сериикодовпланавидовхарактеристик сериикодовпланасчетов ' +
+  'сериикодовсправочника созданиепривводе способвыбора способпоискастрокипривводепостроке способредактирования ' +
+  'типданныхтаблицывнешнегоисточникаданных типкодапланавидоврасчета типкодасправочника типмакета типномерабизнеспроцесса ' +
+  'типномерадокумента типномеразадачи типформы удалениедвижений ';
+
+  // v8 системные перечисления - разные ==> class
+  var v8_system_enums_differents =
+  'важностьпроблемыприменениярасширенияконфигурации вариантинтерфейсаклиентскогоприложения вариантмасштабаформклиентскогоприложения ' +
+  'вариантосновногошрифтаклиентскогоприложения вариантстандартногопериода вариантстандартнойдатыначала видграницы видкартинки ' +
+  'видотображенияполнотекстовогопоиска видрамки видсравнения видцвета видчисловогозначения видшрифта допустимаядлина допустимыйзнак ' +
+  'использованиеbyteordermark использованиеметаданныхполнотекстовогопоиска источникрасширенийконфигурации клавиша кодвозвратадиалога ' +
+  'кодировкаxbase кодировкатекста направлениепоиска направлениесортировки обновлениепредопределенныхданных обновлениеприизмененииданных ' +
+  'отображениепанелиразделов проверказаполнения режимдиалогавопрос режимзапускаклиентскогоприложения режимокругления режимоткрытияформприложения ' +
+  'режимполнотекстовогопоиска скоростьклиентскогосоединения состояниевнешнегоисточникаданных состояниеобновленияконфигурациибазыданных ' +
+  'способвыборасертификатаwindows способкодированиястроки статуссообщения типвнешнейкомпоненты типплатформы типповеденияклавишиenter ' +
+  'типэлементаинформацииовыполненииобновленияконфигурациибазыданных уровеньизоляциитранзакций хешфункция частидаты';
+
+  // class: встроенные наборы значений, системные перечисления (содержат дочерние значения, обращения к которым через разыменование)
+  var CLASS =
+  v8_system_sets_of_values +
+  v8_system_enums_interface +
+  v8_system_enums_objects_properties +
+  v8_system_enums_exchange_plans +
+  v8_system_enums_tabular_document +
+  v8_system_enums_sheduler +
+  v8_system_enums_formatted_document +
+  v8_system_enums_query +
+  v8_system_enums_report_builder +
+  v8_system_enums_files +
+  v8_system_enums_query_builder +
+  v8_system_enums_data_analysis +
+  v8_system_enums_xml_json_xs_dom_xdto_ws +
+  v8_system_enums_data_composition_system +
+  v8_system_enums_email +
+  v8_system_enums_logbook +
+  v8_system_enums_cryptography +
+  v8_system_enums_zip +
+  v8_system_enums_other +
+  v8_system_enums_request_schema +
+  v8_system_enums_properties_of_metadata_objects +
+  v8_system_enums_differents;
+
+  // v8 общие объекты (у объектов есть конструктор, экземпляры создаются методом НОВЫЙ) ==> type
+  var v8_shared_object =
+  'comобъект ftpсоединение httpзапрос httpсервисответ httpсоединение wsопределения wsпрокси xbase анализданных аннотацияxs ' +
+  'блокировкаданных буфердвоичныхданных включениеxs выражениекомпоновкиданных генераторслучайныхчисел географическаясхема ' +
+  'географическиекоординаты графическаясхема группамоделиxs данныерасшифровкикомпоновкиданных двоичныеданные дендрограмма ' +
+  'диаграмма диаграммаганта диалогвыборафайла диалогвыборацвета диалогвыборашрифта диалограсписаниярегламентногозадания ' +
+  'диалогредактированиястандартногопериода диапазон документdom документhtml документацияxs доставляемоеуведомление ' +
+  'записьdom записьfastinfoset записьhtml записьjson записьxml записьzipфайла записьданных записьтекста записьузловdom ' +
+  'запрос защищенноесоединениеopenssl значенияполейрасшифровкикомпоновкиданных извлечениетекста импортxs интернетпочта ' +
+  'интернетпочтовоесообщение интернетпочтовыйпрофиль интернетпрокси интернетсоединение информациядляприложенияxs ' +
+  'использованиеатрибутаxs использованиесобытияжурналарегистрации источникдоступныхнастроеккомпоновкиданных ' +
+  'итераторузловdom картинка квалификаторыдаты квалификаторыдвоичныхданных квалификаторыстроки квалификаторычисла ' +
+  'компоновщикмакетакомпоновкиданных компоновщикнастроеккомпоновкиданных конструктормакетаоформлениякомпоновкиданных ' +
+  'конструкторнастроеккомпоновкиданных конструкторформатнойстроки линия макеткомпоновкиданных макетобластикомпоновкиданных ' +
+  'макетоформлениякомпоновкиданных маскаxs менеджеркриптографии наборсхемxml настройкикомпоновкиданных настройкисериализацииjson ' +
+  'обработкакартинок обработкарасшифровкикомпоновкиданных обходдереваdom объявлениеатрибутаxs объявлениенотацииxs ' +
+  'объявлениеэлементаxs описаниеиспользованиясобытиядоступжурналарегистрации ' +
+  'описаниеиспользованиясобытияотказвдоступежурналарегистрации описаниеобработкирасшифровкикомпоновкиданных ' +
+  'описаниепередаваемогофайла описаниетипов определениегруппыатрибутовxs определениегруппымоделиxs ' +
+  'определениеограниченияидентичностиxs определениепростоготипаxs определениесоставноготипаxs определениетипадокументаdom ' +
+  'определенияxpathxs отборкомпоновкиданных пакетотображаемыхдокументов параметрвыбора параметркомпоновкиданных ' +
+  'параметрызаписиjson параметрызаписиxml параметрычтенияxml переопределениеxs планировщик полеанализаданных ' +
+  'полекомпоновкиданных построительdom построительзапроса построительотчета построительотчетаанализаданных ' +
+  'построительсхемxml поток потоквпамяти почта почтовоесообщение преобразованиеxsl преобразованиекканоническомуxml ' +
+  'процессорвыводарезультатакомпоновкиданныхвколлекциюзначений процессорвыводарезультатакомпоновкиданныхвтабличныйдокумент ' +
+  'процессоркомпоновкиданных разыменовательпространствименdom рамка расписаниерегламентногозадания расширенноеимяxml ' +
+  'результатчтенияданных своднаядиаграмма связьпараметравыбора связьпотипу связьпотипукомпоновкиданных сериализаторxdto ' +
+  'сертификатклиентаwindows сертификатклиентафайл сертификаткриптографии сертификатыудостоверяющихцентровwindows ' +
+  'сертификатыудостоверяющихцентровфайл сжатиеданных системнаяинформация сообщениепользователю сочетаниеклавиш ' +
+  'сравнениезначений стандартнаядатаначала стандартныйпериод схемаxml схемакомпоновкиданных табличныйдокумент ' +
+  'текстовыйдокумент тестируемоеприложение типданныхxml уникальныйидентификатор фабрикаxdto файл файловыйпоток ' +
+  'фасетдлиныxs фасетколичестваразрядовдробнойчастиxs фасетмаксимальноговключающегозначенияxs ' +
+  'фасетмаксимальногоисключающегозначенияxs фасетмаксимальнойдлиныxs фасетминимальноговключающегозначенияxs ' +
+  'фасетминимальногоисключающегозначенияxs фасетминимальнойдлиныxs фасетобразцаxs фасетобщегоколичестваразрядовxs ' +
+  'фасетперечисленияxs фасетпробельныхсимволовxs фильтрузловdom форматированнаястрока форматированныйдокумент ' +
+  'фрагментxs хешированиеданных хранилищезначения цвет чтениеfastinfoset чтениеhtml чтениеjson чтениеxml чтениеzipфайла ' +
+  'чтениеданных чтениетекста чтениеузловdom шрифт элементрезультатакомпоновкиданных ';
+
+  // v8 универсальные коллекции значений ==> type
+  var v8_universal_collection =
+  'comsafearray деревозначений массив соответствие списокзначений структура таблицазначений фиксированнаяструктура ' +
+  'фиксированноесоответствие фиксированныймассив ';
+
+  // type : встроенные типы
+  var TYPE =
+  v8_shared_object +
+  v8_universal_collection;
+
+  // literal : примитивные типы
+  var LITERAL = 'null истина ложь неопределено';
+  
+  // number : числа
+  var NUMBERS = hljs.inherit(hljs.NUMBER_MODE);
+
+  // string : строки
+  var STRINGS = {
     className: 'string',
-    begin: '\\|', end: '"|$',
-    contains: [DQUOTE]
+    begin: '"|\\|', end: '"|$',
+    contains: [{begin: '""'}]
+  };
+
+  // number : даты
+  var DATE = {
+    begin: "'", end: "'", excludeBegin: true, excludeEnd: true,
+    contains: [
+      {
+        className: 'number',
+        begin: '\\d{4}([\\.\\\\/:-]?\\d{2}){0,5}'
+      }
+    ]
+  };
+  
+  // comment : комментарии
+  var COMMENTS = hljs.inherit(hljs.C_LINE_COMMENT_MODE);
+  
+  // meta : инструкции препроцессора, директивы компиляции
+  var META = {
+    className: 'meta',
+    lexemes: UNDERSCORE_IDENT_RE,
+    begin: '#|&', end: '$',
+    keywords: {'meta-keyword': KEYWORD + METAKEYWORD},
+    contains: [
+      COMMENTS
+    ]
+  };
+  
+  // symbol : метка goto
+  var SYMBOL = {
+    className: 'symbol',
+    begin: '~', end: ';|:', excludeEnd: true
+  };  
+  
+  // function : объявление процедур и функций
+  var FUNCTION = {
+    className: 'function',
+    lexemes: UNDERSCORE_IDENT_RE,
+    variants: [
+      {begin: 'процедура|функция', end: '\\)', keywords: 'процедура функция'},
+      {begin: 'конецпроцедуры|конецфункции', keywords: 'конецпроцедуры конецфункции'}
+    ],
+    contains: [
+      {
+        begin: '\\(', end: '\\)', endsParent : true,
+        contains: [
+          {
+            className: 'params',
+            lexemes: UNDERSCORE_IDENT_RE,
+            begin: UNDERSCORE_IDENT_RE, end: ',', excludeEnd: true, endsWithParent: true,
+            keywords: {
+              keyword: 'знач',
+              literal: LITERAL
+            },
+            contains: [
+              NUMBERS,
+              STRINGS,
+              DATE
+            ]
+          },
+          COMMENTS
+        ]
+      },
+      hljs.inherit(hljs.TITLE_MODE, {begin: UNDERSCORE_IDENT_RE})
+    ]
   };
 
   return {
     case_insensitive: true,
-    lexemes: IDENT_RE_RU,
-    keywords: {keyword: OneS_KEYWORDS, built_in: OneS_BUILT_IN},
+    lexemes: UNDERSCORE_IDENT_RE,
+    keywords: {
+      keyword: KEYWORD,
+      built_in: BUILTIN,
+      class: CLASS,
+      type: TYPE,
+      literal: LITERAL
+    },
     contains: [
-      hljs.C_LINE_COMMENT_MODE,
-      hljs.NUMBER_MODE,
-      STR_START, STR_CONT,
-      {
-        className: 'function',
-        begin: '(процедура|функция)', end: '$',
-        lexemes: IDENT_RE_RU,
-        keywords: 'процедура функция',
-        contains: [
-          {
-            begin: 'экспорт', endsWithParent: true,
-            lexemes: IDENT_RE_RU,
-            keywords: 'экспорт',
-            contains: [hljs.C_LINE_COMMENT_MODE]
-          },
-          {
-            className: 'params',
-            begin: '\\(', end: '\\)',
-            lexemes: IDENT_RE_RU,
-            keywords: 'знач',
-            contains: [STR_START, STR_CONT]
-          },
-          hljs.C_LINE_COMMENT_MODE,
-          hljs.inherit(hljs.TITLE_MODE, {begin: IDENT_RE_RU})
-        ]
-      },
-      {className: 'meta', begin: '#', end: '$'},
-      {className: 'number', begin: '\'\\d{2}\\.\\d{2}\\.(\\d{2}|\\d{4})\''} // date
-    ]
-  };
+      META,
+      FUNCTION,
+      COMMENTS,
+      SYMBOL,
+      NUMBERS,
+      STRINGS,
+      DATE
+    ]  
+  }
 };
 },{}],5:[function(require,module,exports){
 module.exports = function(hljs) {
@@ -76216,7 +76666,8 @@ module.exports = function (hljs) {
         contains : [
           {
             begin : hljs.UNDERSCORE_IDENT_RE + '\\s*\\(',
-            keywords : KEYWORDS + ' ' + SHORTKEYS
+            keywords : KEYWORDS + ' ' + SHORTKEYS,
+            relevance: 0
           },
           hljs.QUOTE_STRING_MODE
         ]
@@ -76269,13 +76720,14 @@ module.exports = function (hljs) {
 },{}],15:[function(require,module,exports){
 module.exports = function(hljs) {
   var BACKTICK_ESCAPE = {
-    begin: /`[\s\S]/
+    begin: '`[\\s\\S]'
   };
 
   return {
     case_insensitive: true,
+    aliases: [ 'ahk' ],
     keywords: {
-      keyword: 'Break Continue Else Gosub If Loop Return While',
+      keyword: 'Break Continue Critical Exit ExitApp Gosub Goto New OnExit Pause return SetBatchLines SetTimer Suspend Thread Throw Until ahk_id ahk_class ahk_pid ahk_exe ahk_group',
       literal: 'A|0 true false NOT AND OR',
       built_in: 'ComSpec Clipboard ClipboardAll ErrorLevel',
     },
@@ -76287,16 +76739,26 @@ module.exports = function(hljs) {
       BACKTICK_ESCAPE,
       hljs.inherit(hljs.QUOTE_STRING_MODE, {contains: [BACKTICK_ESCAPE]}),
       hljs.COMMENT(';', '$', {relevance: 0}),
+      hljs.C_BLOCK_COMMENT_MODE,
       {
         className: 'number',
         begin: hljs.NUMBER_RE,
         relevance: 0
       },
       {
-        className: 'variable', // FIXME
-        begin: '%', end: '%',
-        illegal: '\\n',
-        contains: [BACKTICK_ESCAPE]
+        className: 'subst', // FIXED
+        begin: '%(?=[a-zA-Z0-9#_$@])', end: '%',
+        illegal: '[^a-zA-Z0-9#_$@]'
+      },
+      {
+        className: 'built_in',
+        begin: '^\\s*\\w+\\s*,'
+        //I don't really know if this is totally relevant
+      },
+      {
+        className: 'meta', 
+        begin: '^\\s*#\w+', end:'$',
+        relevance: 0
       },
       {
         className: 'symbol',
@@ -76625,7 +77087,7 @@ module.exports = function(hljs) {
 
   return {
     aliases: ['sh', 'zsh'],
-    lexemes: /-?[a-z\._]+/,
+    lexemes: /\b-?[a-z\._]+\b/,
     keywords: {
       keyword:
         'if then else elif fi for while in do done case esac function',
@@ -77112,6 +77574,7 @@ module.exports = function(hljs) {
   LIST.contains = [hljs.COMMENT('comment', ''), NAME, BODY];
   BODY.contains = DEFAULT_CONTAINS;
   COLLECTION.contains = DEFAULT_CONTAINS;
+  HINT_COL.contains = [COLLECTION];
 
   return {
     aliases: ['clj'],
@@ -77524,7 +77987,7 @@ module.exports = function(hljs) {
     className: 'number',
     variants: [
       { begin: '\\b(0b[01\']+)' },
-      { begin: '\\b([\\d\']+(\\.[\\d\']*)?|\\.[\\d\']+)(u|U|l|L|ul|UL|f|F|b|B)' },
+      { begin: '(-?)\\b([\\d\']+(\\.[\\d\']*)?|\\.[\\d\']+)(u|U|l|L|ul|UL|f|F|b|B)' },
       { begin: '(-?)(\\b0[xX][a-fA-F0-9\']+|(\\b[\\d\']+(\\.[\\d\']*)?|\\.[\\d\']+)([eE][-+]?[\\d\']+)?)' }
     ],
     relevance: 0
@@ -77557,15 +78020,16 @@ module.exports = function(hljs) {
 
   var CPP_KEYWORDS = {
     keyword: 'int float while private char catch import module export virtual operator sizeof ' +
-      'dynamic_cast|10 typedef const_cast|10 const struct for static_cast|10 union namespace ' +
+      'dynamic_cast|10 typedef const_cast|10 const for static_cast|10 union namespace ' +
       'unsigned long volatile static protected bool template mutable if public friend ' +
-      'do goto auto void enum else break extern using class asm case typeid ' +
+      'do goto auto void enum else break extern using asm case typeid ' +
       'short reinterpret_cast|10 default double register explicit signed typename try this ' +
       'switch continue inline delete alignof constexpr decltype ' +
       'noexcept static_assert thread_local restrict _Bool complex _Complex _Imaginary ' +
       'atomic_bool atomic_char atomic_schar ' +
       'atomic_uchar atomic_short atomic_ushort atomic_int atomic_uint atomic_long atomic_ulong atomic_llong ' +
-      'atomic_ullong new throw return',
+      'atomic_ullong new throw return ' +
+      'and or not',
     built_in: 'std string cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream ' +
       'auto_ptr deque list queue stack vector map set bitset multiset multimap unordered_set ' +
       'unordered_map unordered_multiset unordered_multimap array shared_ptr abort abs acos ' +
@@ -77650,6 +78114,14 @@ module.exports = function(hljs) {
           hljs.C_LINE_COMMENT_MODE,
           hljs.C_BLOCK_COMMENT_MODE,
           PREPROCESSOR
+        ]
+      },
+      {
+        className: 'class',
+        beginKeywords: 'class struct', end: /[{;:]/,
+        contains: [
+          {begin: /</, end: />/, contains: ['self']}, // skip generic stuff
+          hljs.TITLE_MODE
         ]
       }
     ]),
@@ -77763,10 +78235,10 @@ module.exports = function(hljs) {
   var CRYSTAL_METHOD_RE = '[a-zA-Z_]\\w*[!?=]?|[-+~]\\@|<<|>>|=~|===?|<=>|[<>]=?|\\*\\*|[-/+%^&*~`|]|\\[\\][=?]?';
   var CRYSTAL_KEYWORDS = {
     keyword:
-      'abstract alias as asm begin break case class def do else elsif end ensure enum extend for fun if ifdef ' +
-      'include instance_sizeof is_a? lib macro module next of out pointerof private protected rescue responds_to? ' +
-      'return require self sizeof struct super then type typeof union unless until when while with yield ' +
-      '__DIR__ __FILE__ __LINE__',
+      'abstract alias as as? asm begin break case class def do else elsif end ensure enum extend for fun if ' +
+      'include instance_sizeof is_a? lib macro module next nil? of out pointerof private protected rescue responds_to? ' +
+      'return require select self sizeof struct super then type typeof union uninitialized unless until when while with yield ' +
+      '__DIR__ __END_LINE__ __FILE__ __LINE__',
     literal: 'false nil true'
   };
   var SUBST = {
@@ -77804,6 +78276,22 @@ module.exports = function(hljs) {
       {begin: '%w?%', end: '%'},
       {begin: '%w?-', end: '-'},
       {begin: '%w?\\|', end: '\\|'},
+      {begin: /<<-\w+$/, end: /^\s*\w+$/},
+    ],
+    relevance: 0,
+  };
+  var Q_STRING = {
+    className: 'string',
+    variants: [
+      {begin: '%q\\(', end: '\\)', contains: recursiveParen('\\(', '\\)')},
+      {begin: '%q\\[', end: '\\]', contains: recursiveParen('\\[', '\\]')},
+      {begin: '%q{', end: '}', contains: recursiveParen('{', '}')},
+      {begin: '%q<', end: '>', contains: recursiveParen('<', '>')},
+      {begin: '%q/', end: '/'},
+      {begin: '%q%', end: '%'},
+      {begin: '%q-', end: '-'},
+      {begin: '%q\\|', end: '\\|'},
+      {begin: /<<-'\w+'$/, end: /^\s*\w+$/},
     ],
     relevance: 0,
   };
@@ -77854,6 +78342,7 @@ module.exports = function(hljs) {
   var CRYSTAL_DEFAULT_CONTAINS = [
     EXPANSION,
     STRING,
+    Q_STRING,
     REGEXP,
     REGEXP2,
     ATTRIBUTE,
@@ -77937,12 +78426,11 @@ module.exports = function(hljs) {
     keyword:
       // Normal keywords.
       'abstract as base bool break byte case catch char checked const continue decimal ' +
-      'default delegate do double else enum event explicit extern finally fixed float ' +
-      'for foreach goto if implicit in int interface internal is lock long ' +
+      'default delegate do double enum event explicit extern finally fixed float ' +
+      'for foreach goto if implicit in int interface internal is lock long nameof ' +
       'object operator out override params private protected public readonly ref sbyte ' +
       'sealed short sizeof stackalloc static string struct switch this try typeof ' +
       'uint ulong unchecked unsafe ushort using virtual void volatile while ' +
-      'nameof ' +
       // Contextual keywords.
       'add alias ascending async await by descending dynamic equals from get global group into join ' +
       'let on orderby partial remove select set value var where yield',
@@ -78006,6 +78494,7 @@ module.exports = function(hljs) {
   };
 
   var TYPE_IDENT_RE = hljs.IDENT_RE + '(<' + hljs.IDENT_RE + '(\\s*,\\s*' + hljs.IDENT_RE + ')*>)?(\\[\\])?';
+
   return {
     aliases: ['csharp'],
     keywords: KEYWORDS,
@@ -78039,7 +78528,9 @@ module.exports = function(hljs) {
       {
         className: 'meta',
         begin: '#', end: '$',
-        keywords: {'meta-keyword': 'if else elif endif define undef warning error line region endregion pragma checksum'}
+        keywords: {
+          'meta-keyword': 'if else elif endif define undef warning error line region endregion pragma checksum'
+        }
       },
       STRING,
       hljs.C_NUMBER_MODE,
@@ -78062,15 +78553,23 @@ module.exports = function(hljs) {
         ]
       },
       {
+        // [Attributes("")]
+        className: 'meta',
+        begin: '^\\s*\\[', excludeBegin: true, end: '\\]', excludeEnd: true,
+        contains: [
+          {className: 'meta-string', begin: /"/, end: /"/}
+        ]
+      },
+      {
         // Expression keywords prevent 'keyword Name(...)' from being
         // recognized as a function definition
-        beginKeywords: 'new return throw await',
+        beginKeywords: 'new return throw await else',
         relevance: 0
       },
       {
         className: 'function',
-        begin: '(' + TYPE_IDENT_RE + '\\s+)+' + hljs.IDENT_RE + '\\s*\\(', returnBegin: true, end: /[{;=]/,
-        excludeEnd: true,
+        begin: '(' + TYPE_IDENT_RE + '\\s+)+' + hljs.IDENT_RE + '\\s*\\(', returnBegin: true,
+        end: /[{;=]/, excludeEnd: true,
         keywords: KEYWORDS,
         contains: [
           {
@@ -78791,14 +79290,14 @@ module.exports = function(hljs) {
   return {
     aliases: ['docker'],
     case_insensitive: true,
-    keywords: 'from maintainer expose env user onbuild',
+    keywords: 'from maintainer expose env arg user onbuild stopsignal',
     contains: [
       hljs.HASH_COMMENT_MODE,
       hljs.APOS_STRING_MODE,
       hljs.QUOTE_STRING_MODE,
       hljs.NUMBER_MODE,
       {
-        beginKeywords: 'run cmd entrypoint volume add copy workdir label healthcheck',
+        beginKeywords: 'run cmd entrypoint volume add copy workdir label healthcheck shell',
         starts: {
           end: /[^\\]\n/,
           subLanguage: 'bash'
@@ -79273,7 +79772,8 @@ module.exports = function(hljs) {
       COMMENT,
 
       {begin: '->|<-'} // No markup, relevance booster
-    ]
+    ],
+    illegal: /;/
   };
 };
 },{}],54:[function(require,module,exports){
@@ -79878,7 +80378,7 @@ module.exports = function (hljs) {
         contains: [
               { // Function title
                 className: 'title',
-                begin: /^[a-z][a-z0-9_]+/,
+                begin: /^[a-z0-9_]+/,
               },
               PARAMS,
               SYMBOLS,
@@ -80813,7 +81313,7 @@ module.exports = function(hljs) {
   return {
     aliases: ['hx'],
     keywords: {
-      keyword: 'break callback case cast catch continue default do dynamic else enum extern ' +
+      keyword: 'break case cast catch continue default do dynamic else enum extern ' +
                'for function here if import in inline never new override package private get set ' +
                'public return static super switch this throw trace try typedef untyped using var while ' +
                HAXE_BASIC_TYPES,
@@ -81654,6 +82154,53 @@ module.exports = function(hljs) {
   };
 };
 },{}],84:[function(require,module,exports){
+module.exports = function (hljs) {
+  var PARAM = {
+    begin: /[\w-]+ *=/, returnBegin: true,
+    relevance: 0,
+    contains: [{className: 'attr', begin: /[\w-]+/}]
+  };
+  var PARAMSBLOCK = {
+    className: 'params',
+    begin: /\(/,
+    end: /\)/,
+    contains: [PARAM],
+    relevance : 0
+  };
+  var OPERATION = {
+    className: 'function',
+    begin: /:[\w\-.]+/,
+    relevance: 0
+  };
+  var PATH = {
+    className: 'string',
+    begin: /\B(([\/.])[\w\-.\/=]+)+/,
+  };
+  var COMMAND_PARAMS = {
+    className: 'params',
+    begin: /--[\w\-=\/]+/,
+  };
+  return {
+    aliases: ['wildfly-cli'],
+    lexemes: '[a-z\-]+',
+    keywords: {
+      keyword: 'alias batch cd clear command connect connection-factory connection-info data-source deploy ' +
+      'deployment-info deployment-overlay echo echo-dmr help history if jdbc-driver-info jms-queue|20 jms-topic|20 ls ' +
+      'patch pwd quit read-attribute read-operation reload rollout-plan run-batch set shutdown try unalias ' +
+      'undeploy unset version xa-data-source', // module
+      literal: 'true false'
+    },
+    contains: [
+      hljs.HASH_COMMENT_MODE,
+      hljs.QUOTE_STRING_MODE,
+      COMMAND_PARAMS,
+      OPERATION,
+      PATH,
+      PARAMSBLOCK
+    ]
+  }
+};
+},{}],85:[function(require,module,exports){
 module.exports = function(hljs) {
   var LITERALS = {literal: 'true false null'};
   var TYPES = [
@@ -81690,108 +82237,112 @@ module.exports = function(hljs) {
     illegal: '\\S'
   };
 };
-},{}],85:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
+module.exports = function(hljs) {
+  return {
+    contains: [
+      {
+        className: 'meta',
+        begin: /^julia>/,
+        relevance: 10,
+        starts: {
+          // end the highlighting if we are on a new line and the line does not have at
+          // least six spaces in the beginning
+          end: /^(?![ ]{6})/,
+          subLanguage: 'julia'
+      },
+      // jldoctest Markdown blocks are used in the Julia manual and package docs indicate
+      // code snippets that should be verified when the documentation is built. They can be
+      // either REPL-like or script-like, but are usually REPL-like and therefore we apply
+      // julia-repl highlighting to them. More information can be found in Documenter's
+      // manual: https://juliadocs.github.io/Documenter.jl/latest/man/doctests.html
+      aliases: ['jldoctest']
+      }
+    ]
+  }
+};
+},{}],87:[function(require,module,exports){
 module.exports = function(hljs) {
   // Since there are numerous special names in Julia, it is too much trouble
   // to maintain them by hand. Hence these names (i.e. keywords, literals and
-  // built-ins) are automatically generated from Julia (v0.3.0 and v0.4.1)
-  // itself through following scripts for each.
+  // built-ins) are automatically generated from Julia v0.6 itself through
+  // the following scripts for each.
 
   var KEYWORDS = {
-    // # keyword generator
-    // println("in")
+    // # keyword generator, multi-word keywords handled manually below
+    // foreach(println, ["in", "isa", "where"])
     // for kw in Base.REPLCompletions.complete_keyword("")
-    //     println(kw)
+    //     if !(contains(kw, " ") || kw == "struct")
+    //         println(kw)
+    //     end
     // end
     keyword:
-      'in abstract baremodule begin bitstype break catch ccall const continue do else elseif end export ' +
-      'finally for function global if immutable import importall let local macro module quote return try type ' +
-      'typealias using while',
+      'in isa where ' +
+      'baremodule begin break catch ccall const continue do else elseif end export false finally for function ' +
+      'global if import importall let local macro module quote return true try using while ' +
+      // legacy, to be deprecated in the next release
+      'type immutable abstract bitstype typealias ',
 
     // # literal generator
     // println("true")
     // println("false")
     // for name in Base.REPLCompletions.completions("", 0)[1]
     //     try
-    //         s = symbol(name)
-    //         v = eval(s)
-    //         if !isa(v, Function) &&
-    //            !isa(v, DataType) &&
-    //            !isa(v, IntrinsicFunction) &&
-    //            !issubtype(typeof(v), Tuple) &&
-    //            !isa(v, Union) &&
-    //            !isa(v, Module) &&
-    //            !isa(v, TypeConstructor) &&
-    //            !isa(v, TypeVar) &&
-    //            !isa(v, Colon)
+    //         v = eval(Symbol(name))
+    //         if !(v isa Function || v isa Type || v isa TypeVar || v isa Module || v isa Colon)
     //             println(name)
     //         end
     //     end
     // end
     literal:
-      // v0.3
-      'true false ARGS CPU_CORES C_NULL DL_LOAD_PATH DevNull ENDIAN_BOM ENV I|0 Inf Inf16 Inf32 ' +
-      'InsertionSort JULIA_HOME LOAD_PATH MS_ASYNC MS_INVALIDATE MS_SYNC MergeSort NaN NaN16 NaN32 OS_NAME QuickSort ' +
-      'RTLD_DEEPBIND RTLD_FIRST RTLD_GLOBAL RTLD_LAZY RTLD_LOCAL RTLD_NODELETE RTLD_NOLOAD RTLD_NOW RoundDown ' +
-      'RoundFromZero RoundNearest RoundToZero RoundUp STDERR STDIN STDOUT VERSION WORD_SIZE catalan cglobal e|0 eu|0 ' +
-      'eulergamma golden im nothing pi γ π φ ' +
-      // v0.4 (diff)
-      'Inf64 NaN64 RoundNearestTiesAway RoundNearestTiesUp ',
+      'true false ' +
+      'ARGS C_NULL DevNull ENDIAN_BOM ENV I Inf Inf16 Inf32 Inf64 InsertionSort JULIA_HOME LOAD_PATH MergeSort ' +
+      'NaN NaN16 NaN32 NaN64 PROGRAM_FILE QuickSort RoundDown RoundFromZero RoundNearest RoundNearestTiesAway ' +
+      'RoundNearestTiesUp RoundToZero RoundUp STDERR STDIN STDOUT VERSION catalan e|0 eu|0 eulergamma golden im ' +
+      'nothing pi γ π φ ',
 
     // # built_in generator:
     // for name in Base.REPLCompletions.completions("", 0)[1]
     //     try
-    //         v = eval(symbol(name))
-    //         if isa(v, DataType) || isa(v, TypeConstructor) || isa(v, TypeVar)
+    //         v = eval(Symbol(name))
+    //         if v isa Type || v isa TypeVar
     //             println(name)
     //         end
     //     end
     // end
     built_in:
-      // v0.3
-      'ANY ASCIIString AbstractArray AbstractRNG AbstractSparseArray Any ArgumentError Array Associative Base64Pipe ' +
-      'Bidiagonal BigFloat BigInt BitArray BitMatrix BitVector Bool BoundsError Box CFILE Cchar Cdouble Cfloat Char ' +
-      'CharString Cint Clong Clonglong ClusterManager Cmd Coff_t Colon Complex Complex128 Complex32 Complex64 ' +
-      'Condition Cptrdiff_t Cshort Csize_t Cssize_t Cuchar Cuint Culong Culonglong Cushort Cwchar_t DArray DataType ' +
-      'DenseArray Diagonal Dict DimensionMismatch DirectIndexString Display DivideError DomainError EOFError ' +
-      'EachLine Enumerate ErrorException Exception Expr Factorization FileMonitor FileOffset Filter Float16 Float32 ' +
-      'Float64 FloatRange FloatingPoint Function GetfieldNode GotoNode Hermitian IO IOBuffer IOStream IPv4 IPv6 ' +
-      'InexactError Int Int128 Int16 Int32 Int64 Int8 IntSet Integer InterruptException IntrinsicFunction KeyError ' +
-      'LabelNode LambdaStaticData LineNumberNode LoadError LocalProcess MIME MathConst MemoryError MersenneTwister ' +
-      'Method MethodError MethodTable Module NTuple NewvarNode Nothing Number ObjectIdDict OrdinalRange ' +
-      'OverflowError ParseError PollingFileWatcher ProcessExitedException ProcessGroup Ptr QuoteNode Range Range1 ' +
-      'Ranges Rational RawFD Real Regex RegexMatch RemoteRef RepString RevString RopeString RoundingMode Set ' +
-      'SharedArray Signed SparseMatrixCSC StackOverflowError Stat StatStruct StepRange String SubArray SubString ' +
-      'SymTridiagonal Symbol SymbolNode Symmetric SystemError Task TextDisplay Timer TmStruct TopNode Triangular ' +
-      'Tridiagonal Type TypeConstructor TypeError TypeName TypeVar UTF16String UTF32String UTF8String UdpSocket ' +
-      'Uint Uint128 Uint16 Uint32 Uint64 Uint8 UndefRefError UndefVarError UniformScaling UnionType UnitRange ' +
-      'Unsigned Vararg VersionNumber WString WeakKeyDict WeakRef Woodbury Zip ' +
-      // v0.4 (diff)
-      'AbstractChannel AbstractFloat AbstractString AssertionError Base64DecodePipe Base64EncodePipe BufferStream ' +
-      'CapturedException CartesianIndex CartesianRange Channel Cintmax_t CompositeException Cstring Cuintmax_t ' +
-      'Cwstring Date DateTime Dims Enum GenSym GlobalRef HTML InitError InvalidStateException Irrational LinSpace ' +
-      'LowerTriangular NullException Nullable OutOfMemoryError Pair PartialQuickSort Pipe RandomDevice ' +
-      'ReadOnlyMemoryError ReentrantLock Ref RemoteException SegmentationFault SerializationState SimpleVector ' +
-      'TCPSocket Text Tuple UDPSocket UInt UInt128 UInt16 UInt32 UInt64 UInt8 UnicodeError Union UpperTriangular ' +
-      'Val Void WorkerConfig AbstractMatrix AbstractSparseMatrix AbstractSparseVector AbstractVecOrMat AbstractVector ' +
-      'DenseMatrix DenseVecOrMat DenseVector Matrix SharedMatrix SharedVector StridedArray StridedMatrix ' +
-      'StridedVecOrMat StridedVector VecOrMat Vector '
+      'ANY AbstractArray AbstractChannel AbstractFloat AbstractMatrix AbstractRNG AbstractSerializer AbstractSet ' +
+      'AbstractSparseArray AbstractSparseMatrix AbstractSparseVector AbstractString AbstractUnitRange AbstractVecOrMat ' +
+      'AbstractVector Any ArgumentError Array AssertionError Associative Base64DecodePipe Base64EncodePipe Bidiagonal '+
+      'BigFloat BigInt BitArray BitMatrix BitVector Bool BoundsError BufferStream CachingPool CapturedException ' +
+      'CartesianIndex CartesianRange Cchar Cdouble Cfloat Channel Char Cint Cintmax_t Clong Clonglong ClusterManager ' +
+      'Cmd CodeInfo Colon Complex Complex128 Complex32 Complex64 CompositeException Condition ConjArray ConjMatrix ' +
+      'ConjVector Cptrdiff_t Cshort Csize_t Cssize_t Cstring Cuchar Cuint Cuintmax_t Culong Culonglong Cushort Cwchar_t ' +
+      'Cwstring DataType Date DateFormat DateTime DenseArray DenseMatrix DenseVecOrMat DenseVector Diagonal Dict ' +
+      'DimensionMismatch Dims DirectIndexString Display DivideError DomainError EOFError EachLine Enum Enumerate ' +
+      'ErrorException Exception ExponentialBackOff Expr Factorization FileMonitor Float16 Float32 Float64 Function ' +
+      'Future GlobalRef GotoNode HTML Hermitian IO IOBuffer IOContext IOStream IPAddr IPv4 IPv6 IndexCartesian IndexLinear ' +
+      'IndexStyle InexactError InitError Int Int128 Int16 Int32 Int64 Int8 IntSet Integer InterruptException ' +
+      'InvalidStateException Irrational KeyError LabelNode LinSpace LineNumberNode LoadError LowerTriangular MIME Matrix ' +
+      'MersenneTwister Method MethodError MethodTable Module NTuple NewvarNode NullException Nullable Number ObjectIdDict ' +
+      'OrdinalRange OutOfMemoryError OverflowError Pair ParseError PartialQuickSort PermutedDimsArray Pipe ' +
+      'PollingFileWatcher ProcessExitedException Ptr QuoteNode RandomDevice Range RangeIndex Rational RawFD ' +
+      'ReadOnlyMemoryError Real ReentrantLock Ref Regex RegexMatch RemoteChannel RemoteException RevString RoundingMode ' +
+      'RowVector SSAValue SegmentationFault SerializationState Set SharedArray SharedMatrix SharedVector Signed ' +
+      'SimpleVector Slot SlotNumber SparseMatrixCSC SparseVector StackFrame StackOverflowError StackTrace StepRange ' +
+      'StepRangeLen StridedArray StridedMatrix StridedVecOrMat StridedVector String SubArray SubString SymTridiagonal ' +
+      'Symbol Symmetric SystemError TCPSocket Task Text TextDisplay Timer Tridiagonal Tuple Type TypeError TypeMapEntry ' +
+      'TypeMapLevel TypeName TypeVar TypedSlot UDPSocket UInt UInt128 UInt16 UInt32 UInt64 UInt8 UndefRefError UndefVarError ' +
+      'UnicodeError UniformScaling Union UnionAll UnitRange Unsigned UpperTriangular Val Vararg VecElement VecOrMat Vector ' +
+      'VersionNumber Void WeakKeyDict WeakRef WorkerConfig WorkerPool '
   };
 
   // ref: http://julia.readthedocs.org/en/latest/manual/variables/#allowed-variable-names
   var VARIABLE_NAME_RE = '[A-Za-z_\\u00A1-\\uFFFF][A-Za-z_0-9\\u00A1-\\uFFFF]*';
 
   // placeholder for recursive self-reference
-  var DEFAULT = { lexemes: VARIABLE_NAME_RE, keywords: KEYWORDS, illegal: /<\// };
-
-  var TYPE_ANNOTATION = {
-    className: 'type',
-    begin: /::/
-  };
-
-  var SUBTYPE = {
-    className: 'type',
-    begin: /<:/
+  var DEFAULT = {
+    lexemes: VARIABLE_NAME_RE, keywords: KEYWORDS, illegal: /<\//
   };
 
   // ref: http://julia.readthedocs.org/en/latest/manual/integers-and-floating-point-numbers/
@@ -81856,19 +82407,23 @@ module.exports = function(hljs) {
   DEFAULT.contains = [
     NUMBER,
     CHAR,
-    TYPE_ANNOTATION,
-    SUBTYPE,
     STRING,
     COMMAND,
     MACROCALL,
     COMMENT,
-    hljs.HASH_COMMENT_MODE
+    hljs.HASH_COMMENT_MODE,
+    {
+      className: 'keyword',
+      begin:
+        '\\b(((abstract|primitive)\\s+)type|(mutable\\s+)?struct)\\b'
+    },
+    {begin: /<:/}  // relevance booster
   ];
   INTERPOLATION.contains = DEFAULT.contains;
 
   return DEFAULT;
 };
-},{}],86:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -81902,17 +82457,17 @@ module.exports = function(hljs) {
   // for string templates
   var SUBST = {
     className: 'subst',
-    variants: [
-      {begin: '\\$' + hljs.UNDERSCORE_IDENT_RE},
-      {begin: '\\${', end: '}', contains: [hljs.APOS_STRING_MODE, hljs.C_NUMBER_MODE]}
-    ]
+    begin: '\\${', end: '}', contains: [hljs.APOS_STRING_MODE, hljs.C_NUMBER_MODE]
+  };
+  var VARIABLE = {
+    className: 'variable', begin: '\\$' + hljs.UNDERSCORE_IDENT_RE
   };
   var STRING = {
     className: 'string',
     variants: [
       {
         begin: '"""', end: '"""',
-        contains: [SUBST]
+        contains: [VARIABLE, SUBST]
       },
       // Can't use built-in modes easily, as we want to use STRING in the meta
       // context as 'meta-string' and there's no syntax to remove explicitly set
@@ -81925,7 +82480,7 @@ module.exports = function(hljs) {
       {
         begin: '"', end: '"',
         illegal: /\n/,
-        contains: [hljs.BACKSLASH_ESCAPE, SUBST]
+        contains: [hljs.BACKSLASH_ESCAPE, VARIABLE, SUBST]
       }
     ]
   };
@@ -82042,7 +82597,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],87:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 module.exports = function(hljs) {
   var LASSO_IDENT_RE = '[a-zA-Z_][\\w.]*';
   var LASSO_ANGLE_RE = '<\\?(lasso(script)?|=)';
@@ -82205,7 +82760,7 @@ module.exports = function(hljs) {
     ].concat(LASSO_CODE)
   };
 };
-},{}],88:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -82228,7 +82783,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],89:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 module.exports = function (hljs) {
   return {
     contains: [
@@ -82268,7 +82823,7 @@ module.exports = function (hljs) {
     ]
   };
 };
-},{}],90:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE        = '[\\w-]+'; // yes, Less identifiers may begin with a digit
   var INTERP_IDENT_RE = '(' + IDENT_RE + '|@{' + IDENT_RE + '})';
@@ -82408,7 +82963,7 @@ module.exports = function(hljs) {
     contains: RULES
   };
 };
-},{}],91:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 module.exports = function(hljs) {
   var LISP_IDENT_RE = '[a-zA-Z_\\-\\+\\*\\/\\<\\=\\>\\&\\#][a-zA-Z0-9_\\-\\+\\*\\/\\<\\=\\>\\&\\#!]*';
   var MEC_RE = '\\|[^]*?\\|';
@@ -82511,7 +83066,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],92:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 module.exports = function(hljs) {
   var VARIABLE = {
     begin: '\\b[gtps][A-Z]+[A-Za-z0-9_\\-]*\\b|\\$_[A-Z]+',
@@ -82668,7 +83223,7 @@ module.exports = function(hljs) {
     illegal: ';$|^\\[|^=|&|{'
   };
 };
-},{}],93:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -82817,7 +83372,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],94:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 module.exports = function(hljs) {
   var identifier = '([-a-zA-Z$._][\\w\\-$.]*)';
   return {
@@ -82906,7 +83461,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],95:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 module.exports = function(hljs) {
 
     var LSL_STRING_ESCAPE_CHARS = {
@@ -82989,7 +83544,7 @@ module.exports = function(hljs) {
         ]
     };
 };
-},{}],96:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 module.exports = function(hljs) {
   var OPENING_LONG_BRACKET = '\\[=*\\[';
   var CLOSING_LONG_BRACKET = '\\]=*\\]';
@@ -83022,13 +83577,13 @@ module.exports = function(hljs) {
         'module next pairs pcall print rawequal rawget rawset require select setfenv' +
         'setmetatable tonumber tostring type unpack xpcall arg self' +
         //Library methods and properties (one line per library):
-        'coroutine resume yield status wrap create running debug getupvalue' +
-        'debug sethook getmetatable gethook setmetatable setlocal traceback setfenv getinfo setupvalue getlocal getregistry getfenv' +
-        'io lines write close flush open output type read stderr stdin input stdout popen tmpfile' +
-        'math, log, max, acos, huge, ldexp, pi, cos, tanh, pow, deg, tan, cosh, sinh, random, randomseed, frexp, ceil, floor, rad, abs, sqrt, modf, asin, min, mod, fmod, log10, atan2, exp, sin, atan' +
-        'os, exit, setlocale, date, getenv, difftime, remove, time, clock, tmpname, rename, execute, package, preload, loadlib, loaded, loaders, cpath, config path, seeall' +
-        'string, sub, upper, len, gfind, rep, find, match, char, dump, gmatch, reverse, byte, format, gsub, lower' +
-        'table, setn, insert, getn, foreachi, maxn, foreach, concat, sort, remove'
+        'coroutine resume yield status wrap create running debug getupvalue ' +
+        'debug sethook getmetatable gethook setmetatable setlocal traceback setfenv getinfo setupvalue getlocal getregistry getfenv ' +
+        'io lines write close flush open output type read stderr stdin input stdout popen tmpfile ' +
+        'math log max acos huge ldexp pi cos tanh pow deg tan cosh sinh random randomseed frexp ceil floor rad abs sqrt modf asin min mod fmod log10 atan2 exp sin atan ' +
+        'os exit setlocale date getenv difftime remove time clock tmpname rename execute package preload loadlib loaded loaders cpath config path seeall ' +
+        'string sub upper len gfind rep find match char dump gmatch reverse byte format gsub lower ' +
+        'table setn insert getn foreachi maxn foreach concat sort remove'
     },
     contains: COMMENTS.concat([
       {
@@ -83055,52 +83610,88 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],97:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 module.exports = function(hljs) {
+  /* Variables: simple (eg $(var)) and special (eg $@) */
   var VARIABLE = {
     className: 'variable',
-    begin: /\$\(/, end: /\)/,
-    contains: [hljs.BACKSLASH_ESCAPE]
+    variants: [
+      {
+        begin: '\\$\\(' + hljs.UNDERSCORE_IDENT_RE + '\\)',
+        contains: [hljs.BACKSLASH_ESCAPE],
+      },
+      {
+        begin: /\$[@%<?\^\+\*]/
+      },
+    ]
   };
-  return {
-    aliases: ['mk', 'mak'],
+  /* Quoted string with variables inside */
+  var QUOTE_STRING = {
+    className: 'string',
+    begin: /"/, end: /"/,
     contains: [
-      hljs.HASH_COMMENT_MODE,
+      hljs.BACKSLASH_ESCAPE,
+      VARIABLE,
+    ]
+  };
+  /* Function: $(func arg,...) */
+  var FUNC = {
+    className: 'variable',
+    begin: /\$\([\w-]+\s/, end: /\)/,
+    keywords: {
+      built_in:
+        'subst patsubst strip findstring filter filter-out sort ' +
+        'word wordlist firstword lastword dir notdir suffix basename ' +
+        'addsuffix addprefix join wildcard realpath abspath error warning ' +
+        'shell origin flavor foreach if or and call eval file value',
+    },
+    contains: [
+      VARIABLE,
+    ]
+  };
+  /* Variable assignment */
+  var VAR_ASSIG = {
+    begin: '^' + hljs.UNDERSCORE_IDENT_RE + '\\s*[:+?]?=',
+    illegal: '\\n',
+    returnBegin: true,
+    contains: [
       {
-        begin: /^\w+\s*\W*=/, returnBegin: true,
-        relevance: 0,
-        starts: {
-          end: /\s*\W*=/, excludeEnd: true,
-          starts: {
-            end: /$/,
-            relevance: 0,
-            contains: [
-              VARIABLE
-            ]
-          }
-        }
-      },
-      {
-        className: 'section',
-        begin: /^[\w]+:\s*$/
-      },
-      {
-        className: 'meta',
-        begin: /^\.PHONY:/, end: /$/,
-        keywords: {'meta-keyword': '.PHONY'}, lexemes: /[\.\w]+/
-      },
-      {
-        begin: /^\t+/, end: /$/,
-        relevance: 0,
-        contains: [
-          hljs.QUOTE_STRING_MODE,
-          VARIABLE
-        ]
+        begin: '^' + hljs.UNDERSCORE_IDENT_RE, end: '[:+?]?=',
+        excludeEnd: true,
       }
     ]
   };
+  /* Meta targets (.PHONY) */
+  var META = {
+    className: 'meta',
+    begin: /^\.PHONY:/, end: /$/,
+    keywords: {'meta-keyword': '.PHONY'},
+    lexemes: /[\.\w]+/
+  };
+  /* Targets */
+  var TARGET = {
+    className: 'section',
+    begin: /^[^\s]+:/, end: /$/,
+    contains: [VARIABLE,]
+  };
+  return {
+    aliases: ['mk', 'mak'],
+    keywords:
+      'define endef undefine ifdef ifndef ifeq ifneq else endif ' +
+      'include -include sinclude override export unexport private vpath',
+    lexemes: /[\w-]+/,
+    contains: [
+      hljs.HASH_COMMENT_MODE,
+      VARIABLE,
+      QUOTE_STRING,
+      FUNC,
+      VAR_ASSIG,
+      META,
+      TARGET,
+    ]
+  };
 };
-},{}],98:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['md', 'mkdown', 'mkd'],
@@ -83208,7 +83799,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],99:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['mma'],
@@ -83266,7 +83857,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],100:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMON_CONTAINS = [
     hljs.C_NUMBER_MODE,
@@ -83354,7 +83945,7 @@ module.exports = function(hljs) {
     ].concat(COMMON_CONTAINS)
   };
 };
-},{}],101:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = 'if then else elseif for thru do while unless step in and or not';
   var LITERALS = 'true false unknown inf minf ind und %e %i %pi %phi %gamma';
@@ -83760,7 +84351,7 @@ module.exports = function(hljs) {
     illegal: /@/
   }
 };
-},{}],102:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -83985,7 +84576,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],103:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -84067,7 +84658,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],104:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 module.exports = function(hljs) {
     //local labels: %?[FB]?[AT]?\d{1,2}\w+
   return {
@@ -84153,7 +84744,7 @@ module.exports = function(hljs) {
     illegal: '\/'
   };
 };
-},{}],105:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -84172,7 +84763,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],106:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     subLanguage: 'xml',
@@ -84197,7 +84788,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],107:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUMBER = {
     className: 'number', relevance: 0,
@@ -84272,7 +84863,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],108:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -84384,7 +84975,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],109:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -84453,7 +85044,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],110:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 module.exports = function(hljs) {
   var VAR = {
     className: 'variable',
@@ -84546,7 +85137,7 @@ module.exports = function(hljs) {
     illegal: '[^\\s\\}]'
   };
 };
-},{}],111:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['nim'],
@@ -84601,7 +85192,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],112:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 module.exports = function(hljs) {
   var NIX_KEYWORDS = {
     keyword:
@@ -84650,7 +85241,7 @@ module.exports = function(hljs) {
     contains: EXPRESSIONS
   };
 };
-},{}],113:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 module.exports = function(hljs) {
   var CONSTANTS = {
     className: 'variable',
@@ -84756,7 +85347,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],114:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 module.exports = function(hljs) {
   var API_CLASS = {
     className: 'built_in',
@@ -84847,7 +85438,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],115:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 module.exports = function(hljs) {
   /* missing support for heredoc-like string (OCaml 4.0.2+) */
   return {
@@ -84918,7 +85509,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],116:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 module.exports = function(hljs) {
 	var SPECIAL_VARS = {
 		className: 'keyword',
@@ -84975,7 +85566,7 @@ module.exports = function(hljs) {
 		]
 	}
 };
-},{}],117:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 module.exports = function(hljs) {
   var OXYGENE_KEYWORDS = 'abstract add and array as asc aspect assembly async begin break block by case class concat const copy constructor continue '+
     'create default delegate desc distinct div do downto dynamic each else empty end ensure enum equals event except exit extension external false '+
@@ -85045,7 +85636,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],118:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 module.exports = function(hljs) {
   var CURLY_SUBCOMMENT = hljs.COMMENT(
     '{',
@@ -85093,7 +85684,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],119:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 module.exports = function(hljs) {
   var PERL_KEYWORDS = 'getpwent getservent quotemeta msgrcv scalar kill dbmclose undef lc ' +
     'ma syswrite tr send umask sysopen shmwrite vec qx utime local oct semctl localtime ' +
@@ -85250,7 +85841,7 @@ module.exports = function(hljs) {
     contains: PERL_DEFAULT_CONTAINS
   };
 };
-},{}],120:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 module.exports = function(hljs) {
   var MACRO = {
     className: 'variable',
@@ -85302,7 +85893,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],121:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 module.exports = function(hljs) {
   var VARIABLE = {
     begin: '\\$+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*'
@@ -85429,7 +86020,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],122:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -85520,7 +86111,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],123:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 module.exports = function(hljs) {
   var BACKTICK_ESCAPE = {
     begin: '`[\\s\\S]',
@@ -85601,7 +86192,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],124:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -85649,7 +86240,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],125:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -85679,7 +86270,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],126:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var ATOM = {
@@ -85767,7 +86358,7 @@ module.exports = function(hljs) {
     ])
   };
 };
-},{}],127:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -85803,7 +86394,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],128:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var PUPPET_KEYWORDS = {
@@ -85918,7 +86509,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],129:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 module.exports = // Base deafult colors in PB IDE: background: #FFFFDF; foreground: #000000;
 
 function(hljs) {
@@ -85976,7 +86567,7 @@ function(hljs) {
     ]
   };
 };
-},{}],130:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -86092,7 +86683,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],131:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 module.exports = function(hljs) {
   var Q_KEYWORDS = {
   keyword:
@@ -86115,7 +86706,7 @@ module.exports = function(hljs) {
      ]
   };
 };
-},{}],132:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
       keyword:
@@ -86134,7 +86725,7 @@ module.exports = function(hljs) {
         'module console window document Symbol Set Map WeakSet WeakMap Proxy Reflect ' +
         'Behavior bool color coordinate date double enumeration font geocircle georectangle ' +
         'geoshape int list matrix4x4 parent point quaternion real rect ' +
-        'size string url var variant vector2d vector3d vector4d' +
+        'size string url variant vector2d vector3d vector4d' +
         'Promise'
     };
 
@@ -86284,7 +86875,7 @@ module.exports = function(hljs) {
     illegal: /#/
   };
 };
-},{}],133:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '([a-zA-Z]|\\.[a-zA-Z.])[a-zA-Z0-9._]*';
 
@@ -86354,7 +86945,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],134:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords:
@@ -86381,7 +86972,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],135:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENTIFIER = '[a-zA-Z-_][^\\n{]+\\{';
 
@@ -86448,7 +87039,166 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],136:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
+module.exports = // Colors from RouterOS terminal:
+//   green        - #0E9A00
+//   teal         - #0C9A9A
+//   purple       - #99069A
+//   light-brown  - #9A9900
+
+function(hljs) {
+
+  var STATEMENTS = 'foreach do while for if from to step else on-error and or not in';
+
+  // Global commands: Every global command should start with ":" token, otherwise it will be treated as variable.
+  var GLOBAL_COMMANDS = 'global local beep delay put len typeof pick log time set find environment terminal error execute parse resolve toarray tobool toid toip toip6 tonum tostr totime';
+
+  // Common commands: Following commands available from most sub-menus:
+  var COMMON_COMMANDS = 'add remove enable disable set get print export edit find run debug error info warning';
+
+  var LITERALS = 'true false yes no nothing nil null';
+
+  var OBJECTS = 'traffic-flow traffic-generator firewall scheduler aaa accounting address-list address align area bandwidth-server bfd bgp bridge client clock community config connection console customer default dhcp-client dhcp-server discovery dns e-mail ethernet filter firewall firmware gps graphing group hardware health hotspot identity igmp-proxy incoming instance interface ip ipsec ipv6 irq l2tp-server lcd ldp logging mac-server mac-winbox mangle manual mirror mme mpls nat nd neighbor network note ntp ospf ospf-v3 ovpn-server page peer pim ping policy pool port ppp pppoe-client pptp-server prefix profile proposal proxy queue radius resource rip ripng route routing screen script security-profiles server service service-port settings shares smb sms sniffer snmp snooper socks sstp-server system tool tracking type upgrade upnp user-manager users user vlan secret vrrp watchdog web-access wireless pptp pppoe lan wan layer7-protocol lease simple raw';
+
+  // print parameters
+  // Several parameters are available for print command:
+  // ToDo: var PARAMETERS_PRINT = 'append as-value brief detail count-only file follow follow-only from interval terse value-list without-paging where info';
+  // ToDo: var OPERATORS = '&& and ! not || or in ~ ^ & << >> + - * /';
+  // ToDo: var TYPES = 'num number bool boolean str string ip ip6-prefix id time array';
+  // ToDo: The following tokens serve as delimiters in the grammar: ()  []  {}  :   ;   $   / 
+
+  var VAR_PREFIX = 'global local set for foreach';
+
+  var VAR = {
+    className: 'variable',
+    variants: [
+      {begin: /\$[\w\d#@][\w\d_]*/},
+      {begin: /\$\{(.*?)}/}
+    ]
+  };
+  
+  var QUOTE_STRING = {
+    className: 'string',
+    begin: /"/, end: /"/,
+    contains: [
+      hljs.BACKSLASH_ESCAPE,
+      VAR,
+      {
+        className: 'variable',
+        begin: /\$\(/, end: /\)/,
+        contains: [hljs.BACKSLASH_ESCAPE]
+      }
+    ]
+  };
+  
+  var APOS_STRING = {
+    className: 'string',
+    begin: /'/, end: /'/
+  };
+  
+  var IPADDR = '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\b';
+  var IPADDR_wBITMASK =  IPADDR+'/(3[0-2]|[1-2][0-9]|\\d)';
+  //////////////////////////////////////////////////////////////////////
+  return {
+    aliases: ['routeros', 'mikrotik'],
+    case_insensitive: true,
+    lexemes: /:?[\w-]+/,
+    keywords: {
+      literal: LITERALS,
+      keyword: STATEMENTS + ' :' + STATEMENTS.split(' ').join(' :') + ' :' + GLOBAL_COMMANDS.split(' ').join(' :'),
+    },
+    contains: [
+      { // недопустимые конструкции
+        variants: [
+          { begin: /^@/, end: /$/, },               // dns
+          { begin: /\/\*/, end: /\*\//, },          // -- comment
+          { begin: /%%/, end: /$/, },               // -- comment
+          { begin: /^'/, end: /$/, },               // Monkey one line comment
+          { begin: /^\s*\/[\w-]+=/, end: /$/, },    // jboss-cli
+          { begin: /\/\//, end: /$/, },             // Stan comment
+          { begin: /^\[\</, end: /\>\]$/, },        // F# class declaration?
+          { begin: /<\//, end: />/, },              // HTML tags
+          { begin: /^facet /, end: /\}/, },         // roboconf - лютый костыль )))
+          { begin: '^1\\.\\.(\\d+)$', end: /$/, },  // tap  
+        ],
+        illegal: /./,
+      },
+      hljs.COMMENT('^#', '$'),
+      QUOTE_STRING,
+      APOS_STRING,
+      VAR,
+      { // attribute=value
+        begin: /[\w-]+\=([^\s\{\}\[\]\(\)]+)/, 
+        relevance: 0,
+        returnBegin: true,
+        contains: [
+          {
+            className: 'attribute',
+            begin: /[^=]+/
+          },
+          {
+            begin: /=/, 
+            endsWithParent:  true,
+            relevance: 0,
+            contains: [
+              QUOTE_STRING,
+              APOS_STRING,
+              VAR,
+              {
+                className: 'literal',
+                begin: '\\b(' + LITERALS.split(' ').join('|') + ')\\b',
+              },
+              /*{
+                // IPv4 addresses and subnets
+                className: 'number',
+                variants: [
+                  {begin: IPADDR_wBITMASK+'(,'+IPADDR_wBITMASK+')*'}, //192.168.0.0/24,1.2.3.0/24
+                  {begin: IPADDR+'-'+IPADDR},       // 192.168.0.1-192.168.0.3
+                  {begin: IPADDR+'(,'+IPADDR+')*'}, // 192.168.0.1,192.168.0.34,192.168.24.1,192.168.0.1
+                ]
+              }, // */
+              /*{
+                // MAC addresses and DHCP Client IDs
+                className: 'number',
+                begin: /\b(1:)?([0-9A-Fa-f]{1,2}[:-]){5}([0-9A-Fa-f]){1,2}\b/,
+              }, //*/
+              {
+                // Не форматировать не классифицированные значения. Необходимо для исключения подсветки значений как built_in.
+                // className: 'number',  
+                begin: /("[^"]*"|[^\s\{\}\[\]]+)/,
+              }, //*/
+            ]
+          } //*/
+        ]
+      },//*/
+      {
+        // HEX values
+        className: 'number',
+        begin: /\*[0-9a-fA-F]+/,
+      }, //*/
+
+      { 
+        begin: '\\b(' + COMMON_COMMANDS.split(' ').join('|') + ')([\\s\[\(]|\])',
+        returnBegin: true,
+        contains: [
+          {
+            className: 'builtin-name', //'function',
+            begin: /\w+/,
+          },
+        ],  
+      },
+      
+      { 
+        className: 'built_in',
+        variants: [
+          {begin: '(\\.\\./|/|\\s)((' + OBJECTS.split(' ').join('|') + ');?\\s)+',relevance: 10,},
+          {begin: /\.\./,},
+        ],
+      },//*/
+    ]
+  };
+};
+},{}],139:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -86484,7 +87234,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],137:[function(require,module,exports){
+},{}],140:[function(require,module,exports){
 module.exports = function(hljs) {
   var RUBY_METHOD_RE = '[a-zA-Z_]\\w*[!?=]?|[-+~]\\@|<<|>>|=~|===?|<=>|[<>]=?|\\*\\*|[-/+%^&*~`|]|\\[\\]=?';
   var RUBY_KEYWORDS = {
@@ -86611,6 +87361,7 @@ module.exports = function(hljs) {
     },
     { // regexp container
       begin: '(' + hljs.RE_STARTERS_RE + '|unless)\\s*',
+      keywords: 'unless',
       contains: [
         IRB_OBJECT,
         {
@@ -86660,7 +87411,7 @@ module.exports = function(hljs) {
     contains: COMMENT_MODES.concat(IRB_DEFAULT).concat(RUBY_DEFAULT_CONTAINS)
   };
 };
-},{}],138:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -86721,7 +87472,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],139:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 module.exports = function(hljs) {
   var NUM_SUFFIX = '([ui](8|16|32|64|128|size)|f(32|64))\?';
   var KEYWORDS =
@@ -86768,7 +87519,7 @@ module.exports = function(hljs) {
       {
         className: 'string',
         variants: [
-           { begin: /r(#*)".*?"\1(?!#)/ },
+           { begin: /r(#*)"(.|\n)*?"\1(?!#)/ },
            { begin: /b?'\\?(x\w{2}|u\w{4}|U\w{8}|.)'/ }
         ]
       },
@@ -86829,7 +87580,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],140:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var ANNOTATION = { className: 'meta', begin: '@[A-Za-z]+' };
@@ -86944,7 +87695,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],141:[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 module.exports = function(hljs) {
   var SCHEME_IDENT_RE = '[^\\(\\)\\[\\]\\{\\}",\'`;#|\\\\\\s]+';
   var SCHEME_SIMPLE_NUMBER_RE = '(\\-|\\+)?\\d+([./]\\d+)?';
@@ -87088,7 +87839,7 @@ module.exports = function(hljs) {
     contains: [SHEBANG, NUMBER, STRING, QUOTED_IDENT, QUOTED_LIST, LIST].concat(COMMENT_MODES)
   };
 };
-},{}],142:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var COMMON_CONTAINS = [
@@ -87142,7 +87893,7 @@ module.exports = function(hljs) {
     ].concat(COMMON_CONTAINS)
   };
 };
-},{}],143:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 module.exports = function(hljs) {
   var IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
   var VARIABLE = {
@@ -87240,7 +87991,22 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],144:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
+module.exports = function(hljs) {
+  return {
+    aliases: ['console'],
+    contains: [
+      {
+        className: 'meta',
+        begin: '^\\s{0,3}[\\w\\d\\[\\]()@-]*[>%$#]',
+        starts: {
+          end: '$', subLanguage: 'bash'
+        }
+      },
+    ]
+  }
+};
+},{}],148:[function(require,module,exports){
 module.exports = function(hljs) {
   var smali_instr_low_prio = ['add', 'and', 'cmp', 'cmpg', 'cmpl', 'const', 'div', 'double', 'float', 'goto', 'if', 'int', 'long', 'move', 'mul', 'neg', 'new', 'nop', 'not', 'or', 'rem', 'return', 'shl', 'shr', 'sput', 'sub', 'throw', 'ushr', 'xor'];
   var smali_instr_high_prio = ['aget', 'aput', 'array', 'check', 'execute', 'fill', 'filled', 'goto/16', 'goto/32', 'iget', 'instance', 'invoke', 'iput', 'monitor', 'packed', 'sget', 'sparse'];
@@ -87296,7 +88062,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],145:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 module.exports = function(hljs) {
   var VAR_IDENT_RE = '[a-z][a-zA-Z0-9_]*';
   var CHAR = {
@@ -87346,7 +88112,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],146:[function(require,module,exports){
+},{}],150:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['ml'],
@@ -87412,7 +88178,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],147:[function(require,module,exports){
+},{}],151:[function(require,module,exports){
 module.exports = function(hljs) {
   var CPP = hljs.getLanguage('cpp').exports;
 
@@ -87783,7 +88549,7 @@ module.exports = function(hljs) {
     illegal: /#/
   };
 };
-},{}],148:[function(require,module,exports){
+},{}],152:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMENT_MODE = hljs.COMMENT('--', '$');
   return {
@@ -87943,7 +88709,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],149:[function(require,module,exports){
+},{}],153:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     contains: [
@@ -88026,7 +88792,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],150:[function(require,module,exports){
+},{}],154:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['do', 'ado'],
@@ -88064,7 +88830,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],151:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 module.exports = function(hljs) {
   var STEP21_IDENT_RE = '[A-Z_][A-Z0-9_.]*';
   var STEP21_KEYWORDS = {
@@ -88111,7 +88877,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],152:[function(require,module,exports){
+},{}],156:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var VARIABLE = {
@@ -88565,7 +89331,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],153:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 module.exports = function(hljs) {
   var DETAILS = {
     className: 'string',
@@ -88599,14 +89365,14 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],154:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 module.exports = function(hljs) {
   var SWIFT_KEYWORDS = {
       keyword: '__COLUMN__ __FILE__ __FUNCTION__ __LINE__ as as! as? associativity ' +
         'break case catch class continue convenience default defer deinit didSet do ' +
-        'dynamic dynamicType else enum extension fallthrough false final for func ' +
+        'dynamic dynamicType else enum extension fallthrough false fileprivate final for func ' +
         'get guard if import in indirect infix init inout internal is lazy left let ' +
-        'mutating nil none nonmutating operator optional override postfix precedence ' +
+        'mutating nil none nonmutating open operator optional override postfix precedence ' +
         'prefix private protocol Protocol public repeat required rethrows return ' +
         'right self Self set static struct subscript super switch throw throws true ' +
         'try try! try? Type typealias unowned var weak where while willSet',
@@ -88716,7 +89482,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],155:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 module.exports = function(hljs) {
 
   var COMMENT = {
@@ -88760,7 +89526,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],156:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -88796,7 +89562,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],157:[function(require,module,exports){
+},{}],161:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['tk'],
@@ -88857,7 +89623,7 @@ module.exports = function(hljs) {
     ]
   }
 };
-},{}],158:[function(require,module,exports){
+},{}],162:[function(require,module,exports){
 module.exports = function(hljs) {
   var COMMAND = {
     className: 'tag',
@@ -88919,7 +89685,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],159:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILT_IN_TYPES = 'bool byte i16 i32 i64 double string binary';
   return {
@@ -88954,7 +89720,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],160:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 module.exports = function(hljs) {
   var TPID = {
     className: 'number',
@@ -89038,7 +89804,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],161:[function(require,module,exports){
+},{}],165:[function(require,module,exports){
 module.exports = function(hljs) {
   var PARAMS = {
     className: 'params',
@@ -89104,7 +89870,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],162:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = {
     keyword:
@@ -89260,7 +90026,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],163:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     keywords: {
@@ -89310,7 +90076,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],164:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['vb'],
@@ -89366,7 +90132,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],165:[function(require,module,exports){
+},{}],169:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     subLanguage: 'xml',
@@ -89378,7 +90144,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],166:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     aliases: ['vbs'],
@@ -89417,7 +90183,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],167:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 module.exports = function(hljs) {
   var SV_KEYWORDS = {
     keyword:
@@ -89516,7 +90282,7 @@ module.exports = function(hljs) {
     ]
   }; // return
 };
-},{}],168:[function(require,module,exports){
+},{}],172:[function(require,module,exports){
 module.exports = function(hljs) {
   // Regular expression for VHDL numeric literals.
 
@@ -89577,7 +90343,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],169:[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     lexemes: /[!#@\w]+/,
@@ -89683,7 +90449,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],170:[function(require,module,exports){
+},{}],174:[function(require,module,exports){
 module.exports = function(hljs) {
   return {
     case_insensitive: true,
@@ -89819,7 +90585,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],171:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 module.exports = function(hljs) {
   var BUILTIN_MODULES =
     'ObjectLoader Animate MovieCredits Slides Filters Shading Materials LensFlare Mapping VLCAudioVideo ' +
@@ -89892,7 +90658,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],172:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 module.exports = function(hljs) {
   var XML_IDENT_RE = '[A-Za-z0-9\\._:-]+';
   var TAG_INTERNALS = {
@@ -89995,7 +90761,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],173:[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 module.exports = function(hljs) {
   var KEYWORDS = 'for let if while then else return where group by xquery encoding version' +
     'module namespace boundary-space preserve strip default collation base-uri ordering' +
@@ -90066,7 +90832,7 @@ module.exports = function(hljs) {
     contains: CONTAINS
   };
 };
-},{}],174:[function(require,module,exports){
+},{}],178:[function(require,module,exports){
 module.exports = function(hljs) {
   var LITERALS = 'true false yes no null';
 
@@ -90154,7 +90920,7 @@ module.exports = function(hljs) {
     ]
   };
 };
-},{}],175:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 module.exports = function(hljs) {
   var STRING = {
     className: 'string',
@@ -90269,8 +91035,8 @@ module.exports = function(hljs) {
   var HAS_NATIVE_PROXY = typeof Proxy === 'function';
 
   var SAFE_LOOKUP_FACTORY_METHOD = '_lookupFactory';
-  function factoryFor(fullName) {
-    var factory = this[SAFE_LOOKUP_FACTORY_METHOD](fullName);
+  function factoryFor(fullName, options) {
+    var factory = this[SAFE_LOOKUP_FACTORY_METHOD](fullName, options);
 
     if (!factory) {
       return;
@@ -91128,53 +91894,70 @@ define("ember-arcgis-portal-components/components/item-pager/template", ["export
 
   exports["default"] = Ember.HTMLBars.template({ "id": "jHv7KhG2", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showPagination\"]]],null,5]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.next\"],null]],null]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"changePage\"]],[\"get\",[\"nextPage\"]]]],[\"flush-element\"],[\"text\",\"›\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.last_pg\"],null]],null]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"changePage\"]],[\"get\",[\"lastPage\"]]]],[\"flush-element\"],[\"text\",\"»\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"disabled\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.disabled\"],null]],null]]]],[\"flush-element\"],[\"text\",\"›\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"disabled\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.disabled\"],null]],null]]]],[\"flush-element\"],[\"text\",\"»\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"li\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[[\"unknown\",[\"num\",\"className\"]]]]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"changePage\"]],[\"get\",[\"num\",\"page\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"format-number\"],[[\"get\",[\"num\",\"page\"]]],null],false],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[\"num\"]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.first_pg\"],null]],null]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"changePage\"]],1]],[\"flush-element\"],[\"text\",\"«\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.prev\"],null]],null]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"changePage\"]],[\"get\",[\"prevPage\"]]]],[\"flush-element\"],[\"text\",\"‹\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"disabled\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.disabled\"],null]],null]]]],[\"flush-element\"],[\"text\",\"«\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"li\",[]],[\"static-attr\",\"class\",\"disabled\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"aria-label\",[\"concat\",[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"aria.disabled\"],null]],null]]]],[\"flush-element\"],[\"text\",\"‹\"],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"pagination\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"isFirstPage\"]]],null,4,3],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"pageRange\"]]],null,2],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"isLastPage\"]]],null,1,0],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-pager/template.hbs" } });
 });
-define('ember-arcgis-portal-components/components/item-picker/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/template', 'ember-arcgis-portal-components/utils/query-helpers'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerTemplate, _emberArcgisPortalComponentsUtilsQueryHelpers) {
+define('ember-arcgis-portal-components/components/item-picker/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/template', 'ember-arcgis-portal-components/utils/query-helpers', 'ember-arcgis-portal-components/utils/is-guid'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerTemplate, _emberArcgisPortalComponentsUtilsQueryHelpers, _emberArcgisPortalComponentsUtilsIsGuid) {
   'use strict';
 
+  // {{loading-indicator msg=(t "ember-arcgis-portal-components.itemPicker.loadingLayers")}}
   exports['default'] = _ember['default'].Component.extend({
 
-    layout: _emberArcgisPortalComponentsComponentsItemPickerTemplate['default'],
-
-    intl: _ember['default'].inject.service(),
-
-    itemService: _ember['default'].inject.service('items-service'),
-
-    _i18nScope: _ember['default'].computed('i18nScope', function () {
-      return this.getWithDefault('i18nScope', 'ember-arcgis-portal-components.itemPicker') + '.';
-    }),
-
     classNames: ['item-picker', 'clearfix', 'row'],
-
+    disableAddItems: _ember['default'].computed.not('hasItemsToAdd'),
+    hasItemsToAdd: _ember['default'].computed.notEmpty('itemsToAdd'),
+    intl: _ember['default'].inject.service(),
     isValidating: false,
-
-    shouldValidate: false,
-
+    itemService: _ember['default'].inject.service('items-service'),
+    itemsToAdd: [],
+    layout: _emberArcgisPortalComponentsComponentsItemPickerTemplate['default'],
     selectAnyway: false,
+    shouldValidate: false,
+    showNoItemsMsg: _ember['default'].computed.notEmpty('noItemsFoundMsg'),
 
+    /**
+     * Startup the component... we may need to issue an immediate search...
+     */
     init: function init() {
       this._super.apply(this, arguments);
       if (this.get('searchItemsOnInit')) {
+        if (this.get('catalog')) {
+          this._setInitialCatalog(this.get('catalog'));
+        }
         this._doSearch(this.get('q'));
       }
     },
 
-    selectButtonText: _ember['default'].computed('isValidating', 'selectAnyway', function () {
-      var intl = this.get('intl');
-      if (this.get('isValidating')) {
-        return intl.t(this.get('_i18nScope') + 'buttons.validating');
-      } else if (this.get('selectAnyway')) {
-        return intl.t(this.get('_i18nScope') + 'buttons.selectAnyway');
-      }
-      return intl.t(this.get('_i18nScope') + 'buttons.select');
+    /**
+     * Compure the translation scope
+     */
+    _i18nScope: _ember['default'].computed('i18nScope', function () {
+      return this.getWithDefault('i18nScope', 'ember-arcgis-portal-components.itemPicker') + '.';
     }),
 
-    selectButtonClass: _ember['default'].computed('isValidating', 'selectAnyway', 'errorMessage', function () {
-      var errorMessage = this.get('errorMessage');
-      if (this.get('isValidating')) {
-        return 'disabled';
-      } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
-        return 'disabled';
+    /**
+     * Allow a loading component to be specified as a parameter
+     */
+    loadingComponent: _ember['default'].computed('loadingComponentName', function () {
+      var result = 'loading-indicator';
+      if (this.get('loadingComponentName')) {
+        result = this.get('loadingComponentName');
       }
+      return result;
+    }),
+
+    /**
+     * Determine what preview component to use. This allows us to create
+     * per-type UX for the preview
+     */
+    previewComponent: _ember['default'].computed('currentItem', function () {
+      var type = this.get('currentItem.type');
+      var componentName = 'item-picker/item-preview';
+
+      switch (type.toLowerCase()) {
+        case 'feature service':
+        case 'map service':
+          componentName = 'item-picker/feature-service-preview';
+          break;
+      }
+      return componentName;
     }),
 
     inputElementId: _ember['default'].computed(function () {
@@ -91191,12 +91974,6 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
       return this.get('rowCount') || 10;
     }),
 
-    disabledStatus: _ember['default'].computed('currentItem', function () {
-      if (!this.get('currentItem.url')) {
-        return 'disabled';
-      }
-    }),
-
     items: _ember['default'].A([]),
 
     totalCount: _ember['default'].computed.reads('items.total'),
@@ -91209,7 +91986,10 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
 
     hasSearched: false,
 
-    showTabs: _ember['default'].computed('catalog', function () {
+    /**
+     * Do we show facets? if we have more than one entry in the catalog, yes
+     */
+    showFacets: _ember['default'].computed('catalog', function () {
       var catalog = this.get('catalog');
       if (catalog && catalog.length > 1) {
         return true;
@@ -91247,18 +92027,14 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
       }
     }),
 
-    showNoItemsMsg: _ember['default'].computed.notEmpty('noItemsFoundMsg'),
-
-    itemsToAdd: [],
-
-    hasItemsToAdd: _ember['default'].computed.notEmpty('itemsToAdd'),
-
-    disableAddItems: _ember['default'].computed.not('hasItemsToAdd'),
-
-    _defaultSearch: function _defaultSearch(q) {
+    _defaultSearch: function _defaultSearch(q, isValidGuid) {
       var parts = [];
       if (q) {
-        parts.push('title:' + q);
+        if (isValidGuid) {
+          parts.push('id:' + q);
+        } else {
+          parts.push('title:' + q);
+        }
       }
       var defaultQuery = this.get('defaultQuery');
       if (defaultQuery) {
@@ -91272,11 +92048,15 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
       return parts.join(' AND ');
     },
 
+    /**
+     * Execute the search
+     */
     _doSearch: function _doSearch(q) {
       var _this = this;
 
       var page = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
 
+      var isValidGuid = (0, _emberArcgisPortalComponentsUtilsIsGuid['default'])(q);
       this.setProperties({
         loading: true,
         currentItem: null,
@@ -91286,8 +92066,8 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
       var selectedCatalog = this.get('selectedCatalog') || this.get('onlyOneCataEntry');
 
       var query = selectedCatalog // If we have a catalog selected
-      ? _emberArcgisPortalComponentsUtilsQueryHelpers['default'].createQuery(selectedCatalog, q) // Create a query for that tab.
-      : this._defaultSearch(q); // Otherwise perform a normal search
+      ? _emberArcgisPortalComponentsUtilsQueryHelpers['default'].createQuery(selectedCatalog, q, isValidGuid) // Create a query for that tab.
+      : this._defaultSearch(q, isValidGuid); // Otherwise perform a normal search
 
       var pageSize = this.get('pageSize');
       var params = {
@@ -91296,10 +92076,10 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
         num: pageSize,
         sortField: 'title'
       };
+
       // allow portalOpts to be passed in so we can access
       // other portals besides the one our session is auth'd to
-      var opts = this.get('portalOpts') || null;
-      this.get('itemService').search(params, opts).then(function (resp) {
+      this.get('itemService').search(params, this.get('portalOpts')).then(function (resp) {
         _this.set('items', resp);
       }, function (err) {
         throw err;
@@ -91311,24 +92091,63 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
       });
     },
 
+    /**
+     * Developer can pass in a .active property on a catalog entry,
+     * this code simply ensures that is the "active" catalog
+     */
+    _setInitialCatalog: function _setInitialCatalog(catalog) {
+      var startingCatalog = catalog[0];
+      var selectedCatalog = catalog.reduce(function (acc, entry) {
+        if (entry.active) {
+          acc = entry;
+        }
+        return acc;
+      }, startingCatalog);
+
+      this.set('selectedCatalog', selectedCatalog);
+      this.set('selectedCatalogName', selectedCatalog.name);
+    },
+
+    // _setItemAndLayer (selectedItem, selectedLayerId) {
+    //   if (!selectedItem.fields) {
+    //     let layers = Ember.get(selectedItem, 'layers');
+    //     let selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
+    //     this.set('selectedLayer', selectedLayer);
+    //   }
+    //   this.set('selectedItem', selectedItem);
+    // },
+
     actions: {
+      /**
+       * Fired when a facet is selected
+       */
       chooseCatalog: function chooseCatalog(val) {
         var selectedCatalog = this.get('catalog').findBy('name', val);
         this.set('selectedCatalogName', selectedCatalog.name);
         this.set('selectedCatalog', selectedCatalog);
         // Run search..
-        this._doSearch();
+        this._doSearch(this.get('q'));
       },
 
-      doSearch: function doSearch() {
-        var q = this.get('q');
+      /**
+       * When the user types in the search box, this fires...
+       */
+      doSearch: function doSearch(query) {
+        var q = query;
+        this.set('q', q);
         _ember['default'].run.debounce(this, this._doSearch, q, 150);
       },
+      /**
+       * Paging
+       */
       changePage: function changePage(page) {
         var q = this.get('q');
         this._doSearch(q, page);
       },
-      onClick: function onClick(item) {
+      /**
+       * When an item is clicked in the list
+       */
+      onItemClick: function onItemClick(item) {
         if (this.get('selectMultiple')) {
           var itemsToAdd = this.get('itemsToAdd');
           var existingObj = itemsToAdd.findBy('id', item.id);
@@ -91349,31 +92168,53 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
           }
         }
       },
-
-      onSelect: function onSelect(item) {
-        var _this2 = this;
-
-        var validator = this.get('onSelectionValidator');
-
-        this.set('isValidating', true);
-        if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
-          validator(item).then(function (resp) {
-            _this2.set('isValidating', false);
-            _this2.set('errorHash', resp.status);
-            if (resp.status.status === 'error') {
-              return;
-            } else if (resp.status.status === 'warning') {
-              _this2.set('selectAnyway', true);
-              return;
-            } else {
-              return _this2.get('selectAction')(resp.item);
-            }
-          });
-        } else {
-          this.set('isValidating', false);
-          return this.get('selectAction')(item);
-        }
+      /**
+       * Called when user clicks "Select" in the Preview component
+       */
+      onPreviewSelected: function onPreviewSelected(item, options) {
+        // call the closure action passed into this component
+        return this.get('selectAction')(item, options);
       },
+
+      // onSelect () {
+      //   const item = this.get('selectedItem');
+      //   const layer = this.get('selectedLayer');
+      //   const validator = this.get('onSelectionValidator');
+      //
+      //   this.set('isValidating', true);
+      //   if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+      //     validator(item)
+      //       .then((resp) => {
+      //         this.set('isValidating', false);
+      //         this.set('errorHash', resp.status);
+      //         if (resp.status.status === 'error') {
+      //           return;
+      //         } else if (resp.status.status === 'warning') {
+      //           this.set('selectAnyway', true);
+      //           return;
+      //         } else {
+      //           switch (item.type.toLowerCase()) {
+      //             case 'feature service':
+      //               return this.get('selectAction')(resp.item, 0);
+      //             default:
+      //               return this.get('selectAction')(resp.item);
+      //           }
+      //         }
+      //       });
+      //   } else {
+      //     this.set('isValidating', false);
+      //     switch (item.type.toLowerCase()) {
+      //       case 'feature service':
+      //         return this.get('selectAction')(item, layer);
+      //       default:
+      //         return this.get('selectAction')(item);
+      //     }
+      //   }
+      // },
+
+      // selectItemAndLayer (item, layerId) {
+      //   this._setItemAndLayer(item, layerId);
+      // },
 
       cancelAction: function cancelAction() {
         this.setProperties({
@@ -91386,25 +92227,177 @@ define('ember-arcgis-portal-components/components/item-picker/component', ['expo
     }
   });
 });
-define('ember-arcgis-portal-components/components/item-picker/item-preview/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/item-preview/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerItemPreviewTemplate) {
+define('ember-arcgis-portal-components/components/item-picker/feature-service-preview/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/feature-service-preview/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerFeatureServicePreviewTemplate) {
   'use strict';
 
   exports['default'] = _ember['default'].Component.extend({
 
-    intl: _ember['default'].inject.service(),
-
-    layout: _emberArcgisPortalComponentsComponentsItemPickerItemPreviewTemplate['default'],
-
     classNames: ['item-picker-current-item-preview'],
+    description: _ember['default'].computed.reads('model.description'),
+    featureService: _ember['default'].inject.service('feature-service'),
+    forceLayerSelection: _ember['default'].computed.reads('params.forceLayerSelection'),
+    hasSelectedLayer: _ember['default'].computed.notEmpty('selectedLayer'),
+    intl: _ember['default'].inject.service(),
+    isLoading: true,
+    isValidating: false,
+    itemService: _ember['default'].inject.service('items-service'),
+    layout: _emberArcgisPortalComponentsComponentsItemPickerFeatureServicePreviewTemplate['default'],
+    selectAnyway: false,
+    shouldValidate: false,
+    showError: _ember['default'].computed.notEmpty('errorMessage'),
+    showLayers: _ember['default'].computed.reads('params.showLayers'),
+    /**
+     * What should the select button text be? we have variations depending on status
+     */
+    selectButtonText: _ember['default'].computed('isValidating', 'selectAnyway', function () {
+      var intl = this.get('intl');
+      var key = 'buttons.select';
+      if (this.get('isValidating')) {
+        key = 'buttons.validating';
+      } else if (this.get('selectAnyway')) {
+        key = 'buttons.selectAnyway';
+      }
+      return intl.t('' + this.get('_i18nScope') + key);
+    }),
 
-    didInsertElement: function didInsertElement() {
-      this.$('img').on('error', _ember['default'].run.bind(this, this.onImageError));
+    /**
+     * Select button class. Basically mirroring the disabled state of the button
+     */
+    selectButtonClass: _ember['default'].computed('isSelectDisabled', function () {
+      var result = '';
+      if (this.get('isSelectDisabled')) {
+        result = 'disabled';
+      }
+      return result;
+    }),
+    /**
+     * Disable the select button if...
+     * ... we have an error
+     * ... we need to choose a layer, and have not selected one
+     */
+    isSelectDisabled: _ember['default'].computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage', function () {
+      var errorMessage = this.get('errorMessage');
+      var result = false;
+      if (this.get('isValidating')) {
+        result = true;
+      }
+      if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+        result = true;
+      } else {
+        if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
+          result = true;
+        }
+      }
+      return result;
+    }),
+
+    /**
+     * Upgrade the protocol if we know we can...
+     */
+    upgradeProtocol: function upgradeProtocol(url) {
+      // if already https, just return now...
+      if (url.indexOf('https') > -1) {
+        return url;
+      }
+      // upgrade if possible
+      var upgradeableDomains = ['arcgis.com', 'arcgisonline.com', 'esri.com'];
+      var canUpgrade = upgradeableDomains.reduce(function (acc, entry) {
+        if (url.indexOf(entry) > -1) {
+          acc = true;
+        }
+        return acc;
+      }, false);
+      if (canUpgrade) {
+        url = url.replace('http', 'https');
+      }
+      return url;
     },
 
-    willDestroyElement: function willDestroyElement() {
-      this.$('img').off();
+    /**
+     * Delegate to featureService to get the layer info
+     * for the service. Feature Service will handle auth
+     */
+    fetchServiceLayers: function fetchServiceLayers(serviceItem) {
+      var _this = this;
+
+      var featureService = this.get('featureService');
+      // upgrade the url and re-assign it to the item...
+      serviceItem.url = this.upgradeProtocol(serviceItem.url);
+      // if the last segment of the url isNaN, we have a service url
+      var isService = false;
+      if (isNaN(serviceItem.url.split('/').reverse()[0])) {
+        isService = true;
+      }
+      return featureService.getLayerInfo(serviceItem.url).then(function (result) {
+        var layersAndTables = [];
+        if (isService) {
+          if (result.layers) {
+            layersAndTables = result.layers.concat(result.tables);
+            // if we only have one... select it...
+            if (layersAndTables.length === 1) {
+              layersAndTables[0].checked = true;
+              _this.set('selectedLayer', layersAndTables[0]);
+            } else {
+              _this.set('selectedLayer', null);
+            }
+          }
+        } else {
+          // we need to make something that looks like a layer out of the getLayerInfo
+          layersAndTables.push(result);
+        }
+        return layersAndTables;
+      });
     },
 
+    /**
+     * When the item is changed... re-fetch the layers and tables
+     */
+    onItemChanged: function onItemChanged() {
+      var _this2 = this;
+
+      var item = this.get('model');
+      this.set('isLoading', true);
+      this.fetchServiceLayers(item).then(function (layersAndTables) {
+        _this2.set('isLoading', false);
+        _this2.set('errorMessage', null);
+        _this2.set('layerList', layersAndTables);
+      })['catch'](function (err) {
+        _this2.set('isLoading', false);
+        _this2.set('layerList', []);
+        _this2.set('selectedLayer', null);
+        _ember['default'].debug('Error fetching layers ' + err);
+        _this2.set('errorMessage', {
+          status: 'error',
+          message: err.message || 'Error accessing service.'
+        });
+      });
+    },
+    /**
+     * Lifecycle hook that calls onItemChanged to do the fetch
+     */
+    didReceiveAttrs: function didReceiveAttrs() {
+      this._super.apply(this, arguments);
+      // only do this if we are going to show the layers
+      if (this.get('showLayers')) {
+        var model = this.get('model');
+        if (this.get('cachedModel.id') !== model.id) {
+          // reset some state...
+          this.set('cachedModel', model);
+          this.onItemChanged();
+        }
+      }
+    },
+
+    didRender: function didRender() {
+      // Needed to jump to error message
+      if (this.get('showError')) {
+        this.$().scrollTop(0);
+      }
+    },
+
+    /**
+     * Get the translated form of the Item Type
+     */
     itemType: _ember['default'].computed('_i18nScope', 'model.type', function () {
       var itemType = this.get('model.type');
       var result = itemType;
@@ -91417,22 +92410,9 @@ define('ember-arcgis-portal-components/components/item-picker/item-preview/compo
       return result;
     }),
 
-    thumbnailUrl: _ember['default'].computed('model.thumbnail', function () {
-      var ENV = _ember['default'].getOwner(this).resolveRegistration('config:environment');
-      var portal = ENV.APP.portalRestUrl;
-      return portal + '/content/items/' + this.get('model.id') + '/info/' + this.get('model.thumbnail');
-    }),
-
-    thumbnailIsBroken: false,
-
-    showFallback: _ember['default'].computed('thumbnailIsBroken', 'model.thumbnail', function () {
-      return _ember['default'].isEmpty(this.get('model.thumbnail')) || this.get('thumbnailIsBroken');
-    }),
-
-    description: _ember['default'].computed.reads('model.description'),
-
-    showError: _ember['default'].computed.notEmpty('errorMessage'),
-
+    /**
+     * What class do we use for the message...
+     */
     messageClass: _ember['default'].computed('errorMessage', function () {
       if (this.get('errorMessage.status') === 'warning') {
         return 'alert-warning';
@@ -91441,12 +92421,175 @@ define('ember-arcgis-portal-components/components/item-picker/item-preview/compo
       }
     }),
 
-    onImageError: function onImageError() {
-      _ember['default'].run(this, function () {
-        if (!this.get('isDestroyed') && !this.get('isDestroying')) {
-          this.set('thumbnailIsBroken', true);
+    actions: {
+      /**
+       * Fires when a layer is selected
+       */
+      onLayerSelected: function onLayerSelected(layer) {
+        _ember['default'].debug('Layer selected ' + layer.name + ':' + layer.id);
+        this.set('selectedLayer', layer);
+      },
+      /**
+       * When the user clicks the select button...
+       */
+      onServiceSelected: function onServiceSelected(item) {
+        var _this3 = this;
+
+        var options = undefined;
+        if (this.get('forceLayerSelection')) {
+          options = {
+            layer: this.get('selectedLayer')
+          };
         }
-      });
+        var validator = this.get('onSelectionValidator');
+
+        if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+          this.set('isValidating', true);
+          validator(item).then(function (resp) {
+            _this3.set('isValidating', false);
+            _this3.set('errorHash', resp.status);
+            if (resp.status.status === 'error') {
+              return;
+            } else if (resp.status.status === 'warning') {
+              _this3.set('selectAnyway', true);
+              return;
+            } else {
+              _this3.get('onItemSelected')(item, options);
+            }
+          });
+        } else {
+          this.get('onItemSelected')(item, options);
+        }
+      }
+    }
+  });
+});
+define("ember-arcgis-portal-components/components/item-picker/feature-service-preview/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = Ember.HTMLBars.template({ "id": "LLhOrN54", "block": "{\"statements\":[[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"shared-by-owner\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[\"text\",\": \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-meta\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon icon-layers\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"layerList\",\"length\"]],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-calendar\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"helper\",[\"format-time\"],[[\"get\",[\"model\",\"modified\"]]],null],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-file\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"itemType\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-description\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"description\"]]],null],false],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"text-fade\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"showLayers\"]]],null,4],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"full-width-btn\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-primary btn-block \",[\"unknown\",[\"selectButtonClass\"]]]]],[\"dynamic-attr\",\"disabled\",[\"unknown\",[\"isSelectDisabled\"]],null],[\"modifier\",[\"action\"],[[\"get\",[null]],\"onServiceSelected\",[\"get\",[\"model\"]]]],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectButtonText\"]],false],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"side-by-side\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"onCancel\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"href\",[\"concat\",[[\"unknown\",[\"previewUrl\"]]]]],[\"static-attr\",\"target\",\"_blank\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"    \"],[\"append\",[\"helper\",[\"item-picker/layer-picker\"],null,[[\"model\",\"selectable\",\"onLayerSelected\"],[[\"get\",[\"layerList\"]],[\"get\",[\"forceLayerSelection\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onLayerSelected\"],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"p\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[\"alert \",[\"unknown\",[\"messageClass\"]]]]],[\"static-attr\",\"id\",\"val-error\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"append\",[\"unknown\",[\"errorMessage\",\"message\"]],false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showError\"]]],null,1,0]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"append\",[\"helper\",[\"loading-indicator\"],null,[[\"msg\"],[[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"loadingLayers\"],null]],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"layer-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"open-element\",\"h5\",[]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"layerList\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"isLoading\"]]],null,3,2],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/feature-service-preview/template.hbs" } });
+});
+define('ember-arcgis-portal-components/components/item-picker/item-preview/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/item-preview/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerItemPreviewTemplate) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Component.extend({
+
+    classNames: ['item-picker-current-item-preview'],
+    description: _ember['default'].computed.reads('model.description'),
+    isValidating: false,
+    intl: _ember['default'].inject.service(),
+    layout: _emberArcgisPortalComponentsComponentsItemPickerItemPreviewTemplate['default'],
+    selectAnyway: false,
+    shouldValidate: false,
+    showError: _ember['default'].computed.notEmpty('errorMessage'),
+
+    didRender: function didRender() {
+      // Needed to jump to error message
+      if (this.get('showError')) {
+        this.$().scrollTop(0);
+      }
+    },
+
+    /**
+     * What should the select button text be? we have variations depending on status
+     */
+    selectButtonText: _ember['default'].computed('isValidating', 'selectAnyway', function () {
+      var intl = this.get('intl');
+      var key = 'buttons.select';
+      if (this.get('isValidating')) {
+        key = 'buttons.validating';
+      } else if (this.get('selectAnyway')) {
+        key = 'buttons.selectAnyway';
+      }
+      return intl.t('' + this.get('_i18nScope') + key);
+    }),
+
+    /**
+     * Select button class. Basically disabling the button
+     */
+    selectButtonClass: _ember['default'].computed('isValidating', 'selectAnyway', 'errorMessage', function () {
+      var errorMessage = this.get('errorMessage');
+      if (this.get('isValidating')) {
+        return 'disabled';
+      } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+        return 'disabled';
+      }
+    }),
+
+    /**
+     * Get the translated form of the Item Type
+     */
+    itemType: _ember['default'].computed('_i18nScope', 'model.type', function () {
+      var itemType = this.get('model.type');
+      var result = itemType;
+      var key = this.get('_i18nScope') + 'shared.itemType.' + itemType.camelize();
+      var intl = this.get('intl');
+      // if we don't have a translation for it, just display it as-is
+      if (intl.exists(key)) {
+        result = intl.t(key);
+      }
+      return result;
+    }),
+
+    /**
+     * Construct the preview url
+     */
+    previewUrl: _ember['default'].computed('model', function () {
+      var item = this.get('model');
+      var previewURL = undefined;
+      // if the item has a url property, use that...
+      if (item.url) {
+        previewURL = item.url;
+      } else {
+        // compute a url based on the type...
+        var protocol = '//';
+        var host = this.get('session.portalHostname');
+        switch (item.type.toLowerCase()) {
+          case 'web map':
+            previewURL = '' + protocol + host + '/home/webmap/viewer.html?webmap=' + item.id;
+            break;
+          default:
+            previewURL = '' + protocol + host + '/home/item.html?id=' + item.id;
+        }
+      }
+      return previewURL;
+    }),
+
+    /**
+     * What class should be used for any messages
+     */
+    messageClass: _ember['default'].computed('errorMessage', function () {
+      if (this.get('errorMessage.status') === 'warning') {
+        return 'alert-warning';
+      } else if (this.get('errorMessage.status') === 'error') {
+        return 'alert-danger';
+      }
+    }),
+
+    actions: {
+      onItemSelected: function onItemSelected(item) {
+        var _this = this;
+
+        var validator = this.get('onSelectionValidator');
+
+        if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
+          this.set('isValidating', true);
+          validator(item).then(function (resp) {
+            _this.set('isValidating', false);
+            _this.set('errorHash', resp.status);
+            if (resp.status.status === 'error') {
+              return;
+            } else if (resp.status.status === 'warning') {
+              _this.set('selectAnyway', true);
+              return;
+            } else {
+              _this.get('onItemSelected')(item);
+            }
+          });
+        } else {
+          this.get('onItemSelected')(item);
+        }
+      }
     }
 
   });
@@ -91454,7 +92597,7 @@ define('ember-arcgis-portal-components/components/item-picker/item-preview/compo
 define("ember-arcgis-portal-components/components/item-picker/item-preview/template", ["exports"], function (exports) {
   "use strict";
 
-  exports["default"] = Ember.HTMLBars.template({ "id": "Rh8Q3Dfs", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showError\"]]],null,2],[\"block\",[\"unless\"],[[\"get\",[\"showFallback\"]]],null,1,0],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"shared-by-owner\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[\"text\",\": \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-description\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"description\"]]],null],false],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-meta\"],[\"flush-element\"],[\"text\",\"\\n\\t\"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-calendar\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"helper\",[\"format-time\"],[[\"get\",[\"model\",\"modified\"]]],null],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-file\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"itemType\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"static-attr\",\"src\",\"ember-arcgis-portal-components/assets/images/default-dataset-thumb.png\"],[\"static-attr\",\"alt\",\"\"],[\"static-attr\",\"class\",\"thumbnail\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"dynamic-attr\",\"src\",[\"concat\",[[\"unknown\",[\"thumbnailUrl\"]]]]],[\"static-attr\",\"alt\",\"\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"p\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[\"alert \",[\"unknown\",[\"messageClass\"]]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"append\",[\"unknown\",[\"errorMessage\",\"message\"]],false],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "uqdOh5bQ", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showError\"]]],null,0],[\"append\",[\"helper\",[\"item-picker/item-thumbnail\"],null,[[\"model\"],[[\"get\",[\"model\"]]]]],false],[\"text\",\"\\n\"],[\"open-element\",\"h2\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"shared-by-owner\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[\"text\",\": \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-meta\"],[\"flush-element\"],[\"text\",\"\\n\\t\"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-calendar\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"helper\",[\"format-time\"],[[\"get\",[\"model\",\"modified\"]]],null],false],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"open-element\",\"i\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-file\"],[\"flush-element\"],[\"close-element\"],[\"append\",[\"unknown\",[\"itemType\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-current-item-preview-description\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"append\",[\"helper\",[\"sanitize-html\"],[[\"get\",[\"description\"]]],null],false],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"text-fade\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"full-width-btn\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-primary btn-block \",[\"unknown\",[\"selectButtonClass\"]]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"onItemSelected\"]],[\"get\",[\"model\"]]]],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectButtonText\"]],false],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"side-by-side\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"onCancel\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"href\",[\"concat\",[[\"unknown\",[\"previewUrl\"]]]]],[\"static-attr\",\"target\",\"_blank\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"p\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[\"alert \",[\"unknown\",[\"messageClass\"]]]]],[\"static-attr\",\"id\",\"val-error\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"append\",[\"unknown\",[\"errorMessage\",\"message\"]],false],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
 });
 define('ember-arcgis-portal-components/components/item-picker/item-row/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/item-row/single/template', 'ember-arcgis-portal-components/components/item-picker/item-row/multiple/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerItemRowSingleTemplate, _emberArcgisPortalComponentsComponentsItemPickerItemRowMultipleTemplate) {
   'use strict';
@@ -91462,6 +92605,8 @@ define('ember-arcgis-portal-components/components/item-picker/item-row/component
   exports['default'] = _ember['default'].Component.extend({
 
     session: _ember['default'].inject.service(),
+
+    itemService: _ember['default'].inject.service('items-service'),
 
     layout: _ember['default'].computed('selectMultiple', function () {
       var layout = _emberArcgisPortalComponentsComponentsItemPickerItemRowSingleTemplate['default'];
@@ -91508,7 +92653,6 @@ define('ember-arcgis-portal-components/components/item-picker/item-row/component
       selectItem: function selectItem(item) {
         var _this = this;
 
-        // this is annoying... but necessary
         _ember['default'].run.next(this, function () {
           _this.get('onClick')(item);
         });
@@ -91527,10 +92671,163 @@ define("ember-arcgis-portal-components/components/item-picker/item-row/single/te
 
   exports["default"] = Ember.HTMLBars.template({ "id": "a1yLA5zb", "block": "{\"statements\":[[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"pull-right item-picker-item-results-item-type\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"model\",\"type\"]],false],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"a\",[]],[\"static-attr\",\"href\",\"\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"selectItem\",[\"get\",[\"model\"]]]],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-item-results-item-inner\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"h2\",[]],[\"static-attr\",\"data-toggle\",\"tooltip\"],[\"dynamic-attr\",\"title\",[\"concat\",[[\"unknown\",[\"model\",\"title\"]]]]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"append\",[\"unknown\",[\"model\",\"title\"]],false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"shared-by\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"append\",[\"unknown\",[\"model\",\"owner\"]],false],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-row/single/template.hbs" } });
 });
+define('ember-arcgis-portal-components/components/item-picker/item-thumbnail/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/item-thumbnail/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerItemThumbnailTemplate) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Component.extend({
+    layout: _emberArcgisPortalComponentsComponentsItemPickerItemThumbnailTemplate['default'],
+    thumbnailIsBroken: false,
+    session: _ember['default'].inject.service(),
+    didInsertElement: function didInsertElement() {
+      this.$('img').on('error', _ember['default'].run.bind(this, this.onImageError));
+    },
+
+    willDestroyElement: function willDestroyElement() {
+      this.$('img').off();
+    },
+    /**
+     * Construct the url for the thumbnail
+     * For non-public items, append a token
+     */
+    thumbnailUrl: _ember['default'].computed('model', function () {
+      // const ENV = Ember.getOwner(this).resolveRegistration('config:environment');
+      var portal = this.get('session.portalHostname');
+      var item = this.get('model');
+      var url = '//' + portal + '/sharing/rest/content/items/' + item.id + '/info/' + item.thumbnail + '?w=600';
+      // append token if not public
+      if (item.access !== 'public') {
+        url = url + '&token=' + this.get('session.token');
+      }
+      return url;
+    }),
+    /**
+     * Handle a broken thumbnail
+     */
+    showFallback: _ember['default'].computed('thumbnailIsBroken', 'model.thumbnail', function () {
+      return _ember['default'].isEmpty(this.get('model.thumbnail')) || this.get('thumbnailIsBroken');
+    }),
+    /**
+     * Handler that fires if the thumbnail image 404s
+     */
+    onImageError: function onImageError() {
+      _ember['default'].run(this, function () {
+        if (!this.get('isDestroyed') && !this.get('isDestroying')) {
+          this.set('thumbnailIsBroken', true);
+        }
+      });
+    }
+  });
+});
+define("ember-arcgis-portal-components/components/item-picker/item-thumbnail/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = Ember.HTMLBars.template({ "id": "kqsH5XGV", "block": "{\"statements\":[[\"block\",[\"unless\"],[[\"get\",[\"showFallback\"]]],null,0]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"  \"],[\"open-element\",\"img\",[]],[\"dynamic-attr\",\"src\",[\"concat\",[[\"unknown\",[\"thumbnailUrl\"]]]]],[\"static-attr\",\"alt\",\"\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/item-thumbnail/template.hbs" } });
+});
+define('ember-arcgis-portal-components/components/item-picker/layer-picker/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/item-picker/layer-picker/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsItemPickerLayerPickerTemplate) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Component.extend({
+    layout: _emberArcgisPortalComponentsComponentsItemPickerLayerPickerTemplate['default']
+  });
+});
+define("ember-arcgis-portal-components/components/item-picker/layer-picker/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = Ember.HTMLBars.template({ "id": "Dvo/svNQ", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"layer-picker-list\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"nav nav-pills nav-stacked\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"model\"]]],null,1],[\"text\",\"  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"input\",[]],[\"static-attr\",\"type\",\"radio\"],[\"static-attr\",\"name\",\"selectedLayer\"],[\"dynamic-attr\",\"checked\",[\"unknown\",[\"layer\",\"checked\"]],null],[\"dynamic-attr\",\"value\",[\"unknown\",[\"layer\",\"id\"]],null],[\"static-attr\",\"class\",\"magic-radio\"],[\"dynamic-attr\",\"id\",[\"unknown\",[\"layer\",\"name\"]],null],[\"dynamic-attr\",\"onchange\",[\"helper\",[\"action\"],[[\"get\",[null]],[\"get\",[\"onLayerSelected\"]],[\"get\",[\"layer\"]]],null],null],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"selectable\"]]],null,0],[\"text\",\"      \"],[\"open-element\",\"label\",[]],[\"dynamic-attr\",\"for\",[\"concat\",[[\"unknown\",[\"layer\",\"name\"]]]]],[\"flush-element\"],[\"append\",[\"unknown\",[\"layer\",\"name\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[\"layer\"]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/layer-picker/template.hbs" } });
+});
 define("ember-arcgis-portal-components/components/item-picker/template", ["exports"], function (exports) {
   "use strict";
 
-  exports["default"] = Ember.HTMLBars.template({ "id": "rHosDomb", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showTabs\"]]],null,10],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[[\"helper\",[\"if\"],[[\"get\",[\"showTabs\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"form\",[]],[\"modifier\",[\"action\"],[[\"get\",[null]],\"doSearch\"],[[\"on\"],[\"submit\"]]],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"form-group\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"open-element\",\"label\",[]],[\"dynamic-attr\",\"for\",[\"concat\",[[\"unknown\",[\"inputElementId\"]]]]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"placeholder\"]],false],[\"text\",\":\"],[\"close-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"input\"],null,[[\"id\",\"class\",\"value\",\"placeholder\",\"key-up\"],[[\"get\",[\"inputElementId\"]],\"form-control\",[\"get\",[\"q\"]],[\"get\",[\"placeholder\"]],\"doSearch\"]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n    \"],[\"close-element\"],[\"text\",\"\\n\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-results-container\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"results-list\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"loading\"]]],null,7,6],[\"text\",\"      \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"currentItem\"]]],null,2],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,1],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"item-pager\"],null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[\"get\",[\"_i18nScope\"]],[\"get\",[\"pageSize\"]],[\"get\",[\"totalCount\"]],[\"get\",[\"pageNumber\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"changePage\"],null]]]],false],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,0],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary pull-right\"],[\"dynamic-attr\",\"disabled\",[\"unknown\",[\"disableAddItems\"]],null],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"selectAction\"]],[\"get\",[\"itemsToAdd\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-status\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[\"get\",[\"itemsToAdd\",\"length\"]]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-current-item\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"item-picker/item-preview\"],null,[[\"_i18nScope\",\"model\",\"errorMessage\"],[[\"get\",[\"_i18nScope\"]],[\"get\",[\"currentItem\"]],[\"get\",[\"errorMessage\"]]]]],false],[\"text\",\"\\n\\n          \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-controls\"],[\"flush-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"full-width-btn\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-primary btn-block \",[\"unknown\",[\"selectButtonClass\"]]]]],[\"modifier\",[\"action\"],[[\"get\",[null]],\"onSelect\",[\"get\",[\"currentItem\"]]]],[\"flush-element\"],[\"append\",[\"unknown\",[\"selectButtonText\"]],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n              \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"side-by-side\"],[\"flush-element\"],[\"text\",\"\\n                \"],[\"open-element\",\"div\",[]],[\"flush-element\"],[\"text\",\"\\n                  \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-default btn-block\"],[\"modifier\",[\"action\"],[[\"get\",[null]],\"cancelAction\"]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\\n                  \"],[\"open-element\",\"a\",[]],[\"dynamic-attr\",\"href\",[\"concat\",[[\"unknown\",[\"currentItem\",\"url\"]]]]],[\"static-attr\",\"target\",\"_blank\"],[\"dynamic-attr\",\"class\",[\"concat\",[\"btn btn-default btn-block \",[\"unknown\",[\"disabledStatus\"]]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n                \"],[\"close-element\"],[\"text\",\"\\n              \"],[\"close-element\"],[\"text\",\"\\n\\n          \"],[\"close-element\"],[\"text\",\"\\n\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"            \"],[\"append\",[\"helper\",[\"item-picker/item-row\"],null,[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"model\",\"currentItemId\",\"onClick\"],[[\"get\",[\"selectMultiple\"]],[\"get\",[\"itemsToAdd\"]],[\"get\",[\"_i18nScope\"]],[\"get\",[\"item\"]],[\"get\",[\"currentItem\",\"id\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onClick\"],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[\"item\"]},{\"statements\":[[\"block\",[\"each\"],[[\"get\",[\"items\",\"results\"]]],null,3],[\"text\",\"        \"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"noItemsFoundMsg\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"noItemsFoundMsg\"]]],null,5,4]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"loading\"],null]],null],false],[\"text\",\"...\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"span\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"appType\",\"name\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"radio-button\"],null,[[\"value\",\"groupValue\",\"changed\"],[[\"get\",[\"appType\",\"name\"]],[\"get\",[\"selectedCatalogName\"]],\"chooseCatalog\"]],8]],\"locals\":[\"appType\"]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-radio-buttons col-xs-2\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"catalog\"]]],null,9],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/template.hbs" } });
+  exports["default"] = Ember.HTMLBars.template({ "id": "8zn1f+EC", "block": "{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"showFacets\"]]],null,10],[\"text\",\"\\n  \"],[\"open-element\",\"div\",[]],[\"dynamic-attr\",\"class\",[\"concat\",[[\"helper\",[\"if\"],[[\"get\",[\"showFacets\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[\"flush-element\"],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"search-form\"],null,[[\"q\",\"onSearch\"],[[\"get\",[\"q\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"doSearch\"],null]]]],false],[\"text\",\"\\n\\n    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-results-container\"],[\"flush-element\"],[\"text\",\"\\n      \"],[\"open-element\",\"ul\",[]],[\"static-attr\",\"class\",\"results-list\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"if\"],[[\"get\",[\"loading\"]]],null,7,6],[\"text\",\"      \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"currentItem\"]]],null,2],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,1],[\"text\",\"\\n    \"],[\"append\",[\"helper\",[\"item-pager\"],null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[\"get\",[\"_i18nScope\"]],[\"get\",[\"pageSize\"]],[\"get\",[\"totalCount\"]],[\"get\",[\"pageNumber\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"changePage\"],null]]]],false],[\"text\",\"\\n\\n\"],[\"block\",[\"if\"],[[\"get\",[\"selectMultiple\"]]],null,0],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"button\"],[\"static-attr\",\"class\",\"btn btn-primary pull-right\"],[\"dynamic-attr\",\"disabled\",[\"unknown\",[\"disableAddItems\"]],null],[\"modifier\",[\"action\"],[[\"get\",[null]],[\"get\",[\"selectAction\"]],[\"get\",[\"itemsToAdd\"]]]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"      \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-status\"],[\"flush-element\"],[\"text\",\"\\n        \"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[\"get\",[\"itemsToAdd\",\"length\"]]]]],false],[\"text\",\"\\n      \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"        \"],[\"open-element\",\"section\",[]],[\"static-attr\",\"class\",\"item-picker-current-item\"],[\"flush-element\"],[\"text\",\"\\n          \"],[\"append\",[\"helper\",[\"component\"],[[\"get\",[\"previewComponent\"]]],[[\"_i18nScope\",\"model\",\"params\",\"onSelectionValidator\",\"onItemSelected\",\"onCancel\"],[[\"get\",[\"_i18nScope\"]],[\"get\",[\"currentItem\"]],[\"get\",[\"previewParams\"]],[\"get\",[\"onSelectionValidator\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onPreviewSelected\"],null],[\"helper\",[\"action\"],[[\"get\",[null]],\"cancelAction\"],null]]]],false],[\"text\",\"\\n        \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"            \"],[\"append\",[\"helper\",[\"item-picker/item-row\"],null,[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"model\",\"currentItemId\",\"onClick\"],[[\"get\",[\"selectMultiple\"]],[\"get\",[\"itemsToAdd\"]],[\"get\",[\"_i18nScope\"]],[\"get\",[\"item\"]],[\"get\",[\"currentItem\",\"id\"]],[\"helper\",[\"action\"],[[\"get\",[null]],\"onItemClick\"],null]]]],false],[\"text\",\"\\n\"]],\"locals\":[\"item\"]},{\"statements\":[[\"block\",[\"each\"],[[\"get\",[\"items\",\"results\"]]],null,3],[\"text\",\"        \"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"open-element\",\"h3\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"noItemsFoundMsg\"]],false],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"if\"],[[\"get\",[\"noItemsFoundMsg\"]]],null,5,4]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"li\",[]],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"helper\",[\"concat\"],[[\"get\",[\"_i18nScope\"]],\"loading\"],null]],null],false],[\"text\",\"...\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"text\",\"          \"],[\"open-element\",\"span\",[]],[\"flush-element\"],[\"append\",[\"unknown\",[\"appType\",\"name\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]},{\"statements\":[[\"block\",[\"radio-button\"],null,[[\"value\",\"groupValue\",\"changed\",\"classNames\"],[[\"get\",[\"appType\",\"name\"]],[\"get\",[\"selectedCatalogName\"]],\"chooseCatalog\",[\"helper\",[\"concat\"],[\"item-picker-radio-button-\",[\"helper\",[\"dasherize\"],[[\"get\",[\"appType\",\"name\"]]],null]],null]]],8]],\"locals\":[\"appType\"]},{\"statements\":[[\"text\",\"    \"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"item-picker-radio-buttons col-xs-2\"],[\"flush-element\"],[\"text\",\"\\n\"],[\"block\",[\"each\"],[[\"get\",[\"catalog\"]]],null,9],[\"text\",\"    \"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[]}],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/item-picker/template.hbs" } });
+});
+define('ember-arcgis-portal-components/components/loading-indicator/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/loading-indicator/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsLoadingIndicatorTemplate) {
+  'use strict';
+
+  /**
+   * loading-indicator component
+   *
+   * Default Usage
+   * {{loading-indicator}} - will pull in a default translated message
+   *
+   * Passing a custom message
+   * {{loading-indicator message=(t 'some.translation.key')}}
+   *
+   * No Message - no message is shown
+   * {{loading-indicator noMessage=true}}
+   */
+
+  exports['default'] = _ember['default'].Component.extend({
+
+    layout: _emberArcgisPortalComponentsComponentsLoadingIndicatorTemplate['default'],
+
+    intl: _ember['default'].inject.service(),
+
+    tagName: 'div',
+
+    classNames: ['loader'],
+
+    isActive: true,
+
+    classNameBindings: ['isActive'],
+
+    // default message
+    message: '',
+
+    msg: _ember['default'].computed('message', function () {
+      var message = this.get('message') || '';
+      if (!message && !this.get('noMessage')) {
+        message = this.get('intl').findTranslationByKey('ember-arcgis-portal-components.loading-indicator.defaultMessage');
+      }
+      return message;
+    })
+
+  });
+});
+define("ember-arcgis-portal-components/components/loading-indicator/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = Ember.HTMLBars.template({ "id": "aGYifalF", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"loader-bars\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"loader-text\"],[\"flush-element\"],[\"append\",[\"unknown\",[\"msg\"]],false],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/loading-indicator/template.hbs" } });
+});
+define('ember-arcgis-portal-components/components/search-form/component', ['exports', 'ember', 'ember-arcgis-portal-components/components/search-form/template'], function (exports, _ember, _emberArcgisPortalComponentsComponentsSearchFormTemplate) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Component.extend({
+    layout: _emberArcgisPortalComponentsComponentsSearchFormTemplate['default'],
+    tagName: 'form',
+    classNames: ['portal-search-form', 'form-group-tsf'],
+
+    i18nBase: 'ember-arcgis-portal-components.',
+
+    inputElementId: _ember['default'].computed('elementId', function () {
+      return this.get('elementId') + 'Input';
+    }),
+
+    placeholderi18nKey: _ember['default'].computed('i18nBase', function () {
+      return this.get('i18nBase') + 'itemPicker.searchItems';
+    }),
+
+    submit: function submit(e) {
+      e.preventDefault();
+      var query = this.get('_q');
+      _ember['default'].tryInvoke(this, 'onSearch', [query]);
+    }
+  });
+});
+define("ember-arcgis-portal-components/components/search-form/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = Ember.HTMLBars.template({ "id": "hBrSlLZO", "block": "{\"statements\":[[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"input-group pull-left\"],[\"flush-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"label\",[]],[\"dynamic-attr\",\"for\",[\"concat\",[[\"unknown\",[\"inputElementId\"]]]]],[\"static-attr\",\"class\",\"sr-only\"],[\"flush-element\"],[\"append\",[\"helper\",[\"t\"],[[\"get\",[\"placeholderi18nKey\"]]],null],false],[\"text\",\":\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"input\",[]],[\"dynamic-attr\",\"id\",[\"unknown\",[\"inputElementId\"]],null],[\"dynamic-attr\",\"value\",[\"helper\",[\"readonly\"],[[\"get\",[\"q\"]]],null],null],[\"static-attr\",\"class\",\"form-control-tsf\"],[\"dynamic-attr\",\"placeholder\",[\"helper\",[\"t\"],[[\"get\",[\"placeholderi18nKey\"]]],null],null],[\"dynamic-attr\",\"oninput\",[\"helper\",[\"action\"],[[\"get\",[null]],[\"helper\",[\"mut\"],[[\"get\",[\"_q\"]]],null]],[[\"value\"],[\"target.value\"]]],null],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"input-group-btn\"],[\"flush-element\"],[\"text\",\"\\n    \"],[\"open-element\",\"button\",[]],[\"static-attr\",\"type\",\"submit\"],[\"static-attr\",\"class\",\"btn\"],[\"flush-element\"],[\"open-element\",\"span\",[]],[\"static-attr\",\"class\",\"glyphicon glyphicon-search\"],[\"flush-element\"],[\"close-element\"],[\"close-element\"],[\"text\",\"\\n  \"],[\"close-element\"],[\"text\",\"\\n\"],[\"close-element\"],[\"text\",\"\\n\"],[\"open-element\",\"div\",[]],[\"static-attr\",\"class\",\"clearfix\"],[\"flush-element\"],[\"close-element\"],[\"text\",\"\\n\"]],\"locals\":[],\"named\":[],\"yields\":[],\"blocks\":[],\"hasPartials\":false}", "meta": { "moduleName": "modules/ember-arcgis-portal-components/components/search-form/template.hbs" } });
+});
+define("ember-arcgis-portal-components/utils/is-guid", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = isGuid;
+
+  function isGuid(query) {
+    // Regex taken from ember-arcgis-layout-services/addon/utils/is-guid.js
+    var re = /^(\{){0,1}[0-9a-fA-F]{8}[-]?[0-9a-fA-F]{4}[-]?[0-9a-fA-F]{4}[-]?[0-9a-fA-F]{4}[-]?[0-9a-fA-F]{12}(\}){0,1}$/gi;
+    return re.test(query);
+  }
 });
 define('ember-arcgis-portal-components/utils/query-helpers', ['exports', 'ember'], function (exports, _ember) {
   'use strict';
@@ -91538,12 +92835,16 @@ define('ember-arcgis-portal-components/utils/query-helpers', ['exports', 'ember'
   /**
    * blah
    */
-  function createQuery(catalog, searchString) {
+  function createQuery(catalog, searchString, isHex) {
     var queryParts = _ember['default'].A([]);
     var queryObj = catalog.params.query;
 
     if (searchString) {
-      queryParts.push('title:' + searchString);
+      if (isHex) {
+        queryParts.push('id:' + searchString);
+      } else {
+        queryParts.push('title:' + searchString);
+      }
     }
 
     for (var prop in queryObj) {
@@ -92758,6 +94059,507 @@ define('ember-arcgis-portal-services/services/user-service', ['exports', 'ember'
 
   });
 });
+define('ember-arcgis-server-services/mixins/ags-service-mixin', ['exports', 'ember', 'ember-arcgis-server-services/utils/request', 'ember-arcgis-server-services/utils/parse-url', 'ember-arcgis-server-services/utils/should-add-token'], function (exports, _ember, _emberArcgisServerServicesUtilsRequest, _emberArcgisServerServicesUtilsParseUrl, _emberArcgisServerServicesUtilsShouldAddToken) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Mixin.create({
+    init: function init() {
+      this._super(); // ensure a good citizen in the super chain
+      this.set('shouldAddTokenCache', {});
+    },
+
+    session: _ember['default'].inject.service(),
+
+    hostAppConfig: _ember['default'].computed(function () {
+      return _ember['default'].getOwner(this).resolveRegistration('config:environment');
+    }),
+
+    // TODO consider removing this at a major version
+    parseServiceUrl: _emberArcgisServerServicesUtilsParseUrl.parseType,
+
+    /**
+     * Make an arbitrary request to the server
+     */
+    request: function request(url) {
+      var _this = this;
+
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+      return this.shouldAddToken(url, this.get('session.portal')).then(function (shouldAddToken) {
+        if (shouldAddToken) {
+          options.token = _this.get('session.token');
+        }
+        options.method = options.method || 'GET';
+        return (0, _emberArcgisServerServicesUtilsRequest['default'])(url, options);
+      });
+    },
+    /**
+     * Given a url, determine if we should send along a token
+     */
+    shouldAddToken: function shouldAddToken(url) {
+      var portalInfo = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+      var shouldAddTokenCache = this.get('shouldAddTokenCache');
+      var key = (0, _emberArcgisServerServicesUtilsParseUrl.parseServerUrl)(url) || url;
+      var cachedValue = shouldAddTokenCache[key];
+
+      if (!_ember['default'].isBlank(cachedValue)) {
+        return _ember['default'].RSVP.resolve(cachedValue);
+      }
+
+      return this.getAuthInfo(url).then(function (authInfo) {
+        var result = (0, _emberArcgisServerServicesUtilsShouldAddToken['default'])(url, authInfo, portalInfo);
+        shouldAddTokenCache[key] = result;
+        return result;
+      })['catch'](function (err) {
+        _ember['default'].debug('Error occured checking authInfo for ' + url + '. Message: ' + err + '. Will not send token for ' + key);
+        shouldAddTokenCache[key] = false;
+        return false;
+      });
+    },
+
+    getServiceInfo: function getServiceInfo(url, options) {
+      _ember['default'].deprecate('use .getLayerInfo(url, options).', false, { id: 'getServiceInfoDeprecation', until: '10.0.0' });
+      return this.getLayerInfo(url, options);
+    },
+
+    getLayerInfo: function getLayerInfo(url, options) {
+      return this.request(url + '?f=json', options);
+    },
+
+    /**
+    * Get the base server info.
+    * Returns stuff like version, services and folders
+     */
+    getServerInfo: function getServerInfo(url, options) {
+      var serviceUrl = (0, _emberArcgisServerServicesUtilsParseUrl.parseServiceUrl)(url);
+      var service = url;
+      if (serviceUrl) {
+        service = serviceUrl;
+      }
+      return this.request(service + '?f=json', options);
+    },
+
+    /**
+     * Get the authentication information from a server.
+     */
+    getAuthInfo: function getAuthInfo(url, options) {
+      var server = url;
+      var serverUrl = (0, _emberArcgisServerServicesUtilsParseUrl.parseServerUrl)(url);
+      if (serverUrl) {
+        server = serverUrl;
+      }
+      // we want to never send a token for this one so we use agoRequest directly
+      return (0, _emberArcgisServerServicesUtilsRequest['default'])(server + '/info?f=json');
+    }
+
+  });
+});
+define('ember-arcgis-server-services/mixins/layers', ['exports', 'ember', 'ember-arcgis-server-services/utils/parse-url', 'ember-arcgis-server-services/utils/encode-form'], function (exports, _ember, _emberArcgisServerServicesUtilsParseUrl, _emberArcgisServerServicesUtilsEncodeForm) {
+  'use strict';
+
+  function _toConsumableArray(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];return arr2;
+    } else {
+      return Array.from(arr);
+    }
+  }
+
+  exports['default'] = _ember['default'].Mixin.create({
+    init: function init() {
+      this._super(); // ensure a good citizen in the super chain
+    },
+
+    /**
+     * Get the layer info
+     */
+    getLayerInfo: function getLayerInfo(url) {
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+      var layerUrl = url;
+      if (options && options.layer) {
+        var serviceUrl = (0, _emberArcgisServerServicesUtilsParseUrl.parseServiceUrl)(url);
+        layerUrl = serviceUrl + '/' + options.layer;
+      }
+      return this.request(layerUrl + '?f=json', options);
+    },
+
+    /**
+     * Get info about all layers
+     */
+    getLayersInfo: function getLayersInfo(url, options) {
+      var _this = this;
+
+      var serviceUrl = (0, _emberArcgisServerServicesUtilsParseUrl.parseServiceUrl)(url);
+      var layersUrl = serviceUrl + '/layers?f=json';
+      // make the request
+      return this.request(layersUrl, options).then(function (layerInfo) {
+        var merged = [].concat(_toConsumableArray(layerInfo.layers), _toConsumableArray(layerInfo.tables));
+        _this.set('layers', merged);
+        return merged;
+      })['catch'](function (e) {
+        return Promise.reject(e);
+      });
+    },
+
+    /**
+     * Search for records
+     */
+    query: function query(url, options) {
+      var encoded = (0, _emberArcgisServerServicesUtilsEncodeForm['default'])(options);
+      url = url + '/query?f=json&' + encoded;
+      return this.request(url, { method: 'GET' });
+    },
+
+    /**
+     * Get a record by id
+     */
+    getById: function getById(url, id, options) {
+      url = url + '/' + id + '?f=json';
+      return this.request(url, options);
+    }
+  });
+});
+define('ember-arcgis-server-services/services/feature-service', ['exports', 'ember', 'ember-arcgis-server-services/mixins/ags-service-mixin', 'ember-arcgis-server-services/mixins/layers'], function (exports, _ember, _emberArcgisServerServicesMixinsAgsServiceMixin, _emberArcgisServerServicesMixinsLayers) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisServerServicesMixinsAgsServiceMixin['default'], _emberArcgisServerServicesMixinsLayers['default'], {
+
+    /**
+     * Get a record by id
+     */
+    getById: function getById(url, id) {
+      url = url + '/' + id + '?f=json';
+      return this.request(url, { method: 'GET' });
+    },
+
+    /**
+     * Update a single feature
+     */
+    updateFeature: function updateFeature(url, feature, token) {
+      return this.updateFeatures(url, [feature], token);
+    },
+
+    /**
+     * Update a set of features
+     */
+    updateFeatures: function updateFeatures(url, features, token) {
+      return this.applyEdits(url, [], features, [], token);
+    },
+
+    /**
+     * Add an single feature
+     */
+    addFeature: function addFeature(url, feature, token) {
+      // wrap into an array...
+      var adds = [feature];
+      // delegate to addFeatures
+      return this.addFeatures(url, adds, token);
+    },
+
+    /**
+     * Add a set of features
+     */
+    addFeatures: function addFeatures(url, features, token) {
+      return this.applyEdits(url, features, [], [], token);
+    },
+
+    /**
+     * Delete a single feature
+     */
+    deleteFeature: function deleteFeature(url, objectId, token) {
+      return this.deleteFeatures(url, [objectId], token);
+    },
+
+    /**
+     * Delete a set of features
+     */
+    deleteFeatures: function deleteFeatures(url, objectIds, token) {
+      return this.applyEdits(url, [], [], objectIds, token);
+    },
+
+    /**
+     * Actually send the edits to the Service
+     */
+    applyEdits: function applyEdits(url, adds, updates, deletes, token) {
+      url = url + '/applyEdits';
+      var options = {
+        method: 'POST',
+        data: {
+          adds: JSON.stringify(adds),
+          updates: JSON.stringify(updates),
+          deletes: deletes.join(','),
+          f: 'json'
+        }
+      };
+      if (token) {
+        options.data.token = token;
+      }
+      return this.request(url, options);
+    }
+  });
+});
+define('ember-arcgis-server-services/services/image-service', ['exports', 'ember', 'ember-arcgis-server-services/mixins/ags-service-mixin'], function (exports, _ember, _emberArcgisServerServicesMixinsAgsServiceMixin) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisServerServicesMixinsAgsServiceMixin['default'], {});
+});
+define('ember-arcgis-server-services/services/map-service', ['exports', 'ember', 'ember-arcgis-server-services/mixins/ags-service-mixin', 'ember-arcgis-server-services/mixins/layers'], function (exports, _ember, _emberArcgisServerServicesMixinsAgsServiceMixin, _emberArcgisServerServicesMixinsLayers) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisServerServicesMixinsLayers['default'], _emberArcgisServerServicesMixinsAgsServiceMixin['default'], {});
+});
+define('ember-arcgis-server-services/services/vector-service', ['exports', 'ember', 'ember-arcgis-server-services/mixins/ags-service-mixin', 'ember-arcgis-server-services/mixins/layers'], function (exports, _ember, _emberArcgisServerServicesMixinsAgsServiceMixin, _emberArcgisServerServicesMixinsLayers) {
+  'use strict';
+
+  exports['default'] = _ember['default'].Service.extend(_emberArcgisServerServicesMixinsAgsServiceMixin['default'], _emberArcgisServerServicesMixinsLayers['default'], {});
+});
+define('ember-arcgis-server-services/utils/add-token', ['exports'], function (exports) {
+  'use strict';
+
+  exports['default'] = addToken;
+
+  function addToken(url, token) {
+    // append the token
+    if (token) {
+      if (url.indexOf('?') > -1) {
+        return url + '&token=' + token;
+      } else {
+        return url + '?token=' + token;
+      }
+    } else {
+      return url;
+    }
+  }
+});
+define('ember-arcgis-server-services/utils/encode-form', ['exports'], function (exports) {
+  'use strict';
+
+  exports['default'] = encodeForm;
+
+  function encodeForm() {
+    var form = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+    return Object.keys(form).map(function (key) {
+      return [key, form[key]].map(encodeURIComponent).join('=');
+    }).join('&');
+  }
+});
+define('ember-arcgis-server-services/utils/parse-url', ['exports', 'ember'], function (exports, _ember) {
+  'use strict';
+
+  exports['default'] = parseUrl;
+  exports.parseServiceUrl = parseServiceUrl;
+  exports.parseServerUrl = parseServerUrl;
+
+  /**
+   * Parse up the url so we have a better idea what we are dealing with
+   */
+  function parseUrl(url) {
+    var parsed = {
+      url: url,
+      layerId: null
+    };
+    // if there is a trailing slash, remove it
+    url = url.replace(new RegExp('/$'), '');
+
+    // get the last segment of the url
+    var layerId = Number(url.split('/').pop());
+    if (!isNaN(layerId)) {
+      parsed.layerId = layerId;
+      parsed.serviceUrl = url.replace(new RegExp('/' + parsed.layerId + '$'), '');
+      // incase there were double slashes, nix any trailing slash
+      parsed.serviceUrl = parsed.serviceUrl.replace(new RegExp('/$'), '');
+    } else {
+      parsed.serviceUrl = url.replace(new RegExp('/$'), '');
+      // this url points at a service, not a layer
+    }
+    // get the type from the last part of the serviceUrl
+    // parsed.serviceType = Ember.String.dasherize(parsed.serviceUrl.split('/').pop());
+    // this is not reliable - MapServer can have extensions i.e. /WMSServer
+    // so we should check for well-known server types
+    parsed.serviceType = 'unknown';
+    var wktypes = ['MapServer', 'FeatureServer', 'ImageServer', 'WMSServer'];
+    wktypes.forEach(function (type) {
+      if (url.toLowerCase().indexOf(type.toLowerCase()) > -1) {
+        parsed.serviceType = _ember['default'].String.dasherize(type);
+      }
+    });
+    _ember['default'].debug('Service Type: ' + parsed.serviceType);
+
+    // if it's hosted, pull out the orgid
+    if (url.indexOf('arcgis.com') > -1) {
+      // extract out the org_id
+      parsed.isHosted = true;
+      parsed.orgId = url.split('/')[3];
+    }
+
+    // finally, if this is tiles, the org id is in another position
+    if (url.indexOf('arcgis.com/tiles') > -1) {
+      // extract out the org_id
+      parsed.orgId = url.split('/')[4];
+    }
+    return parsed;
+  }
+
+  /**
+   * Match the "service" part of the url
+   */
+  var serviceRegex = new RegExp(/.+(?:map|feature|image)server/i);
+  /**
+   * Return the service url. If not matched, returns what was passed in
+   */
+
+  function parseServiceUrl(url) {
+    var match = url.match(serviceRegex);
+    if (match) {
+      return match[0];
+    } else {
+      return stripQuerystring(url);
+    }
+  }
+
+  /**
+   * Match the arcGIS server "root"
+   * which always ends with /rest
+   */
+  var serverRegex = new RegExp(/(\/rest).+/i);
+  /**
+   * Return the server url, if not matched, returns null
+   */
+
+  function parseServerUrl(url) {
+    var match = url.match(serverRegex);
+    if (match) {
+      return url.replace(serverRegex, '$1');
+    } else {
+      return stripQuerystring(url);
+    }
+  }
+
+  function stripQuerystring(url) {
+    var stripped = url;
+    if (url.indexOf('?') > -1) {
+      stripped = url.split('?')[0];
+    }
+    return stripped;
+  }
+});
+define('ember-arcgis-server-services/utils/request', ['exports', 'ember', 'ember-network/fetch', 'ember-arcgis-server-services/utils/add-token', 'ember-arcgis-server-services/utils/encode-form'], function (exports, _ember, _emberNetworkFetch, _emberArcgisServerServicesUtilsAddToken, _emberArcgisServerServicesUtilsEncodeForm) {
+  'use strict';
+
+  exports['default'] = request;
+
+  /**
+   * Fetch based request method
+   */
+  function request(url) {
+    var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    if (opts.method && opts.method === 'POST') {
+      // if we are POSTing, we need to manually set the content-type because AGO
+      // actually does care about this header
+      if (!opts.headers) {
+        opts.headers = {
+          Accept: 'application/json, application/xml, text/plain, text/html, *.*',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        };
+      }
+      // if a body was passed, we need to set the content type to multipart
+      if (opts.body) {
+        delete opts.headers['Content-Type']; // = 'multipart/form-data';
+      }
+
+      // if we have a data, create a formData from it
+      if (opts.data) {
+        var form = (0, _emberArcgisServerServicesUtilsEncodeForm['default'])(opts.data);
+        opts.body = form;
+      }
+    }
+    opts.redirect = 'follow';
+    opts.mode = 'cors';
+    url = (0, _emberArcgisServerServicesUtilsAddToken['default'])(url, opts.token);
+
+    return (0, _emberNetworkFetch['default'])(url, opts).then(checkStatusAndParseJson);
+    // TODO: try JSONP if GET request fails (to support older IE versions)
+    // .catch((err) => {
+    //   if (err.message === 'Network request failed' && opts.method === 'GET') {
+    //     // need to install ember-ajax or fetch-jsonp to try a JSONP request
+    //   }
+    // });
+  }
+
+  /**
+   * Fetch does not reject on non-200 responses, so we need to check this manually
+   */
+  function checkStatusAndParseJson(response) {
+    var error;
+    // Ember.debug('Fetch request status: ' + response.status);
+    if (response.status >= 200 && response.status < 300) {
+      // check if this is one of those groovy 200-but-a-400 things
+      return response.json().then(function (json) {
+        if (json.error) {
+          // cook an error
+          error = new Error(json.error.message);
+          error.code = json.error.code || 404;
+          error.response = response;
+          _ember['default'].debug('Error in response:  ' + json.error.message);
+          throw error;
+        } else {
+          return json;
+        }
+      });
+    } else {
+      // Response has non 200 http code
+      error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    }
+  }
+});
+define('ember-arcgis-server-services/utils/should-add-token', ['exports', 'ember'], function (exports, _ember) {
+  'use strict';
+
+  exports['default'] = shouldAddToken;
+
+  /**
+   * Logic to determine when we should attach a token to a ArcGIS Server / Hosted Service call
+   */
+  function shouldAddToken(url, serverInfo, portalInfo) {
+    // default to not sending tokens
+    var shouldSendToken = false;
+    // check if the server even accepts tokens
+    var acceptsTokens = _ember['default'].getWithDefault(serverInfo, 'authInfo.isTokenBasedSecurity', false);
+    if (acceptsTokens) {
+      var serverDomain = stripToDomain(url);
+      var portalDomain = stripToDomain(portalInfo.portalHostname);
+      var owningDomain = stripToDomain(serverInfo.owningSystemUrl);
+      var authorizedCrossOriginDomains = portalInfo.authorizedCrossOriginDomains || [];
+      var isAuthorizedUrl = authorizedCrossOriginDomains.indexOf(serverDomain) > -1;
+      var isArcGisDomain = !!url.toLowerCase().match('.arcgis.com/');
+
+      // if all three are the same domain... send it
+      if (serverDomain === portalDomain === owningDomain) {
+        shouldSendToken = true;
+      } else if (portalDomain === owningDomain && isAuthorizedUrl) {
+        shouldSendToken = true;
+      } else if (portalDomain === owningDomain && isArcGisDomain) {
+        shouldSendToken = true;
+      }
+    }
+
+    return shouldSendToken;
+  }
+
+  function stripToDomain(url) {
+    try {
+      return url.replace(/^https?:\/\//, '').split(':')[0].split('/')[0];
+    } catch (e) {
+      return url;
+    }
+  }
+});
 define('ember-cli-active-link-wrapper/components/active-link', ['exports', 'ember', 'ember-cli-active-link-wrapper/mixins/active-link'], function (exports, _ember, _emberCliActiveLinkWrapperMixinsActiveLink) {
   'use strict';
 
@@ -92837,13 +94639,12 @@ define('ember-cli-active-link-wrapper/mixins/active-link', ['exports', 'ember'],
 
   });
 });
-define('ember-cli-app-version/initializer-factory', ['exports', 'ember'], function (exports, _ember) {
-  'use strict';
+define("ember-cli-app-version/initializer-factory", ["exports"], function (exports) {
+  "use strict";
 
-  exports['default'] = initializerFactory;
-
-  var classify = _ember['default'].String.classify;
-  var libraries = _ember['default'].libraries;
+  exports["default"] = initializerFactory;
+  var classify = Ember.String.classify,
+      libraries = Ember.libraries;
 
   function initializerFactory(name, version) {
     var registered = false;
@@ -92862,9 +94663,318 @@ define("ember-cli-app-version/utils/regexp", ["exports"], function (exports) {
 
   var versionRegExp = /\d[.]\d[.]\d/;
   exports.versionRegExp = versionRegExp;
-
   var shaRegExp = /[a-z\d]{8}/;
   exports.shaRegExp = shaRegExp;
+});
+define("ember-cli-string-helpers/-private/create-string-helper", ["exports"], function (exports) {
+  "use strict";
+
+  var _slicedToArray = (function () {
+    function sliceIterator(arr, i) {
+      var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;_e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"]) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }return _arr;
+    }return function (arr, i) {
+      if (Array.isArray(arr)) {
+        return arr;
+      } else if (Symbol.iterator in Object(arr)) {
+        return sliceIterator(arr, i);
+      } else {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+      }
+    };
+  })();
+
+  exports["default"] = function (stringFunction) {
+    return function (_ref) {
+      var _ref2 = _slicedToArray(_ref, 1),
+          string = _ref2[0];
+
+      string = string || '';
+      return stringFunction(string);
+    };
+  };
+});
+define('ember-cli-string-helpers/helpers/camelize', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _camelize = Ember.String.camelize;
+
+  var camelize = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_camelize);
+  exports.camelize = camelize;
+  exports['default'] = helper(camelize);
+});
+define('ember-cli-string-helpers/helpers/capitalize', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _capitalize = Ember.String.capitalize;
+
+  var capitalize = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_capitalize);
+  exports.capitalize = capitalize;
+  exports['default'] = helper(capitalize);
+});
+define('ember-cli-string-helpers/helpers/classify', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _classify = Ember.String.classify;
+
+  var classify = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_classify);
+  exports.classify = classify;
+  exports['default'] = helper(classify);
+});
+define('ember-cli-string-helpers/helpers/dasherize', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _dasherize = Ember.String.dasherize;
+
+  var dasherize = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_dasherize);
+  exports.dasherize = dasherize;
+  exports['default'] = helper(dasherize);
+});
+define('ember-cli-string-helpers/helpers/html-safe', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _htmlSafe = Ember.String.htmlSafe;
+
+  var htmlSafe = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_htmlSafe);
+  exports.htmlSafe = htmlSafe;
+  exports['default'] = helper(htmlSafe);
+});
+define("ember-cli-string-helpers/helpers/humanize", ["exports"], function (exports) {
+  "use strict";
+
+  exports.humanize = humanize;
+  var _slicedToArray = (function () {
+    function sliceIterator(arr, i) {
+      var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;_e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"]) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }return _arr;
+    }return function (arr, i) {
+      if (Array.isArray(arr)) {
+        return arr;
+      } else if (Symbol.iterator in Object(arr)) {
+        return sliceIterator(arr, i);
+      } else {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+      }
+    };
+  })();
+
+  var helper = Ember.Helper.helper;
+
+  var regex = /_+|-+/g;
+  var replacement = ' ';
+
+  // The substituted value will be contained in the result variable
+
+  function humanize(_ref) {
+    var _ref2 = _slicedToArray(_ref, 1),
+        string = _ref2[0];
+
+    if (string === undefined || string === null) {
+      return '';
+    }
+
+    var result = string.toLowerCase().replace(regex, replacement);
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  }
+
+  exports["default"] = helper(humanize);
+});
+define('ember-cli-string-helpers/helpers/lowercase', ['exports', 'ember-cli-string-helpers/utils/lowercase', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersUtilsLowercase, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+
+  var lowercase = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_emberCliStringHelpersUtilsLowercase['default']);
+  exports.lowercase = lowercase;
+  exports['default'] = helper(lowercase);
+});
+define('ember-cli-string-helpers/helpers/titleize', ['exports', 'ember-cli-string-helpers/utils/titleize', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersUtilsTitleize, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+
+  var titleize = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_emberCliStringHelpersUtilsTitleize['default']);
+  exports.titleize = titleize;
+  exports['default'] = helper(titleize);
+});
+define("ember-cli-string-helpers/helpers/truncate", ["exports"], function (exports) {
+  "use strict";
+
+  exports.truncate = truncate;
+  var _slicedToArray = (function () {
+    function sliceIterator(arr, i) {
+      var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;_e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"]) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }return _arr;
+    }return function (arr, i) {
+      if (Array.isArray(arr)) {
+        return arr;
+      } else if (Symbol.iterator in Object(arr)) {
+        return sliceIterator(arr, i);
+      } else {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+      }
+    };
+  })();
+
+  var helper = Ember.Helper.helper;
+
+  function truncate(_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        string = _ref2[0],
+        _ref2$ = _ref2[1],
+        characterLimit = _ref2$ === undefined ? 140 : _ref2$;
+
+    var limit = characterLimit - 3;
+
+    if (string && string.length > limit) {
+      return string.substring(0, limit) + '...';
+    } else {
+      return string;
+    }
+  }
+
+  exports["default"] = helper(truncate);
+});
+define('ember-cli-string-helpers/helpers/underscore', ['exports', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+  var _underscore = Ember.String.underscore;
+
+  var underscore = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_underscore);
+  exports.underscore = underscore;
+  exports['default'] = helper(underscore);
+});
+define('ember-cli-string-helpers/helpers/uppercase', ['exports', 'ember-cli-string-helpers/utils/uppercase', 'ember-cli-string-helpers/-private/create-string-helper'], function (exports, _emberCliStringHelpersUtilsUppercase, _emberCliStringHelpersPrivateCreateStringHelper) {
+  'use strict';
+
+  var helper = Ember.Helper.helper;
+
+  var uppercase = (0, _emberCliStringHelpersPrivateCreateStringHelper['default'])(_emberCliStringHelpersUtilsUppercase['default']);
+  exports.uppercase = uppercase;
+  exports['default'] = helper(uppercase);
+});
+define("ember-cli-string-helpers/helpers/w", ["exports"], function (exports) {
+  "use strict";
+
+  exports.w = w;
+  function _toArray(arr) {
+    return Array.isArray(arr) ? arr : Array.from(arr);
+  }
+
+  var helper = Ember.Helper.helper;
+  var toWords = Ember.String.w;
+
+  function w(_ref) {
+    var _ref2 = _toArray(_ref),
+        wordStrings = _ref2.slice(0);
+
+    return wordStrings.map(toWords).reduce(function (words, moreWords) {
+      return words.concat(moreWords);
+    }, []);
+  }
+
+  exports["default"] = helper(w);
+});
+define("ember-cli-string-helpers/utils/lowercase", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = lowercase;
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  };
+
+  function lowercase() {
+    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+    if (typeof string !== 'string') {
+      throw new TypeError('Expected a string, got a ' + (typeof string === 'undefined' ? 'undefined' : _typeof(string)));
+    }
+
+    return string.toLowerCase();
+  }
+});
+define("ember-cli-string-helpers/utils/titleize", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = titleize;
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  };
+
+  function titleize() {
+    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+    if (typeof string !== 'string') {
+      throw new TypeError('Expected a string, got a ' + (typeof string === 'undefined' ? 'undefined' : _typeof(string)));
+    }
+
+    return string.toLowerCase().replace(/(?:^|\s|-|\/)\S/g, function (m) {
+      return m.toUpperCase();
+    });
+  }
+});
+define("ember-cli-string-helpers/utils/uppercase", ["exports"], function (exports) {
+  "use strict";
+
+  exports["default"] = uppercase;
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  };
+
+  function uppercase() {
+    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+    if (typeof string !== 'string') {
+      throw new TypeError('Expected a string, got a ' + (typeof string === 'undefined' ? 'undefined' : _typeof(string)));
+    }
+
+    return string.toUpperCase();
+  }
 });
 define("ember-getowner-polyfill/index", ["exports", "ember"], function (exports, _ember) {
   "use strict";
@@ -94760,7 +96870,15 @@ define('intl-format-cache/index', ['exports', 'intl-format-cache/memoizer'], fun
     }
   });
 });
-define('intl-format-cache/memoizer', ['exports', 'intl-format-cache/es5'], function (exports, _intlFormatCacheEs5) {
+define("intl-format-cache/memoizer", ["exports", "intl-format-cache/es5"], function (exports, _intlFormatCacheEs5) {
+    "use strict";
+
+    var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+        return typeof obj;
+    } : function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+
     /*
     Copyright (c) 2014, Yahoo! Inc. All rights reserved.
     Copyrights licensed under the New BSD License.
@@ -94769,9 +96887,7 @@ define('intl-format-cache/memoizer', ['exports', 'intl-format-cache/es5'], funct
 
     /* jshint esnext: true */
 
-    'use strict';
-
-    exports['default'] = createFormatCache;
+    exports["default"] = createFormatCache;
 
     // -----------------------------------------------------------------------------
 
@@ -94810,7 +96926,7 @@ define('intl-format-cache/memoizer', ['exports', 'intl-format-cache/es5'], funct
         for (i = 0, len = inputs.length; i < len; i += 1) {
             input = inputs[i];
 
-            if (input && typeof input === 'object') {
+            if (input && (typeof input === 'undefined' ? 'undefined' : _typeof(input)) === 'object') {
                 cacheId.push(orderedProps(input));
             } else {
                 cacheId.push(input);
