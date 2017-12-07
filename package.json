@@ -1,17 +1,18 @@
 {
   "name": "ember-arcgis-portal-components",
   "version": "0.4.2",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "Ember components that help when working with ArcGIS Online/Enterprise items",
   "keywords": [
+    "esri", "arcgis", "arcgisonline", "emberjs",
     "ember-addon"
   ],
-  "license": "MIT",
-  "author": "",
+  "license": "Apache-2.0",
+  "author": "Dave Bouwman <dbouwman@esri.com>",
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "",
+  "repository": "https://github.com/ArcGIS/ember-arcgis-portal-components",
   "scripts": {
     "build": "ember build",
     "start": "ember server",
@@ -28,7 +29,7 @@
     "broccoli-asset-rev": "^2.4.5",
     "calcite-bootstrap": "^0.4.4",
     "ember-arcgis-portal-services": "0.13.5",
-    "ember-arcgis-server-services": "1.0.1",
+    "ember-arcgis-server-services": "1.1.0",
     "ember-cli": "2.11.1",
     "ember-cli-active-link-wrapper": "0.3.2",
     "ember-cli-app-version": "^2.0.0",
