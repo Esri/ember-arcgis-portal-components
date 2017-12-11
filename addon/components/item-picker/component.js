@@ -31,7 +31,7 @@ export default Ember.Component.extend({
   },
 
   /**
-   * Compure the translation scope
+   * Compute the translation scope
    */
   _i18nScope: Ember.computed('i18nScope', function () {
     return `${this.getWithDefault('i18nScope', 'ember-arcgis-portal-components.itemPicker')}.`;
@@ -278,46 +278,6 @@ export default Ember.Component.extend({
       // call the closure action passed into this component
       return this.get('selectAction')(item, options);
     },
-
-    // onSelect () {
-    //   const item = this.get('selectedItem');
-    //   const layer = this.get('selectedLayer');
-    //   const validator = this.get('onSelectionValidator');
-    //
-    //   this.set('isValidating', true);
-    //   if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
-    //     validator(item)
-    //       .then((resp) => {
-    //         this.set('isValidating', false);
-    //         this.set('errorHash', resp.status);
-    //         if (resp.status.status === 'error') {
-    //           return;
-    //         } else if (resp.status.status === 'warning') {
-    //           this.set('selectAnyway', true);
-    //           return;
-    //         } else {
-    //           switch (item.type.toLowerCase()) {
-    //             case 'feature service':
-    //               return this.get('selectAction')(resp.item, 0);
-    //             default:
-    //               return this.get('selectAction')(resp.item);
-    //           }
-    //         }
-    //       });
-    //   } else {
-    //     this.set('isValidating', false);
-    //     switch (item.type.toLowerCase()) {
-    //       case 'feature service':
-    //         return this.get('selectAction')(item, layer);
-    //       default:
-    //         return this.get('selectAction')(item);
-    //     }
-    //   }
-    // },
-
-    // selectItemAndLayer (item, layerId) {
-    //   this._setItemAndLayer(item, layerId);
-    // },
 
     cancelAction () {
       this.setProperties({
