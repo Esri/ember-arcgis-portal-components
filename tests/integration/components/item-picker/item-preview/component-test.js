@@ -13,8 +13,6 @@ moduleForComponent('item-picker/item-preview', 'Integration | Component | item p
 });
 
 test('it renders', function (assert) {
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });
   const id = 'test-dataset-id';
   const model = {
     id: id,
@@ -24,8 +22,20 @@ test('it renders', function (assert) {
     modified: 1411060006000,
     type: 'Web Map'
   };
+
   this.set('model', model);
-  this.render(hbs`{{item-picker/item-preview model=model _i18nScope="ember-arcgis-portal-components.itemPicker."}}`);
+  this.set('onSelectionValidator', function () {});
+  this.set('onItemSelected', function () {});
+  this.set('cancelAction', function () {});
+  this.set('isLoading', true);
+
+  this.render(hbs`{{item-picker/item-preview
+    _i18nScope="ember-arcgis-portal-components.itemPicker."
+    model=model
+    onSelectionValidator=onSelectionValidator
+    onItemSelected=onItemSelected
+    onCancel=cancelAction
+  }}`);
 
   // assert.equal(this.$().text().trim(), '');
   const el = this.$('.item-picker-current-item-preview');
