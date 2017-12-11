@@ -17,7 +17,7 @@ Router.map(function () {
     this.route('layerpicker');
   });
 
-  this.route('itemPicker', function() {});
+  this.route('itemPicker', function () {});
 });
 
 export default Router;
