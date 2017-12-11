@@ -6,7 +6,7 @@ export default Ember.Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
   description: Ember.computed.reads('model.description'),
   featureService: Ember.inject.service('feature-service'),
-  forceLayerSelection: Ember.computed.reads('params.forceLayerSelection'),
+  forceLayerSelection: Ember.computed.alias('showLayers'),
   hasSelectedLayer: Ember.computed.notEmpty('selectedLayer'),
   intl: Ember.inject.service(),
   isLoading: true,
@@ -16,7 +16,6 @@ export default Ember.Component.extend({
   selectAnyway: false,
   shouldValidate: false,
   showError: Ember.computed.notEmpty('errorMessage'),
-  showLayers: Ember.computed.reads('params.showLayers'),
   /**
    * What should the select button text be? we have variations depending on status
    */
@@ -41,6 +40,24 @@ export default Ember.Component.extend({
     }
     return result;
   }),
+
+  /**
+  * Show layers if we have...
+  * ... a map service
+  * ... a feature service
+  */
+
+  showLayers: Ember.computed('model', function () {
+    let item = this.get('model');
+    switch (item.type.toLowerCase()) {
+      case 'feature service':
+      case 'map service':
+        return true;
+      default:
+        return false;
+    }
+  }),
+
   /**
    * Disable the select button if...
    * ... we have an error
