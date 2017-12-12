@@ -12,6 +12,14 @@ moduleForComponent('item-picker/feature-service-preview', 'Integration | Compone
 
     const session = Ember.Service.extend({});
     this.register('service:session', session);
+  },
+  beforeEach () {
+    const featureService = Ember.Service.extend({
+      getLayerInfo () {
+        return Ember.RSVP.resolve(2);
+      }
+    });
+    this.register('service:feature-service', featureService);
   }
 });
 
@@ -27,11 +35,15 @@ test('it renders', function (assert) {
     url: 'https://foo.bar.baz'
   };
 
-  this.set('currentItem', item);
-  this.set('onSelectionValidator', function () {});
-  this.set('onPreviewSelected', function () {});
-  this.set('cancelAction', function () {});
-  this.set('isLoading', 'false');
+  this.setProperties({
+    currentItem: item,
+    isLoading: false,
+    layerList: [],
+    selectedLayer: null,
+    onSelectionValidator: function () {},
+    onPreviewSelected: function () {},
+    cancelAction: function () {},
+  });
 
   this.render(hbs`{{item-picker/feature-service-preview
     _i18nScope="ember-arcgis-portal-components.itemPicker."
@@ -39,7 +51,6 @@ test('it renders', function (assert) {
     onSelectionValidator=onSelectionValidator
     onItemSelected=onPreviewSelected
     onCancel=cancelAction
-    isLoading=isLoading
   }}`);
 
   const el = this.$('.item-picker-current-item-preview');
