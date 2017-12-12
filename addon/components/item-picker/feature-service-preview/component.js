@@ -16,6 +16,7 @@ export default Ember.Component.extend({
   selectAnyway: false,
   shouldValidate: false,
   showError: Ember.computed.notEmpty('errorMessage'),
+
   /**
    * What should the select button text be? we have variations depending on status
    */
@@ -144,14 +145,18 @@ export default Ember.Component.extend({
     this.set('isLoading', true);
     this.fetchServiceLayers(item)
       .then((layersAndTables) => {
-        this.set('isLoading', false);
-        this.set('errorMessage', null);
-        this.set('layerList', layersAndTables);
+        this.setProperties({
+          isLoading: false,
+          errorMessage: null,
+          layerList: layersAndTables
+        });
       })
       .catch((err) => {
-        this.set('isLoading', false);
-        this.set('layerList', []);
-        this.set('selectedLayer', null);
+        this.setProperties({
+          isLoading: false,
+          layerList: [],
+          selectedLayer: null,
+        });
         Ember.debug(`Error fetching layers ${err}`);
         this.set('errorMessage', {
           status: 'error',
