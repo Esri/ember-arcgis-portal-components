@@ -17,14 +17,14 @@ The item picker component allows a user to search a portal for items, see a prev
 Layer picker is part of the item picker. It allows for items with multiple layers to display them as radio buttons. This will then allow the user to select which layer they would like to use. The layer picker will display by default if the item is type `Feature Service` or `Map Service`.
 
 ## Options for Item Picker
-| Flag | Type | Options | Default | Required | Purpose |
-|----|:-------:|:-------:|:---:|:------:|----------|
-|   [selectAction]()   |     Function<br><small>(Closure Action)</small>    |         |     |   Yes   | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action.   |
-|  [searchItemsOnInit]()   |   Boolean   |       `true` <br> `false` | `false` |No| Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
-|   [selectMultiple]()   |   Boolean      |    `true` <br> `false`     |   `false`  |No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
-|   [catalog]()   |    Array     |         |     |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
-|   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>     |         |     |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
-|  [portalOpts]()    |   Object      |         |     |  No    |   Allows a different portal to be assigned to an item picker.       |
+| Flag | Type | Required | Purpose |
+|----|:-------:|:-------:|----------|
+|   [selectAction]()   |     Function<br><small>(Closure Action)</small>      |   Yes   | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action.   |
+|  [searchItemsOnInit]()   |   Boolean   |No| Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
+|   [selectMultiple]()   |   Boolean      |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
+|   [catalog]()   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
+|   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
+|  [portalOpts]()    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
 
 
 ## Examples
