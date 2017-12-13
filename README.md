@@ -16,6 +16,17 @@ The item picker component allows a user to search a portal for items, see a prev
 ### Layer Picker
 Layer picker is part of the item picker. It allows for items with multiple layers to display them as radio buttons. This will then allow the user to select which layer they would like to use. The layer picker will display by default if the item is type `Feature Service` or `Map Service`.
 
+### Generating a New Component
+When generating a new component, please structure your files in the following order. This will help standardize the files and keep everything in an organized format:
+
+1. Injections
+2. Ember variables
+  * (classNames, tagName, attributeBindings, init, didInsertElement, etc)
+3. Properties and Computed Properties (CPs)
+4. Functions
+5. Actions
+
+
 ## Options for Item Picker
 | Flag | Type | Required | Purpose |
 |----|:-------:|:-------:|----------|
