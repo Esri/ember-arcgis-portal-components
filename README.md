@@ -20,11 +20,13 @@ Layer picker is part of the item picker. It allows for items with multiple layer
 When generating a new component, please structure your files in the following order. This will help standardize the files and keep everything in an organized format:
 
 1. Injections
-2. Ember variables
-  * (classNames, tagName, attributeBindings, init, didInsertElement, etc)
-3. Properties and Computed Properties (CPs)
-4. Functions
-5. Actions
+2. Component stuff (classNames, tagName, etc)
+3. Component lifecycle hooks (init, didInsertElement)
+  * roughly in the order they happen
+4. Properties
+5. Computed properties
+6. Functions
+7. Actions
 
 
 ## Options for Item Picker
