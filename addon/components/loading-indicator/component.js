@@ -15,21 +15,16 @@ import layout from './template';
  */
 
 export default Ember.Component.extend({
-
   layout,
-
   intl: Ember.inject.service(),
 
   tagName: 'div',
-
   classNames: [ 'loader' ],
-
-  isActive: true,
-
   classNameBindings: [ 'isActive' ],
 
   // default message
   message: '',
+  isActive: true,
 
   msg: Ember.computed('message', function () {
     let message = this.get('message') || '';

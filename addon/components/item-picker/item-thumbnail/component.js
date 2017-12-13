@@ -3,8 +3,8 @@ import layout from './template';
 
 export default Ember.Component.extend({
   layout,
-  thumbnailIsBroken: false,
   session: Ember.inject.service(),
+
   didInsertElement () {
     this.$('img').on('error', Ember.run.bind(this, this.onImageError));
   },
@@ -12,6 +12,8 @@ export default Ember.Component.extend({
   willDestroyElement () {
     this.$('img').off();
   },
+
+  thumbnailIsBroken: false,
   /**
    * Construct the url for the thumbnail
    * For non-public items, append a token

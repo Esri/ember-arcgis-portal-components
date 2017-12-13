@@ -2,15 +2,10 @@ import Ember from 'ember';
 import layout from './template';
 
 export default Ember.Component.extend({
+  layout,
+  intl: Ember.inject.service(),
 
   classNames: [ 'item-picker-current-item-preview' ],
-  description: Ember.computed.reads('model.description'),
-  isValidating: false,
-  intl: Ember.inject.service(),
-  layout,
-  selectAnyway: false,
-  shouldValidate: false,
-  showError: Ember.computed.notEmpty('errorMessage'),
 
   didRender () {
     // Needed to jump to error message
@@ -18,6 +13,12 @@ export default Ember.Component.extend({
       this.$().scrollTop(0);
     }
   },
+
+  isValidating: false,
+  selectAnyway: false,
+  shouldValidate: false,
+  showError: Ember.computed.notEmpty('errorMessage'),
+  description: Ember.computed.reads('model.description'),
 
   /**
    * What should the select button text be? we have variations depending on status

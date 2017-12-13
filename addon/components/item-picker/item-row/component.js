@@ -3,11 +3,6 @@ import singleTemplate from './single/template';
 import multipleTemplate from './multiple/template';
 
 export default Ember.Component.extend({
-
-  session: Ember.inject.service(),
-
-  itemService: Ember.inject.service('items-service'),
-
   layout: Ember.computed('selectMultiple', function () {
     let layout = singleTemplate;
     if (this.get('selectMultiple')) {
@@ -15,11 +10,11 @@ export default Ember.Component.extend({
     }
     return layout;
   }),
+  session: Ember.inject.service(),
+  itemService: Ember.inject.service('items-service'),
 
   tagName: 'li',
-
   classNames: [ 'item-picker-item-results-item' ],
-
   classNameBindings: [ 'isSelected', 'selectMultiple' ],
 
   didInsertElement () {

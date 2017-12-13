@@ -11,23 +11,25 @@
   {{sanitize-html description}}
   <div class="text-fade"></div>
 </div>
-{{#if showLayers}}
-<section class="layer-picker-controls">
-<h5>{{t (concat _i18nScope "layerList")}}</h5>
 
-{{#if isLoading}}
-  {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
-{{else}}
-  {{#if showError}}
-    <p class="alert {{messageClass}}" id="val-error">
-      {{errorMessage.message}}
-    </p>
+{{#if showLayers}}
+  <section class="layer-picker-controls">
+  <h5>{{t (concat _i18nScope "layerList")}}</h5>
+
+  {{#if isLoading}}
+    {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
   {{else}}
-    {{item-picker/layer-picker model=layerList selectable=forceLayerSelection onLayerSelected=(action "onLayerSelected")}}
+      {{#if showError}}
+        <p class="alert {{messageClass}}" id="val-error">
+          {{errorMessage.message}}
+        </p>
+      {{else}}
+        {{item-picker/layer-picker model=layerList selectable=forceLayerSelection onLayerSelected=(action "onLayerSelected")}}
+      {{/if}}
   {{/if}}
+  </section>
 {{/if}}
-</section>
-{{/if}}
+
 <section class="item-picker-controls">
   <div class="full-width-btn">
     <div>

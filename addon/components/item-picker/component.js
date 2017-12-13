@@ -2,26 +2,18 @@ import Ember from 'ember';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
 import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
-// {{loading-indicator msg=(t "ember-arcgis-portal-components.itemPicker.loadingLayers")}}
 export default Ember.Component.extend({
-
-  classNames: [ 'item-picker', 'clearfix', 'row' ],
-  disableAddItems: Ember.computed.not('hasItemsToAdd'),
-  hasItemsToAdd: Ember.computed.notEmpty('itemsToAdd'),
-  intl: Ember.inject.service(),
-  isValidating: false,
-  itemService: Ember.inject.service('items-service'),
-  itemsToAdd: [],
   layout,
-  selectAnyway: false,
-  shouldValidate: false,
-  showNoItemsMsg: Ember.computed.notEmpty('noItemsFoundMsg'),
+  intl: Ember.inject.service(),
+  itemService: Ember.inject.service('items-service'),
+  classNames: [ 'item-picker', 'clearfix', 'row' ],
 
   /**
    * Startup the component... we may need to issue an immediate search...
    */
   init () {
     this._super(...arguments);
+    this.set('itemsToAdd', []);
     if (this.get('searchItemsOnInit')) {
       if (this.get('catalog')) {
         this._setInitialCatalog(this.get('catalog'));
@@ -29,6 +21,13 @@ export default Ember.Component.extend({
       this._doSearch(this.get('q'));
     }
   },
+
+  disableAddItems: Ember.computed.not('hasItemsToAdd'),
+  showNoItemsMsg: Ember.computed.notEmpty('noItemsFoundMsg'),
+  hasItemsToAdd: Ember.computed.notEmpty('itemsToAdd'),
+  isValidating: false,
+  selectAnyway: false,
+  shouldValidate: false,
 
   /**
    * Compute the translation scope
@@ -210,15 +209,6 @@ export default Ember.Component.extend({
     this.set('selectedCatalog', selectedCatalog);
     this.set('selectedCatalogName', selectedCatalog.name);
   },
-
-  // _setItemAndLayer (selectedItem, selectedLayerId) {
-  //   if (!selectedItem.fields) {
-  //     let layers = Ember.get(selectedItem, 'layers');
-  //     let selectedLayer = layers.filter(layer => layer.id === selectedLayerId);
-  //     this.set('selectedLayer', selectedLayer);
-  //   }
-  //   this.set('selectedItem', selectedItem);
-  // },
 
   actions: {
     /**

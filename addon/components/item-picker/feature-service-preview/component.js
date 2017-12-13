@@ -48,9 +48,9 @@ export default Ember.Component.extend({
   * ... a feature service
   */
 
-  showLayers: Ember.computed('model', function () {
-    let item = this.get('model');
-    switch (item.type.toLowerCase()) {
+  showLayers: Ember.computed('model.type', function () {
+    const type = this.get('model.type');
+    switch (type.toLowerCase()) {
       case 'feature service':
       case 'map service':
         return true;
@@ -64,7 +64,7 @@ export default Ember.Component.extend({
    * ... we have an error
    * ... we need to choose a layer, and have not selected one
    */
-  isSelectDisabled: Ember.computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage', function () {
+  isSelectDisabled: Ember.computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
     const errorMessage = this.get('errorMessage');
     let result = false;
     if (this.get('isValidating')) {
@@ -205,7 +205,7 @@ export default Ember.Component.extend({
   /**
    * What class do we use for the message...
    */
-  messageClass: Ember.computed('errorMessage', function () {
+  messageClass: Ember.computed('errorMessage.status', function () {
     if (this.get('errorMessage.status') === 'warning') {
       return 'alert-warning';
     } else if (this.get('errorMessage.status') === 'error') {
