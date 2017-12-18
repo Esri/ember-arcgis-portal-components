@@ -15,6 +15,16 @@ export default Ember.Controller.extend({
       }
     },
     {
+      name: 'Services',
+      params: {
+        query: {
+          type: [
+            'Feature Service', 'Map Service'
+          ]
+        }
+      }
+    },
+    {
       name: 'Apps',
       params: {
         query: {
@@ -117,6 +127,11 @@ export default Ember.Controller.extend({
       }
     }
   ]),
+
+  previewParams: {
+    showLayers: true,
+    forceLayerSelection: true
+  },
 
   actions: {
     onSelectItem (selected) {

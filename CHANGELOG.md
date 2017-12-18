@@ -2,7 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## Unreleased - [0.5.0]
+- Add layer picker to allow users to select which specific layer in an item they'd like to view
+- Update documentation on layer picker and restructure old docs to be more concise 
 
 ## [0.4.2]
 ### Fixed

@@ -1,0 +1,13 @@
+@charset "UTF-8";
+@at-root {
+  @font-face {
+    font-family: "hub";
+    src:url("#{$hub-font-path}hub.eot");
+    src:url("#{$hub-font-path}hub.eot?#iefix") format("embedded-opentype"),
+      url("#{$hub-font-path}hub.woff") format("woff"),
+      url("#{$hub-font-path}hub.ttf") format("truetype"),
+      url("#{$hub-font-path}hub.svg#hub") format("svg");
+    font-weight: normal;
+    font-style: normal;
+  }
+}
