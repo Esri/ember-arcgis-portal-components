@@ -11,35 +11,63 @@ ember install ember-arcgis-portal-components
 
 ### Item Picker
 
-The item picker component allows a user to search a portal for items, see a preview of the item, and then get the item returned. While commonly used in a modal, the component can be used in any context.
+The item picker component allows a user to search a portal for items, see a preview of the item, and then get the item returned. While commonly used in a modal, the component can be used in any context. [Clone the repo locally and run the dummy application to see examples]()
 
-#### Default Usage
+### Layer Picker
+Layer picker is part of the item picker. It allows for items with multiple layers to display them as radio buttons. This will then allow the user to select which layer they would like to use. The layer picker will display by default if the item is type `Feature Service` or `Map Service`.
+
+### Generating a New Component
+When generating a new component, please structure your files in the following order. This will help standardize the files and keep everything in an organized format:
+
+1. Injections
+2. Component stuff (classNames, tagName, etc)
+3. Component lifecycle hooks (init, didInsertElement)
+  * roughly in the order they happen
+4. Properties
+5. Computed properties
+6. Functions
+7. Actions
+
+
+## Options for Item Picker
+| Flag | Type | Required | Purpose |
+|----|:-------:|:-------:|----------|
+|   [selectAction]()   |     Function<br><small>(Closure Action)</small>      |   Yes   | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action.   |
+|  [searchItemsOnInit]()   |   Boolean   |No| Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
+|   [selectMultiple]()   |   Boolean      |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
+|   [catalog]()   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
+|   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
+|  [portalOpts]()    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
+
+
+## Examples
+#### Default Usage (selectAction)
 ```
 {{item-picker
       selectAction=(action "onSelectItem")}}
 ```
 
-### Search on Initialize
-As soon as the component is rendered, it will execute a search and show the results
+### Search on Initialize (searchItemsOnInit)
+
 ```
 {{item-picker
   searchItemsOnInit=true
   selectAction=(action "onSelectItem")}}
 ```
 
-### Multi-Select
-In this mode, an array of items will be passed to the closure action.
+### Multi-Select (selectMultiple)
 ```
 {{item-picker
   selectMultiple=true
   selectAction=(action "onSelectItem")}}
 ```
 
-### Facets
-Passing a `catalog` array will allows the developer to control the search to a much higher degree.
+### Facets (catalog)
+This code will have two facets on the left hand side of the component. `All` and `Waste Water Apps`
+
+In the controller:
 
 ```
-// in the controller...
 facets: [
   {
     name: 'All',
@@ -57,32 +85,26 @@ facets: [
   }
 ]
 ```
-The entries in this array will be used to generate a AGO search. Documentation of this schema will be forthcoming.
+
+In the template:
 
 ```
-// in template
 {{item-picker
   searchItemsOnInit=true
   catalog=facets
   selectAction=(action "onSelectItem")}}
 ```
 
-If more the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. So - the code above will have two facets called 'All' and 'Waste Water Apps'.
 
-### Validation
-Many times an application will need to do more in-depth interrogation of an item before it can use it. The validation system is designed to accomodate this need.
 
-```
-{{item-picker
-      selectAction=(action "onSelectItem")
-      onSelectionValidator=(action "selectionValidator") }}
-```
+### Validation (onSelectionValidator)
+
+In the controller:
 
 ```
-// in controller...
 actions: {
   selectionValidator(item) {
-    // validation logic of whatever type...
+    // validation logic
     if (item.something) {
       return {
         item: item,
@@ -96,20 +118,30 @@ actions: {
         status: 'ok'
       };
     }
-
   }
 }
 ```
-#### Portal Options
-In some applications we have need to search for items in different portals. To address this, we can pass `portalOpts` into the component.
+In the template:
+
+```
+{{item-picker
+      selectAction=(action "onSelectItem")
+      onSelectionValidator=(action "selectionValidator") }}
+```
+
+#### Portal Options (portalOpts)
+
+In the controller:
 
 ```
 // in Controller
 portalOpts: {
   portalBaseUrl: 'https://someotherportal.com',
-  token: 'cb12---TOKEN-FOR-PORTAL---34..'
+  token: 'cb12---TOKEN-FOR-someotherportal.com---34..'
 }
 ```
+In the template:
+
 ```
 {{item-picker
       selectAction=(action "onSelectItem")
@@ -117,8 +149,8 @@ portalOpts: {
 ```
 
 
-All of these options can be combined
 
+## Setup
 
 * `git clone <repository-url>` this repository
 * `cd ember-arcgis-portal-components`
