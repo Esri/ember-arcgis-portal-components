@@ -32,17 +32,6 @@ export default Ember.Component.extend({
   }),
 
   /**
-   * Select button class. Basically mirroring the disabled state of the button
-   */
-  selectButtonClass: Ember.computed('isSelectDisabled', function () {
-    let result = '';
-    if (this.get('isSelectDisabled')) {
-      result = 'disabled';
-    }
-    return result;
-  }),
-
-  /**
   * Show layers if we have...
   * ... a map service
   * ... a feature service

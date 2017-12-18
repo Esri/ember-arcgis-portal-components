@@ -35,18 +35,6 @@ export default Ember.Component.extend({
   }),
 
   /**
-   * Select button class. Basically disabling the button
-   */
-  selectButtonClass: Ember.computed('isValidating', 'selectAnyway', 'errorMessage', function () {
-    const errorMessage = this.get('errorMessage');
-    if (this.get('isValidating')) {
-      return 'disabled';
-    } else if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
-      return 'disabled';
-    }
-  }),
-
-  /**
    * Get the translated form of the Item Type
    */
   itemType: Ember.computed('_i18nScope', 'model.type', function () {
