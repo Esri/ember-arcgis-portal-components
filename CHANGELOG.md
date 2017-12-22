@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.5.1]
 ### Added
-- Add data-test data attribute to item-picker/item-preview for use by e2e test element locator.
+- Add data-test data attribute to item-picker/item-preview and item-picker/feature-service-preview for use by e2e test element locator.
 
 ## [0.5.0]
 - Add layer picker to allow users to select which specific layer in a item they'd like to view
