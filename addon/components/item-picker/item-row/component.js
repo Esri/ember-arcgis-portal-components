@@ -36,7 +36,6 @@ export default Ember.Component.extend({
   }),
 
   typeOfData: Ember.computed('model.type', function () {
-    console.log(this.get('model'));
     let type = this.get('model.type');
     switch (type) {
       case 'Feature Service':
