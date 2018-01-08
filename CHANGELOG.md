@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+##[UNRELEASED]
+### Changed
+- Update the language to remove `Feature Service` and `Map Service` in favor of `Data` [Link](https://esriarlington.tpondemand.com/entity/82148)
+
 ## [0.5.1]
 ### Added
 - Add data-test data attribute to item-picker/item-preview and item-picker/feature-service-preview for use by e2e test element locator.
