@@ -75,20 +75,24 @@ export default Ember.Component.extend({
   upgradeProtocol (url) {
     // if already https, just return now...
     if (url.indexOf('https') > -1) {
-      return url;
+      return {
+        safe: true,
+        url: url
+      };
     }
-    // upgrade if possible
-    const upgradeableDomains = ['arcgis.com', 'arcgisonline.com', 'esri.com'];
-    let canUpgrade = upgradeableDomains.reduce((acc, entry) => {
+    // it's a safe upgrade if the domain is in this list...
+    const upgradeableDomains = ['arcgis.com', 'arcgisonline.com'];
+    let canUpgradeSafely = upgradeableDomains.reduce((acc, entry) => {
       if (url.indexOf(entry) > -1) {
         acc = true;
       }
       return acc;
     }, false);
-    if (canUpgrade) {
-      url = url.replace('http', 'https');
-    }
-    return url;
+    url = url.replace(/^http:/i, 'https:');
+    return {
+      safe: canUpgradeSafely,
+      url: url
+    };
   },
 
   /**
@@ -98,7 +102,9 @@ export default Ember.Component.extend({
   fetchServiceLayers (serviceItem) {
     const featureService = this.get('featureService');
     // upgrade the url and re-assign it to the item...
-    serviceItem.url = this.upgradeProtocol(serviceItem.url);
+    let upgradeInfo = this.upgradeProtocol(serviceItem.url);
+    serviceItem.url = upgradeInfo.url;
+
     // if the last segment of the url isNaN, we have a service url
     let isService = false;
     if (isNaN(serviceItem.url.split('/').reverse()[0])) {
@@ -123,6 +129,16 @@ export default Ember.Component.extend({
           layersAndTables.push(result);
         }
         return layersAndTables;
+      })
+      .catch((err) => {
+        // if we did an unsafe protocol upgrade, assume that's the problem
+        if (!upgradeInfo.safe) {
+          // get the error string
+          let intl = this.get('intl');
+          throw new Error(intl.t(`${this.get('_i18nScope')}errors.httpsNotSupported`));
+        } else {
+          throw err;
+        }
       });
   },
 

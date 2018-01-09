@@ -20,6 +20,9 @@
         "withQuery": "No items matched your search.",
         "withoutQuery": "No items found."
       },
+      "errors": {
+        "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again."
+      },
       "buttons": {
         "back": "Back",
         "select": "Select",
