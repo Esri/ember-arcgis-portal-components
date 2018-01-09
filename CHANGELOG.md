@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Fixed
+- added missing util `force-https` and it's tests
+### Changed
+- `feature-service-preview` will now auto-upgrade protocol to https regardless of the domain. If the request fails, we show an appropriate message.
+
 ## [0.5.1]
 ### Added
 - Add data-test data attribute to item-picker/item-preview and item-picker/feature-service-preview for use by e2e test element locator.
