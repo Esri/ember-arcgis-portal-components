@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import forceHttps from 'ember-arcgis-opendata-components/utils/force-https';
+import forceHttps from 'ember-arcgis-portal-components/utils/force-https';
 
 // NOTE: the test for this is in
 // packages/opendata-ui/tests/integration/components/image-with-fallback/component-test.js
@@ -27,7 +27,8 @@ export default Ember.Component.extend({
 
   src: Ember.computed('imgSrcAry', 'imgIndex', function () {
     const imgSrc = this.get('imgSrcAry')[this.get('imgIndex')];
-    return forceHttps(imgSrc);
+    let protocol = window.location.protocol || 'http';
+    return forceHttps(imgSrc, protocol);
   }),
 
   onImageError () {
