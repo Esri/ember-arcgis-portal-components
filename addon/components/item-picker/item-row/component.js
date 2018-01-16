@@ -35,6 +35,17 @@ export default Ember.Component.extend({
     return this.get('currentItemId') === this.get('model.id');
   }),
 
+  typeOfData: Ember.computed('model.type', function () {
+    let type = this.get('model.type');
+    switch (type) {
+      case 'Feature Service':
+      case 'Map Service':
+        return 'Data';
+      default:
+        return type;
+    }
+  }),
+
   checked: Ember.computed('model.id', 'itemsToAdd.[]', function () {
     const itemsToAdd = this.get('itemsToAdd');
     return !!itemsToAdd.findBy('id', this.get('model.id'));

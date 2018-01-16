@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - added missing util `force-https` and it's tests
 ### Changed
 - `feature-service-preview` will now auto-upgrade protocol to https regardless of the domain. If the request fails, we show an appropriate message.
+- Update the language to remove `Feature Service` and `Map Service` in favor of `Data` [Link](https://esriarlington.tpondemand.com/entity/82148)
 
 ## [0.5.1]
 ### Added
