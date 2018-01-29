@@ -15,7 +15,7 @@
     "doc": "doc",
     "test": "tests"
   },
-  "repository": "https://github.com/ArcGIS/ember-arcgis-portal-components",
+  "repository": "https://github.com/Esri/ember-arcgis-portal-components",
   "scripts": {
     "build": "ember build",
     "start": "ember server",
@@ -26,7 +26,8 @@
     "ember-cli-babel": "^5.1.7",
     "ember-cli-htmlbars": "^1.1.1",
     "ember-cli-sass": "5.5.1",
-    "ember-cli-string-helpers": "1.5.0"
+    "ember-cli-string-helpers": "1.5.0",
+    "bower": "1.8.2"
   },
   "devDependencies": {
     "broccoli-asset-rev": "^2.4.5",
@@ -68,7 +69,7 @@
     "torii-provider-arcgis": "0.6.2"
   },
   "engines": {
-    "node": ">= 0.12.0"
+    "node": ">= 6"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
