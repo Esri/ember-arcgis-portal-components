@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### Fixed
+- If only one layer is available, it will now be auto selected [Link](https://esriarlington.tpondemand.com/entity/82678)
 
 ## [0.5.2]
 ### Fixed
