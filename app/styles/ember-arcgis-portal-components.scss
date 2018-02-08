@@ -46,7 +46,7 @@ div.panel-body:has(.item-picker) {
         padding: 0.5rem 1rem;
         display: block;
         font-size: 1rem;
-        p {
+        h2 {
           // controls the contents of the item rows
           margin: 0; // width: 250px;
           white-space: nowrap;
@@ -122,6 +122,10 @@ div.panel-body:has(.item-picker) {
     border-top: solid 1px $calcite-gray-lighter;
     border-left: solid 1px $calcite-gray-lighter;
     box-shadow: -6px 0px 6px -6px $calcite-gray-lighter;
+    h4 {
+      font-size: $font-size-h4;
+      margin: 10px 0px;
+    }
     .item-picker-current-item-preview {
       position: absolute;
       height: calc(100% - 10px);
