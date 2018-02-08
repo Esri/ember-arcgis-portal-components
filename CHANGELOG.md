@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+- Preview button now takes user to the selected item [Link](https://esriarlington.tpondemand.com/entity/83079)
 - Update styling to better provide visual hierarchy [link](https://esriarlington.tpondemand.com/entity/83080)
 
 ## [0.5.3]
