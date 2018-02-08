@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+- Preview button now takes user to the selected item [Link](https://esriarlington.tpondemand.com/entity/83079)
+
 ## [0.5.3]
 ### Fixed
 - If only one layer is available, it will now be auto selected [Link](https://esriarlington.tpondemand.com/entity/82678)
