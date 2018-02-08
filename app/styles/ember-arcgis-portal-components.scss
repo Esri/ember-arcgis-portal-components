@@ -63,7 +63,7 @@ div.panel-body:has(.item-picker) {
         margin-right: 10px;
       }
       &.is-selected {
-        background-color: #d9edf7;
+        background-color: $calcite-blue-lightest;
       }
       &.select-multiple {
         a:first-child {
@@ -135,7 +135,7 @@ div.panel-body:has(.item-picker) {
       }
       h2 {
         font-size: $font-size-h4;
-        color: #4c4c4c;
+        color: $off-black;
         margin: 0px auto 15px auto;
         font-weight: 500;
       }
@@ -153,7 +153,7 @@ div.panel-body:has(.item-picker) {
           height: 13px;
           position: absolute;
           bottom: 0px;
-          box-shadow: inset 0px -33px 32px -23px #fff;
+          box-shadow: inset 0px -33px 32px -23px $white;
         }
       }
       .item-picker-current-item-preview-meta {
@@ -170,7 +170,7 @@ div.panel-body:has(.item-picker) {
       right: 0px;
       width: 100%;
       border-spacing: 15px;
-      background-color: #fff;
+      background-color: $white;
       padding-top: 15px;
       .full-width-btn {
         padding-left: 15px;
