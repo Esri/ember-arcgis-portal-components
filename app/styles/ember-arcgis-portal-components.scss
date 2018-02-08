@@ -51,7 +51,7 @@ div.panel-body:has(.item-picker) {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 1.5rem;
+          font-size: $font-size-base;
         }
         .shared-by {
           color: $off-black;
@@ -133,7 +133,7 @@ div.panel-body:has(.item-picker) {
         height: 133px;
       }
       h2 {
-        font-size: 1.8rem;
+        font-size: $font-size-h4;
         color: #4c4c4c;
         margin: 0px auto 15px auto;
         font-weight: 500;
