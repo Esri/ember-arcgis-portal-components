@@ -46,7 +46,8 @@ div.panel-body:has(.item-picker) {
         padding: 0.5rem 1rem;
         display: block;
         font-size: 1rem;
-        h2 {
+        p {
+          // controls the contents of the item rows
           margin: 0; // width: 250px;
           white-space: nowrap;
           overflow: hidden;
