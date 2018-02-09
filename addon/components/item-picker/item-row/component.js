@@ -35,7 +35,7 @@ export default Ember.Component.extend({
     return this.get('currentItemId') === this.get('model.id');
   }),
 
-  itemHasEvents: Ember.computed('events', function () {
+  numberOfItems: Ember.computed('events', function () {
     let events = this.get('events');
     let item = this.get('model');
 

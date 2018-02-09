@@ -9,7 +9,7 @@
     </h2>
     <div class="shared-by">
       {{#if events}}
-        ({{itemHasEvents}}) {{t (concat _i18nScope "relatedEvents") }}
+        ({{numberOfItems}}) {{t (concat _i18nScope "relatedEvents") }}
       {{else}}
         {{model.owner}}
       {{/if}}
