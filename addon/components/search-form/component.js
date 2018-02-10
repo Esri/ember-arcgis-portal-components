@@ -12,7 +12,7 @@ export default Ember.Component.extend({
     return this.get('elementId') + 'Input';
   }),
 
-  placeholderi18nKey: Ember.computed('i18nBase', function () {
+  placeholderi18nKey: Ember.computed('i18nBase', 'placeholder', function () {
     return this.get('i18nBase') + 'itemPicker.searchItems';
   }),
 
