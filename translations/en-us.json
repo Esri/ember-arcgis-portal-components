@@ -1,4 +1,11 @@
 {
+  "addons": {
+    "components": {
+      "loadingIndicator": {
+        "defaultMessage":"Loading..."
+      }
+    }
+  },
   "ember-arcgis-portal-components": {
     "itemPicker": {
       "searchDatasets": "Search datasets",
