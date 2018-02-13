@@ -3,80 +3,81 @@
     "components": {
       "loadingIndicator": {
         "defaultMessage":"Loading..."
-      }
-    }
-  },
-  "ember-arcgis-portal-components": {
-    "itemPicker": {
-      "searchDatasets": "Search datasets",
-      "searchItems": "Search items",
-      "rows": "{count} Rows",
-      "datasets": "Datasets",
-      "items": "Items",
-      "itemDetails": "Item Details",
-      "loading": "loading",
-      "loadingLayers": "Loading Layers...",
-      "layerList": "Layers and Tables",
-      "sharedBy": "Shared by",
-      "relatedEvents": "Related Events",
-      "selectedCount": "Total Datasets Selected: {count}",
-      "licenses": {
-        "none": "No license specified",
-        "custom": "Custom License"
       },
-      "noItems": {
-        "withQuery": "No items matched your search.",
-        "withoutQuery": "No items found."
+      "searchForm": {
+        "searchItems":"Search items"
       },
-      "errors": {
-        "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again."
-      },
-      "buttons": {
-        "back": "Back",
-        "select": "Select",
-        "validating": "Validating data...",
-        "selectAnyway": "Select Anyway",
-        "selectMultiple": "Select",
-        "preview": "Preview"
-      },
-      "aria": {
-        "disabled": "Disabled",
-        "first_pg": "First Page",
-        "last_pg": "Last Page",
-        "next": "Next",
-        "prev": "Previous",
-        "chartable-icon": "Attribute can be charted"
-      },
-      "shared": {
-        "content_types": {
-          "spatial": "Spatial Dataset",
-          "table": "Tabular Dataset",
-          "raster": "Raster Dataset",
-          "webmap": "Web Map",
-          "storymap": "Story Map",
-          "document": "Document",
-          "webmappingapp": "Web Mapping Application"
+      "itemPicker": {
+        "searchDatasets": "Search datasets",
+        "searchItems": "Search items",
+        "rows": "{count} Rows",
+        "datasets": "Datasets",
+        "items": "Items",
+        "itemDetails": "Item Details",
+        "loading": "loading",
+        "loadingLayers": "Loading Layers...",
+        "layerList": "Layers and Tables",
+        "sharedBy": "Shared by",
+        "relatedEvents": "Related Events",
+        "selectedCount": "Total Datasets Selected: {count}",
+        "licenses": {
+          "none": "No license specified",
+          "custom": "Custom License"
         },
-        "fieldType": {
-          "esriFieldTypeGlobalID": "Unique ID",
-          "esriFieldTypeGUID": "Unique ID",
-          "esriFieldTypeDouble": "Number",
-          "esriFieldTypeDate": "Date or Time",
-          "esriFieldTypeString": "Text",
-          "esriFieldTypeOID": "Unique ID",
-          "esriFieldTypeInteger": "Number",
-          "esriFieldTypeGeometry": "Geometry",
-          "esriFieldTypeSmallInteger": "Number",
-          "esriFieldTypeSingle": "Number",
-          "esriFieldTypeRaster": "Raster",
-          "esriFieldTypeBlob": "Blob"
+        "noItems": {
+          "withQuery": "No items matched your search.",
+          "withoutQuery": "No items found."
         },
-        "itemType": {
-          "featureService": "Feature Service",
-          "mapService": "Map Service",
-          "imageService": "Image Service",
-          "webMap": "Web Map",
-          "webMappingApplication": "Web Mapping Application"
+        "errors": {
+          "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again."
+        },
+        "buttons": {
+          "back": "Back",
+          "select": "Select",
+          "validating": "Validating data...",
+          "selectAnyway": "Select Anyway",
+          "selectMultiple": "Select",
+          "preview": "Preview"
+        },
+        "aria": {
+          "disabled": "Disabled",
+          "first_pg": "First Page",
+          "last_pg": "Last Page",
+          "next": "Next",
+          "prev": "Previous",
+          "chartable-icon": "Attribute can be charted"
+        },
+        "shared": {
+          "content_types": {
+            "spatial": "Spatial Dataset",
+            "table": "Tabular Dataset",
+            "raster": "Raster Dataset",
+            "webmap": "Web Map",
+            "storymap": "Story Map",
+            "document": "Document",
+            "webmappingapp": "Web Mapping Application"
+          },
+          "fieldType": {
+            "esriFieldTypeGlobalID": "Unique ID",
+            "esriFieldTypeGUID": "Unique ID",
+            "esriFieldTypeDouble": "Number",
+            "esriFieldTypeDate": "Date or Time",
+            "esriFieldTypeString": "Text",
+            "esriFieldTypeOID": "Unique ID",
+            "esriFieldTypeInteger": "Number",
+            "esriFieldTypeGeometry": "Geometry",
+            "esriFieldTypeSmallInteger": "Number",
+            "esriFieldTypeSingle": "Number",
+            "esriFieldTypeRaster": "Raster",
+            "esriFieldTypeBlob": "Blob"
+          },
+          "itemType": {
+            "featureService": "Feature Service",
+            "mapService": "Map Service",
+            "imageService": "Image Service",
+            "webMap": "Web Map",
+            "webMappingApplication": "Web Mapping Application"
+          }
         }
       }
     }

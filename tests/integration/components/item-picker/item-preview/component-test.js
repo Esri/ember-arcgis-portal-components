@@ -30,7 +30,6 @@ test('it renders', function (assert) {
   this.set('isLoading', true);
 
   this.render(hbs`{{item-picker/item-preview
-    _i18nScope="ember-arcgis-portal-components.itemPicker."
     model=model
     onSelectionValidator=onSelectionValidator
     onItemSelected=onItemSelected
@@ -39,7 +38,7 @@ test('it renders', function (assert) {
 
   // assert.equal(this.$().text().trim(), '');
   const el = this.$('.item-picker-current-item-preview');
-  assert.equal(el.find('h2').text().trim(), 'This is the name');
+  assert.equal(el.find('h4').text().trim(), 'This is the name');
   assert.equal(el.find('span').text().trim(), 'Shared by: jupe');
   assert.equal(el.find('.item-picker-current-item-preview-description').text().trim(), 'This is the description');
   assert.equal(el.find('.item-picker-current-item-preview-meta > div').length, 2);

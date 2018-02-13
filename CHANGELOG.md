@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ### Changed
 - add `{{loading-indicator}}` default message string
+- move itemPicker strings under `addons.components` so it will be included for translation
+- `{{search-form }}` uses `i18nScope` to be consistent with other addons
 
 ## [0.5.4]
 - Preview button now takes user to the selected item [Link](https://esriarlington.tpondemand.com/entity/83079)
