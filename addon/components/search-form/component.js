@@ -17,13 +17,29 @@ export default Ember.Component.extend({
     return this.get('elementId') + 'Input';
   }),
 
-  placeholderi18nKey: Ember.computed('_i18nScope', function () {
-    return this.get('_i18nScope') + 'searchItems';
+  clearElementId: Ember.computed('elementId', function () {
+    return this.get('elementId') + 'Clear';
+  }),
+
+  placeholderi18nKey: Ember.computed('i18nBase', function () {
+    return this.get('i18nBase') + 'itemPicker.searchItems';
+  }),
+
+  hasClearedSearch: Ember.computed('_q', function () {
+    let query = this.get('_q');
+    return (query === '');
   }),
 
   submit (e) {
     e.preventDefault();
     let query = this.get('_q');
     Ember.tryInvoke(this, 'onSearch', [query]);
+  },
+
+  actions: {
+    cancel () {
+      this.set('q', '');
+      Ember.tryInvoke(this, 'onSearch', ['']);
+    }
   }
 });
