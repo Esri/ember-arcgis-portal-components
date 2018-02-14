@@ -18,6 +18,13 @@ export default Ember.Component.extend({
   showError: Ember.computed.notEmpty('errorMessage'),
 
   /**
+   * Compute the translation scope
+   */
+  _i18nScope: Ember.computed('i18nScope', function () {
+    return `${this.getWithDefault('i18nScope', 'addons.components.itemPicker')}.`;
+  }),
+
+  /**
    * What should the select button text be? we have variations depending on status
    */
   selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {

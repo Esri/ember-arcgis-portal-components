@@ -33,7 +33,7 @@ export default Ember.Component.extend({
    * Compute the translation scope
    */
   _i18nScope: Ember.computed('i18nScope', function () {
-    return `${this.getWithDefault('i18nScope', 'ember-arcgis-portal-components.itemPicker')}.`;
+    return `${this.getWithDefault('i18nScope', 'addons.components.itemPicker')}.`;
   }),
 
   /**
