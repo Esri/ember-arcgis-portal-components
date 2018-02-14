@@ -25,11 +25,6 @@ export default Ember.Component.extend({
     return this.get('i18nBase') + 'itemPicker.searchItems';
   }),
 
-  hasClearedSearch: Ember.computed('_q', function () {
-    let query = this.get('_q');
-    return (query === '');
-  }),
-
   submit (e) {
     e.preventDefault();
     let query = this.get('_q');
