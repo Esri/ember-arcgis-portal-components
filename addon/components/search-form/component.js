@@ -34,6 +34,7 @@ export default Ember.Component.extend({
   actions: {
     cancel () {
       this.set('q', '');
+      this.set('_q', '');
       Ember.tryInvoke(this, 'onSearch', ['']);
     }
   }
