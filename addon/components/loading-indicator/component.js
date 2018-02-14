@@ -38,9 +38,9 @@ export default Ember.Component.extend({
   isActive: true,
 
   msg: Ember.computed('message', function () {
-    let message = this.get('message') || '';
+    let message = this.getWithDefault('message', '');
     if (!message && !this.get('noMessage')) {
-      message = this.get('intl').findTranslationByKey('ember-arcgis-portal-components.loading-indicator.defaultMessage');
+      message = this.get('intl').findTranslationByKey('addons.components.loadingIndicator.defaultMessage');
     }
     return message;
   })

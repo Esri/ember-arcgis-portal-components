@@ -1,8 +1,8 @@
 <div class="input-group pull-left">
-  <label for="{{inputElementId}}" class="sr-only">{{t placeholderi18nKey}}:</label>
-  <input id={{inputElementId}} value={{readonly q}} class="form-control-tsf" placeholder={{t placeholderi18nKey}} oninput={{action (mut _q) value="target.value"}} />
   <span class="input-group-btn">
     <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
   </span>
+  <label for="{{inputElementId}}" class="sr-only">{{if placeholder placeholder (t placeholderi18nKey)}}:</label>
+  <input id={{inputElementId}} value={{readonly q}} class="form-control-tsf" placeholder={{if placeholder placeholder (t placeholderi18nKey)}} oninput={{action (mut _q) value="target.value"}} >
 </div>
 <div class="clearfix"></div>

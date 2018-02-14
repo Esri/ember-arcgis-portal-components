@@ -17,14 +17,19 @@ export default Ember.Component.extend({
   tagName: 'form',
   classNames: ['portal-search-form', 'form-group-tsf'],
 
-  i18nBase: 'ember-arcgis-portal-components.',
+  /**
+   * Compute the translation scope
+   */
+  _i18nScope: Ember.computed('i18nScope', function () {
+    return `${this.getWithDefault('i18nScope', 'addons.components.searchForm')}.`;
+  }),
 
   inputElementId: Ember.computed('elementId', function () {
     return this.get('elementId') + 'Input';
   }),
 
-  placeholderi18nKey: Ember.computed('i18nBase', function () {
-    return this.get('i18nBase') + 'itemPicker.searchItems';
+  placeholderi18nKey: Ember.computed('_i18nScope', function () {
+    return this.get('_i18nScope') + 'searchItems';
   }),
 
   submit (e) {

@@ -29,6 +29,13 @@ export default Ember.Component.extend({
   showError: Ember.computed.notEmpty('errorMessage'),
 
   /**
+   * Compute the translation scope
+   */
+  _i18nScope: Ember.computed('i18nScope', function () {
+    return `${this.getWithDefault('i18nScope', 'addons.components.itemPicker')}.`;
+  }),
+
+  /**
    * What should the select button text be? we have variations depending on status
    */
   selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {
@@ -57,6 +64,30 @@ export default Ember.Component.extend({
       default:
         return false;
     }
+  }),
+
+  /**
+   * Construct the preview url
+   */
+  previewUrl: Ember.computed('model', function () {
+    const item = this.get('model');
+    let previewURL;
+    // if the item has a url property, use that...
+    if (item.url) {
+      previewURL = item.url;
+    } else {
+      // compute a url based on the type...
+      const protocol = '//';
+      let host = this.get('session.portalHostname');
+      switch (item.type.toLowerCase()) {
+        case 'web map':
+          previewURL = `${protocol}${host}/home/webmap/viewer.html?webmap=${item.id}`;
+          break;
+        default:
+          previewURL = `${protocol}${host}/home/item.html?id=${item.id}`;
+      }
+    }
+    return previewURL;
   }),
 
   /**
@@ -127,18 +158,20 @@ export default Ember.Component.extend({
         if (isService) {
           if (result.layers) {
             layersAndTables = result.layers.concat(result.tables);
-            // if we only have one... select it...
-            if (layersAndTables.length === 1) {
-              layersAndTables[0].checked = true;
-              this.set('selectedLayer', layersAndTables[0]);
-            } else {
-              this.set('selectedLayer', null);
-            }
           }
         } else {
           // we need to make something that looks like a layer out of the getLayerInfo
           layersAndTables.push(result);
         }
+
+        // if we only have one... select it...
+        if (layersAndTables.length === 1) {
+          layersAndTables[0].checked = true;
+          this.set('selectedLayer', layersAndTables[0]);
+        } else {
+          this.set('selectedLayer', null);
+        }
+
         return layersAndTables;
       })
       .catch((err) => {

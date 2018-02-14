@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### Changed
+- add `{{loading-indicator}}` default message string
+- move itemPicker strings under `addons.components` so it will be included for translation
+- `{{search-form }}` uses `i18nScope` to be consistent with other addons
+
+## [0.5.4]
+- Preview button now takes user to the selected item [Link](https://esriarlington.tpondemand.com/entity/83079)
+- Update styling to better provide visual hierarchy [link](https://esriarlington.tpondemand.com/entity/83080)
+- Updated styling and ux for search form [link](https://esriarlington.tpondemand.com/entity/82699)
+
+## [0.5.3]
+### Fixed
+- If only one layer is available, it will now be auto selected [Link](https://esriarlington.tpondemand.com/entity/82678)
 
 ## [0.5.2]
 ### Fixed
