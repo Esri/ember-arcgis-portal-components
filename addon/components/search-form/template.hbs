@@ -5,7 +5,9 @@
   <div class="form-group has-feedback has-clear">
     <label for="{{inputElementId}}" class="sr-only">{{if placeholder placeholder (t placeholderi18nKey)}}:</label>
     <input autocomplete={{if autocomplete autocomplete 'off'}} id={{inputElementId}} value={{readonly _q}} class="form-control form-control-tsf" placeholder={{if placeholder placeholder (t placeholderi18nKey)}} oninput={{action (mut _q) value="target.value"}} >
-    <button class="form-control-feedback clear-button" {{action 'cancel'}}><span class="glyphicon glyphicon-remove"></span></button>
+    {{#if _q}}
+      <button class="form-control-feedback clear-button" {{action 'cancel'}}><span class="glyphicon glyphicon-remove"></span></button>
+    {{/if}}
   </div>
 </div>
 <div class="clearfix"></div>
