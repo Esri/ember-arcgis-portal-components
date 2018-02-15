@@ -9,36 +9,41 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import Ember from 'ember';
+import { debug } from '@ember/debug';
+
+import { computed } from '@ember/object';
+import { inject as service } from '@ember/service';
+import { reads, alias, notEmpty } from '@ember/object/computed';
+import Component from '@ember/component';
 import layout from './template';
 
-export default Ember.Component.extend({
+export default Component.extend({
 
   classNames: [ 'item-picker-current-item-preview' ],
-  description: Ember.computed.reads('model.description'),
-  featureService: Ember.inject.service('feature-service'),
-  forceLayerSelection: Ember.computed.alias('showLayers'),
-  hasSelectedLayer: Ember.computed.notEmpty('selectedLayer'),
-  intl: Ember.inject.service(),
+  description: reads('model.description'),
+  featureService: service('feature-service'),
+  forceLayerSelection: alias('showLayers'),
+  hasSelectedLayer: notEmpty('selectedLayer'),
+  intl: service(),
   isLoading: true,
   isValidating: false,
-  itemService: Ember.inject.service('items-service'),
+  itemService: service('items-service'),
   layout,
   selectAnyway: false,
   shouldValidate: false,
-  showError: Ember.computed.notEmpty('errorMessage'),
+  showError: notEmpty('errorMessage'),
 
   /**
    * Compute the translation scope
    */
-  _i18nScope: Ember.computed('i18nScope', function () {
+  _i18nScope: computed('i18nScope', function () {
     return `${this.getWithDefault('i18nScope', 'addons.components.itemPicker')}.`;
   }),
 
   /**
    * What should the select button text be? we have variations depending on status
    */
-  selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {
+  selectButtonText: computed('isValidating', 'selectAnyway', function () {
     const intl = this.get('intl');
     let key = 'buttons.select';
     if (this.get('isValidating')) {
@@ -55,7 +60,7 @@ export default Ember.Component.extend({
   * ... a feature service
   */
 
-  showLayers: Ember.computed('model.type', function () {
+  showLayers: computed('model.type', function () {
     const type = this.get('model.type');
     switch (type.toLowerCase()) {
       case 'feature service':
@@ -69,7 +74,7 @@ export default Ember.Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: Ember.computed('model', function () {
+  previewUrl: computed('model', function () {
     const item = this.get('model');
     let previewURL;
     // if the item has a url property, use that...
@@ -95,7 +100,7 @@ export default Ember.Component.extend({
    * ... we have an error
    * ... we need to choose a layer, and have not selected one
    */
-  isSelectDisabled: Ember.computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
+  isSelectDisabled: computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
     const errorMessage = this.get('errorMessage');
     let result = false;
     if (this.get('isValidating')) {
@@ -206,7 +211,7 @@ export default Ember.Component.extend({
           layerList: [],
           selectedLayer: null,
         });
-        Ember.debug(`Error fetching layers ${err}`);
+        debug(`Error fetching layers ${err}`);
         this.set('errorMessage', {
           status: 'error',
           message: err.message || 'Error accessing service.'
@@ -239,7 +244,7 @@ export default Ember.Component.extend({
   /**
    * Get the translated form of the Item Type
    */
-  itemType: Ember.computed('_i18nScope', 'model.type', function () {
+  itemType: computed('_i18nScope', 'model.type', function () {
     const itemType = this.get('model.type');
     let result = itemType;
     const key = `${this.get('_i18nScope')}shared.itemType.${itemType.camelize()}`;
@@ -254,7 +259,7 @@ export default Ember.Component.extend({
   /**
    * What class do we use for the message...
    */
-  messageClass: Ember.computed('errorMessage.status', function () {
+  messageClass: computed('errorMessage.status', function () {
     if (this.get('errorMessage.status') === 'warning') {
       return 'alert-warning';
     } else if (this.get('errorMessage.status') === 'error') {
@@ -267,7 +272,7 @@ export default Ember.Component.extend({
      * Fires when a layer is selected
      */
     onLayerSelected (layer) {
-      Ember.debug(`Layer selected ${layer.name}:${layer.id}`);
+      debug(`Layer selected ${layer.name}:${layer.id}`);
       this.set('selectedLayer', layer);
     },
     /**

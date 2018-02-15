@@ -9,9 +9,9 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import Ember from 'ember';
+import Component from '@ember/component';
 import layout from './template';
 
-export default Ember.Component.extend({
+export default Component.extend({
   layout
 });
