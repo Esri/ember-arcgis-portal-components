@@ -1,5 +1,13 @@
 # ember-arcgis-portal-components
 
+> Ember Components for interacting with ArcGIS Online/Enterprise items.
+
+This repository contains standalone components from [ArcGIS Hub](https://hub.arcgis.com) for interacting with ArcGIS Online and Enterprise items, making it extremely simple to include a responsive search dialog in your own Ember, [Bootstrap](https://getbootstrap.com/) application.
+
+Check out the [live demo](https://esri.github.io/ember-arcgis-portal-components/#/itempicker)
+
+![screenshot](screenshot.png)
+
 ## Installation
 
 ```
@@ -10,12 +18,14 @@ ember install ember-arcgis-portal-components
 
 ### Item Picker
 
-The item picker component allows a user to search a portal for items, see a preview of the item, and then get the item returned. While commonly used in a modal, the component can be used in any context. [Clone the repo locally and run the dummy application to see examples]()
+The item picker component allows a user to search a portal for items, see a preview of the item, and then get the item returned. While commonly used in a modal, the component can be used in any context.
 
 ### Layer Picker
+
 Layer picker is part of the item picker. It allows for items with multiple layers to display them as radio buttons. This will then allow the user to select which layer they would like to use. The layer picker will display by default if the item is type `Feature Service` or `Map Service`.
 
 ### Generating a New Component
+
 When generating a new component, please structure your files in the following order. This will help standardize the files and keep everything in an organized format:
 
 1. Injections
@@ -27,7 +37,6 @@ When generating a new component, please structure your files in the following or
 6. Functions
 7. Actions
 
-
 ## Options for Item Picker
 | Flag | Type | Required | Purpose |
 |----|:-------:|:-------:|----------|
@@ -37,7 +46,6 @@ When generating a new component, please structure your files in the following or
 |   [catalog]()   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
 |   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
 |  [portalOpts]()    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
-
 
 ### Examples
 
