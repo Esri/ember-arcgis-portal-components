@@ -8,6 +8,10 @@
     height: 33px;
     width: 100%;
   }
+  .clear-button{
+    z-index: 10;
+    pointer-events: auto;
+  }
   input {
     border: 0px;
     box-shadow: none;

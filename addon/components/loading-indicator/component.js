@@ -9,7 +9,10 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import Ember from 'ember';
+import { computed } from '@ember/object';
+
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import layout from './template';
 
 /**
@@ -25,9 +28,9 @@ import layout from './template';
  * {{loading-indicator noMessage=true}}
  */
 
-export default Ember.Component.extend({
+export default Component.extend({
   layout,
-  intl: Ember.inject.service(),
+  intl: service(),
 
   tagName: 'div',
   classNames: [ 'loader' ],
@@ -37,7 +40,7 @@ export default Ember.Component.extend({
   message: '',
   isActive: true,
 
-  msg: Ember.computed('message', function () {
+  msg: computed('message', function () {
     let message = this.getWithDefault('message', '');
     if (!message && !this.get('noMessage')) {
       message = this.get('intl').findTranslationByKey('addons.components.loadingIndicator.defaultMessage');

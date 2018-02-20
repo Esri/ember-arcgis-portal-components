@@ -9,10 +9,13 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import Ember from 'ember';
+import { tryInvoke } from '@ember/utils';
+
+import { computed } from '@ember/object';
+import Component from '@ember/component';
 import layout from './template';
 
-export default Ember.Component.extend({
+export default Component.extend({
   layout,
   tagName: 'form',
   classNames: ['portal-search-form', 'form-group-tsf'],
@@ -20,21 +23,33 @@ export default Ember.Component.extend({
   /**
    * Compute the translation scope
    */
-  _i18nScope: Ember.computed('i18nScope', function () {
+  _i18nScope: computed('i18nScope', function () {
     return `${this.getWithDefault('i18nScope', 'addons.components.searchForm')}.`;
   }),
 
-  inputElementId: Ember.computed('elementId', function () {
+  inputElementId: computed('elementId', function () {
     return this.get('elementId') + 'Input';
   }),
 
-  placeholderi18nKey: Ember.computed('_i18nScope', function () {
+  placeholderi18nKey: computed('_i18nScope', function () {
     return this.get('_i18nScope') + 'searchItems';
   }),
+
+  didReceiveAttrs () {
+    this._super(...arguments);
+    this.set('_q', this.get('q'));
+  },
 
   submit (e) {
     e.preventDefault();
     let query = this.get('_q');
-    Ember.tryInvoke(this, 'onSearch', [query]);
+    tryInvoke(this, 'onSearch', [query]);
+  },
+
+  actions: {
+    cancel () {
+      this.set('_q', '');
+      tryInvoke(this, 'onSearch', ['']);
+    }
   }
 });

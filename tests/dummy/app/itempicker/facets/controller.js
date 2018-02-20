@@ -1,11 +1,13 @@
-import Ember from 'ember';
+import $ from 'jquery';
+import { A } from '@ember/array';
+import Controller from '@ember/controller';
 
-export default Ember.Controller.extend({
+export default Controller.extend({
   selectedItem: null,
 
   url: 'http://dc.mapsqa.arcgis.com',
 
-  catalog: Ember.A([
+  catalog: A([
     {
       name: 'All',
       params: {
@@ -128,14 +130,17 @@ export default Ember.Controller.extend({
     }
   ]),
 
-  previewParams: {
-    showLayers: true,
-    forceLayerSelection: true
+  init () {
+    this._super(...arguments);
+    this.set('previewParams', {
+      showLayers: true,
+      forceLayerSelection: true
+    });
   },
 
   actions: {
     onSelectItem (selected) {
-      Ember.$('#myModal').modal('hide');
+      $('#myModal').modal('hide');
       this.set('selectedItem', selected);
     },
   }
