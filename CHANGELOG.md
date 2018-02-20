@@ -2,7 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [0.7.0]
+### Changed
+- Upgrade to ember 2.18 [link](https://esriarlington.tpondemand.com/entity/83424)
+### Added
+- Prepare for open sourcing of repository [link 1](https://github.com/ArcGIS/ember-arcgis-portal-components/pull/34) [link 2](https://github.com/ArcGIS/ember-arcgis-portal-components/pull/45)
+- Add button to remove the current search [link](https://esriarlington.tpondemand.com/entity/82642)
+
+## [0.6.0]
 ### Changed
 - add `{{loading-indicator}}` default message string
 - move itemPicker strings under `addons.components` so it will be included for translation
