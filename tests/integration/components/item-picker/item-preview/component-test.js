@@ -1,12 +1,9 @@
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
-import instanceInitializer from 'dummy/instance-initializers/ember-intl';
 
 moduleForComponent('item-picker/item-preview', 'Integration | Component | item picker/item preview', {
   integration: true,
   setup () {
-    // manually invoke the ember-intl initializer
-    instanceInitializer.initialize(this);
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
   }

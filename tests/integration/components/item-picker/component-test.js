@@ -1,15 +1,16 @@
-import Ember from 'ember';
+import { A } from '@ember/array';
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
-import instanceInitializer from 'dummy/instance-initializers/ember-intl';
+import Service from '@ember/service';
 
 moduleForComponent('item-picker', 'Integration | Component | item picker', {
   integration: true,
   setup () {
-    // manually invoke the ember-intl initializer
-    instanceInitializer.initialize(this);
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
+
+    const session = Service.extend({});
+    this.register('service:session', session);
   }
 });
 
@@ -33,7 +34,7 @@ test('it renders results', function (assert) {
     modified: 1411060006000,
     type: 'Web Map'
   };
-  const items = Ember.A([item]);
+  const items = A([item]);
   this.set('items', { results: items });
   this.render(hbs`{{item-picker items=items }}`);
   assert.equal(this.$('.item-picker-item-results-item').length, 1);

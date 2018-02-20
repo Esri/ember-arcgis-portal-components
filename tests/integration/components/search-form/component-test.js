@@ -6,7 +6,6 @@ moduleForComponent('search-form', 'Integration | Component | search form', {
   beforeEach () {
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
-    this.inject.service('intl', {as: 'intl'});
   }
 });
 

@@ -9,12 +9,16 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import Ember from 'ember';
+import { computed } from '@ember/object';
+
+import { notEmpty, reads } from '@ember/object/computed';
+import { inject as service } from '@ember/service';
+import Component from '@ember/component';
 import layout from './template';
 
-export default Ember.Component.extend({
+export default Component.extend({
   layout,
-  intl: Ember.inject.service(),
+  intl: service(),
 
   classNames: [ 'item-picker-current-item-preview' ],
 
@@ -28,20 +32,20 @@ export default Ember.Component.extend({
   isValidating: false,
   selectAnyway: false,
   shouldValidate: false,
-  showError: Ember.computed.notEmpty('errorMessage'),
-  description: Ember.computed.reads('model.description'),
+  showError: notEmpty('errorMessage'),
+  description: reads('model.description'),
 
   /**
    * Compute the translation scope
    */
-  _i18nScope: Ember.computed('i18nScope', function () {
+  _i18nScope: computed('i18nScope', function () {
     return `${this.getWithDefault('i18nScope', 'addons.components.itemPicker')}.`;
   }),
 
   /**
    * What should the select button text be? we have variations depending on status
    */
-  selectButtonText: Ember.computed('isValidating', 'selectAnyway', function () {
+  selectButtonText: computed('isValidating', 'selectAnyway', function () {
     const intl = this.get('intl');
     let key = 'buttons.select';
     if (this.get('isValidating')) {
@@ -55,7 +59,7 @@ export default Ember.Component.extend({
   /**
    * Get the translated form of the Item Type
    */
-  itemType: Ember.computed('_i18nScope', 'model.type', function () {
+  itemType: computed('_i18nScope', 'model.type', function () {
     const itemType = this.get('model.type');
     let result = itemType;
     const key = `${this.get('_i18nScope')}shared.itemType.${itemType.camelize()}`;
@@ -70,7 +74,7 @@ export default Ember.Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: Ember.computed('model', function () {
+  previewUrl: computed('model', function () {
     const item = this.get('model');
     let previewURL;
     // if the item has a url property, use that...
@@ -94,7 +98,7 @@ export default Ember.Component.extend({
   /**
    * What class should be used for any messages
    */
-  messageClass: Ember.computed('errorMessage', function () {
+  messageClass: computed('errorMessage', function () {
     if (this.get('errorMessage.status') === 'warning') {
       return 'alert-warning';
     } else if (this.get('errorMessage.status') === 'error') {
