@@ -2,12 +2,10 @@ import { resolve } from 'rsvp';
 import Service from '@ember/service';
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
-import instanceInitializer from 'dummy/instance-initializers/ember-intl';
 
 moduleForComponent('item-picker/feature-service-preview', 'Integration | Component | item picker/feature service preview', {
   integration: true,
   setup () {
-    instanceInitializer.initialize(this);
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
 

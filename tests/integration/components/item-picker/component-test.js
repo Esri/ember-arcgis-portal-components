@@ -1,15 +1,16 @@
 import { A } from '@ember/array';
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
-import instanceInitializer from 'dummy/instance-initializers/ember-intl';
+import Service from '@ember/service';
 
 moduleForComponent('item-picker', 'Integration | Component | item picker', {
   integration: true,
   setup () {
-    // manually invoke the ember-intl initializer
-    instanceInitializer.initialize(this);
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
+
+    const session = Service.extend({});
+    this.register('service:session', session);
   }
 });
 
