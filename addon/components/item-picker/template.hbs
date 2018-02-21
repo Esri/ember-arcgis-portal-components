@@ -24,7 +24,7 @@
           <li><h3>{{noItemsFoundMsg}}</h3></li>
         {{else}}
           {{#each items.results as |item|}}
-            {{item-picker/item-row
+            {{component rowComponent
               selectMultiple=selectMultiple
               itemsToAdd=itemsToAdd
               _i18nScope=_i18nScope

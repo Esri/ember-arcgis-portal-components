@@ -82,6 +82,15 @@ export default Component.extend({
     return componentName;
   }),
 
+  /**
+   * Determine what preview component to use. This allows us to create
+   * per-type UX for the preview
+   */
+  rowComponent: computed('rowComponent', function () {
+    let row = this.get('rowComponent');
+    return !row ? 'item-picker/item-row' : row;
+  }),
+
   inputElementId: computed(function () {
     return `${this.get('elementId')}-search-items`;
   }),
