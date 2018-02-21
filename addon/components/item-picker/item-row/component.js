@@ -50,19 +50,6 @@ export default Component.extend({
     return this.get('currentItemId') === this.get('model.id');
   }),
 
-  numberOfItems: computed('events', function () {
-    let events = this.get('events');
-    let item = this.get('model');
-
-    // filter out only the initiative we want
-    let filteredEvents = events.filter(event => {
-      return event.initiativeId === item.id;
-    });
-
-    // send back that length, otherwise there are no events
-    return (filteredEvents.length > 0) ? filteredEvents[0].events.length : 0;
-  }),
-
   typeOfData: computed('model.type', function () {
     let type = this.get('model.type');
     switch (type) {
