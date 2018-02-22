@@ -19,7 +19,7 @@
         "layerList": "Layers and Tables",
         "sharedBy": "Shared by",
         "relatedEvents": "Related Events",
-        "selectedCount": "Total Datasets Selected: {count}",
+        "selectedCount": "Total Selected: {count}",
         "licenses": {
           "none": "No license specified",
           "custom": "Custom License"
