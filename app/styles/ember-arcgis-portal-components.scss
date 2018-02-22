@@ -27,6 +27,7 @@ div.panel-body:has(.item-picker) {
 .item-picker {
   position: relative;
   min-height: 45rem;
+  padding: 1.5% 2.5% 0 2.5%;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
