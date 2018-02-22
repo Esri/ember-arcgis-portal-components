@@ -24,7 +24,7 @@
           <li><h3>{{noItemsFoundMsg}}</h3></li>
         {{else}}
           {{#each items.results as |item|}}
-            {{component rowComponent
+            {{component row
               selectMultiple=selectMultiple
               itemsToAdd=itemsToAdd
               _i18nScope=_i18nScope
@@ -37,7 +37,7 @@
 
       {{#if currentItem}}
         <section class="item-picker-current-item">
-          {{component previewComponent
+          {{component preview
             _i18nScope=_i18nScope
             model=currentItem
             params=previewParams

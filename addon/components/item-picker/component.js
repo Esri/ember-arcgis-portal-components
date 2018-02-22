@@ -69,7 +69,7 @@ export default Component.extend({
    * Determine what preview component to use. This allows us to create
    * per-type UX for the preview
    */
-  previewComponent: computed('currentItem', function () {
+  preview: computed('currentItem', function () {
     let type = this.get('currentItem.type');
     let componentName = 'item-picker/item-preview';
 
@@ -86,7 +86,7 @@ export default Component.extend({
    * Determine what preview component to use. This allows us to create
    * per-type UX for the preview
    */
-  rowComponent: computed('rowComponent', function () {
+  row: computed('rowComponent', function () {
     let row = this.get('rowComponent');
     return !row ? 'item-picker/item-row' : row;
   }),
