@@ -20,6 +20,7 @@
         "sharedBy": "Shared by",
         "relatedEvents": "Related Events",
         "selectedCount": "Total Selected: {count}",
+        "deselectAll": "Deselect All",
         "licenses": {
           "none": "No license specified",
           "custom": "Custom License"

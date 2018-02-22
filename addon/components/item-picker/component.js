@@ -287,6 +287,14 @@ export default Component.extend({
       return this.get('selectAction')(item, options);
     },
 
+    /**
+     * Deselects all currently selected items when in
+     * multi-select mode
+     */
+    deselectAll () {
+      this.set('itemsToAdd', []);
+    },
+
     cancelAction () {
       this.setProperties({
         errorHash: null,

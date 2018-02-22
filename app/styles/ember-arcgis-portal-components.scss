@@ -37,6 +37,10 @@ div.panel-body:has(.item-picker) {
   }
   .item-picker-status {
     margin: 8px 0;
+    .anchor-tag-button {
+      cursor: pointer;
+      margin-left: 10px;
+    }
   }
   ul.results-list {
     padding: 0;
