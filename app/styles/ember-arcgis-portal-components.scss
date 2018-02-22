@@ -81,7 +81,10 @@ div.panel-body:has(.item-picker) {
           display: inline-block;
         }
         input {
-          top: -22px;
+          top: -28px;
+          left: 18px;
+          width:30px;
+          height:30px;
         }
       }
     }
