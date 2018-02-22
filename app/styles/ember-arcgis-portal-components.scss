@@ -1,5 +1,4 @@
 .portal-search-form {
-  margin-bottom: 20px;
   border-bottom: 1px solid $calcite-gray-light;
   .form-group-tsf {
     margin-bottom: 0px;
@@ -256,6 +255,9 @@ div.panel-body:has(.item-picker) {
         }
       }
     }
+  }
+  .item-picker-results-container {
+    margin: 25px 0px;
   }
 }
 .layer-picker-list {

@@ -24,7 +24,7 @@ export default Component.extend({
   layout,
   intl: service(),
   itemService: service('items-service'),
-  classNames: [ 'item-picker', 'clearfix', 'row' ],
+  classNames: [ 'item-picker', 'clearfix' ],
 
   /**
    * Startup the component... we may need to issue an immediate search...
