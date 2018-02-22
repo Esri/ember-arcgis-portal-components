@@ -61,6 +61,7 @@ div.panel-body:has(.item-picker) {
           overflow: hidden;
           text-overflow: ellipsis;
           font-size: $font-size-base;
+          font-weight: 600;
         }
         .shared-by {
           color: $off-black;
