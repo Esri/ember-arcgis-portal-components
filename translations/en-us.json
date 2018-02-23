@@ -19,8 +19,9 @@
         "layerList": "Layers and Tables",
         "sharedBy": "Shared by",
         "relatedEvents": "Related Events",
+        "selectedCount": "Total Selected: {count}",
+        "deselectAll": "Deselect All",
         "gettingEventCount": "Getting Event Count...",
-        "selectedCount": "Total Datasets Selected: {count}",
         "licenses": {
           "none": "No license specified",
           "custom": "Custom License"

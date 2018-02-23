@@ -24,7 +24,7 @@ export default Component.extend({
   layout,
   intl: service(),
   itemService: service('items-service'),
-  classNames: [ 'item-picker', 'clearfix', 'row' ],
+  classNames: [ 'item-picker', 'clearfix' ],
 
   /**
    * Startup the component... we may need to issue an immediate search...
@@ -293,6 +293,14 @@ export default Component.extend({
     onPreviewSelected (item, options) {
       // call the closure action passed into this component
       return this.get('selectAction')(item, options);
+    },
+
+    /**
+     * Deselects all currently selected items when in
+     * multi-select mode
+     */
+    deselectAll () {
+      this.set('itemsToAdd', []);
     },
 
     cancelAction () {
