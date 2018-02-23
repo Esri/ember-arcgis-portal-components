@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.8.0]
+### Changed
+- Updated the item picker to use contextual components and accept an optional parameter of `rowComponent` [link](https://esriarlington.tpondemand.com/entity/83325)
+- UX tweaks: [link](https://esriarlington.tpondemand.com/entity/83365)
+  - styling updates to checkboxes, padding, and titles [link](https://esriarlington.tpondemand.com/entity/83371)
+  - Add a `Deselect All` button for multiselect [link](https://esriarlington.tpondemand.com/entity/83368)
+
 ## [0.7.0]
 ### Changed
 - Upgrade to ember 2.18 [link](https://esriarlington.tpondemand.com/entity/83424)
