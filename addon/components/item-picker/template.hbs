@@ -13,7 +13,7 @@
     </div>
   {{/if}}
 
-  <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
+<div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
     {{search-form q=q onSearch=(action "doSearch")}}
 
     <div class="item-picker-results-container">
@@ -24,12 +24,11 @@
           <li><h3>{{noItemsFoundMsg}}</h3></li>
         {{else}}
           {{#each items.results as |item|}}
-            {{item-picker/item-row
+            {{component row
               selectMultiple=selectMultiple
               itemsToAdd=itemsToAdd
               _i18nScope=_i18nScope
               model=item
-              events=eventsArray
               currentItemId=currentItem.id
               onClick=(action "onItemClick")}}
           {{/each}}
@@ -38,7 +37,7 @@
 
       {{#if currentItem}}
         <section class="item-picker-current-item">
-          {{component previewComponent
+          {{component preview
             _i18nScope=_i18nScope
             model=currentItem
             params=previewParams
