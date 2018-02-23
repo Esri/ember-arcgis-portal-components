@@ -21,6 +21,7 @@
         "relatedEvents": "Related Events",
         "selectedCount": "Total Selected: {count}",
         "deselectAll": "Deselect All",
+        "gettingEventCount": "Getting Event Count...",
         "licenses": {
           "none": "No license specified",
           "custom": "Custom License"
