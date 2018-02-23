@@ -46,6 +46,7 @@ When generating a new component, please structure your files in the following or
 |   [catalog]()   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
 |   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
 |  [portalOpts]()    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
+|  [rowComponent](#custom-row-component-rowComponent)    |   String<br><small>(Component)</small>      |  No    |   Allows a different row layout to be passed into the item picker.       |
 
 ### Examples
 
@@ -155,6 +156,17 @@ In the template:
 {{item-picker
       selectAction=(action "onSelectItem")
       portalOpts=portalOpts }}
+```
+
+
+#### Custom Row Component (rowComponent)
+
+In the template:
+
+```js
+{{item-picker
+      selectAction=(action "onSelectItem")
+      rowComponent="name-of-custom-component" }}
 ```
 
 ### Setup
