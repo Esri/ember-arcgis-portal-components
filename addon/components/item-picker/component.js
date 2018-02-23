@@ -87,8 +87,7 @@ export default Component.extend({
    * per-type UX for the preview
    */
   row: computed('rowComponent', function () {
-    let row = this.get('rowComponent');
-    return !row ? 'item-picker/item-row' : row;
+    return this.getWithDefault('rowComponent', 'item-picker/item-row')
   }),
 
   inputElementId: computed(function () {
