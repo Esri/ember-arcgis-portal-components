@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+##[0.8.2]
+### Removed
+- Remove form-group class from search-form component
 
 ##[0.8.1]
 ### Removed
