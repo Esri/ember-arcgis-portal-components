@@ -53,7 +53,7 @@
     {{#if selectMultiple}}
       <div class="item-picker-status">
         {{t (concat _i18nScope "selectedCount") count=itemsToAdd.length}}
-        <a {{action 'deselectAll'}} class="anchor-tag-button">{{t (concat _i18nScope "deselectAll")}}</a>
+        <button {{action 'deselectAll'}} class="btn btn-link">{{t (concat _i18nScope "deselectAll")}}</button>
       </div>
     {{/if}}
 
