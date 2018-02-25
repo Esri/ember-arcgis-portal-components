@@ -36,6 +36,11 @@ div.panel-body:has(.item-picker) {
     margin: 0 0 15px 0;
   }
   .item-picker-status {
+    .btn, .btn-link {
+      padding: 0px 12px;
+    }
+    padding: 6px 0px;
+    height: 33px;
     margin: 8px 0;
   }
   ul.results-list {
