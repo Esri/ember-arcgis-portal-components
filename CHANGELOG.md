@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ## [0.8.3]
-## Added
+### Added
 - Add documentation on `rowComponent` usage
 - Update links in documentation
 - More minor UX tweaks
