@@ -4,8 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.8.3]
+### Added
+- Add documentation on `rowComponent` usage
+- Update links in documentation
+- More minor UX tweaks
 
-##[0.8.1]
+## [0.8.2]
+### Removed
+- Remove `form-group` class that was causing margin issues
+
+## [0.8.1]
 ### Removed
 - Moved custom translations outside of item picker and into monorepo
 
