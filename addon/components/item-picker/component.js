@@ -266,13 +266,19 @@ export default Component.extend({
     /**
      * When an item is clicked in the list
      */
-    onItemClick (item) {
+    onItemClick (item, options) {
       if (this.get('selectMultiple')) {
         const itemsToAdd = this.get('itemsToAdd');
         const existingObj = itemsToAdd.findBy('id', item.id);
         if (!existingObj) {
+          if (options.numberOfEvents === 0) {
+            this.set('showEventError', true);
+          } else {
+            this.set('showEventError', false);
+          }
           itemsToAdd.pushObject(item);
         } else {
+          this.set('showEventError', false);
           itemsToAdd.removeObject(existingObj);
         }
       } else {

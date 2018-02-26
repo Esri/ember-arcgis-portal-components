@@ -13,6 +13,10 @@
     </div>
   {{/if}}
 
+  {{#if showEventError}}
+    <div class="alert alert-warning" role="alert">This is a test.</div>
+  {{/if}}
+
 <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
     {{search-form q=q onSearch=(action "doSearch")}}
 
