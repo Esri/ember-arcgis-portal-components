@@ -40,12 +40,13 @@ When generating a new component, please structure your files in the following or
 ## Options for Item Picker
 | Flag | Type | Required | Purpose |
 |----|:-------:|:-------:|----------|
-|   [selectAction]()   |     Function<br><small>(Closure Action)</small>      |   Yes   | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action.   |
-|  [searchItemsOnInit]()   |   Boolean   |No| Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
-|   [selectMultiple]()   |   Boolean      |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
-|   [catalog]()   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
-|   [onSelectionValidator]()   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
-|  [portalOpts]()    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
+|   [selectAction](#default-usage-selectaction)   |     Function<br><small>(Closure Action)</small>      |   Yes   | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action.   |
+|  [searchItemsOnInit](#search-on-initialize-searchitemsoninit)   |   Boolean   |No| Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
+|   [selectMultiple](#multi-select-selectmultiple)   |   Boolean      |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
+|   [catalog](#facets-catalog)   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
+|   [onSelectionValidator](#validation-onselectionvalidator)   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
+|  [portalOpts](#portal-options-portalopts)    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
+|  [rowComponent](#custom-row-component-rowcomponent)    |   String<br><small>(Component)</small>      |  No    |   Allows a different row layout to be passed into the item picker.       |
 
 ### Examples
 
@@ -155,6 +156,17 @@ In the template:
 {{item-picker
       selectAction=(action "onSelectItem")
       portalOpts=portalOpts }}
+```
+
+
+#### Custom Row Component (rowComponent)
+
+In the template:
+
+```js
+{{item-picker
+      selectAction=(action "onSelectItem")
+      rowComponent="name-of-custom-component" }}
 ```
 
 ### Setup
