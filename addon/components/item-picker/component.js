@@ -317,7 +317,10 @@ export default Component.extend({
      * multi-select mode
      */
     deselectAll () {
-      this.set('itemsToAdd', []);
+      this.setProperties({
+        'itemsToAdd': [],
+        'currentMessage': null
+      });
     },
 
     cancelAction () {
