@@ -43,6 +43,7 @@ export default Component.extend({
   disableAddItems: not('hasItemsToAdd'),
   showNoItemsMsg: notEmpty('noItemsFoundMsg'),
   hasItemsToAdd: notEmpty('itemsToAdd'),
+  showMessage: notEmpty('currentMessage'),
   isValidating: false,
   selectAnyway: false,
   shouldValidate: false,
@@ -89,8 +90,6 @@ export default Component.extend({
   row: computed('rowComponent', function () {
     return this.getWithDefault('rowComponent', 'item-picker/item-row');
   }),
-
-  showMessage: notEmpty('currentMessage'),
 
   inputElementId: computed(function () {
     return `${this.get('elementId')}-search-items`;
