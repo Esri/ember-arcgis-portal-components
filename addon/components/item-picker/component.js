@@ -237,13 +237,14 @@ export default Component.extend({
     this.set('selectedCatalogName', selectedCatalog.name);
   },
 
+  /**
+   * Shows the validation message if one is given
+   */
+  showMultiValidationMessage (message) {
+    this.set('currentMessage', message);
+  },
+
   actions: {
-    /**
-     * Shows the validation message if one is given
-     */
-    showMultiValidationMessage (response) {
-      this.set('currentMessage', response.message);
-    },
     /**
      * Fired when a facet is selected
      */
