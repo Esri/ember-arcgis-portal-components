@@ -274,23 +274,32 @@ export default Component.extend({
     /**
      * When an item is clicked in the list
      */
-    onItemClick (item) {
+    onItemClick (model) {
       if (this.get('selectMultiple')) {
+        let validator = this.get('onSelectionValidator');
         const itemsToAdd = this.get('itemsToAdd');
-        const existingObj = itemsToAdd.findBy('id', item.id);
+        const existingObj = itemsToAdd.findBy('id', model.item.id);
         if (!existingObj) {
-          itemsToAdd.pushObject(item);
+          itemsToAdd.pushObject(model.item);
         } else {
           itemsToAdd.removeObject(existingObj);
         }
+
+        if (validator) {
+          validator(model).then(response => {
+            if (response.state !== 'ok') {
+              this.showMultiValidationMessage(response.message);
+            }
+          });
+        }
       } else {
-        if (this.get('currentItem.id') === item.id) {
+        if (this.get('currentItem.id') === model.item.id) {
           this.set('currentItem', null);
         } else {
           this.setProperties({
             errorHash: null,
             selectAnyway: false,
-            currentItem: item
+            currentItem: model.item
           });
         }
       }

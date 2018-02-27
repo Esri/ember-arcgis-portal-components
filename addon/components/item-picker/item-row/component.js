@@ -72,7 +72,10 @@ export default Component.extend({
 
   actions: {
     selectItem (item) {
-      this.get('onClick')(item);
+      let model = {
+        item: item
+      };
+      this.get('onClick')(model);
     },
   }
 
