@@ -13,6 +13,8 @@
     </div>
   {{/if}}
 
+  {{#if showMessage}}
+    <div class="alert alert-warning" role="alert">{{t (concat _i18nScope) "loading"}}</div>
   {{/if}}
 
 <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
@@ -30,8 +32,10 @@
               selectMultiple=selectMultiple
               itemsToAdd=itemsToAdd
               _i18nScope=_i18nScope
+              onSelectionValidator=onSelectionValidator
               model=item
               currentItemId=currentItem.id
+              onValidationFailure=(action 'showMultiValidationMessage')
               onClick=(action "onItemClick")}}
           {{/each}}
         {{/if}}

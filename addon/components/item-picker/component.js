@@ -90,6 +90,8 @@ export default Component.extend({
     return this.getWithDefault('rowComponent', 'item-picker/item-row');
   }),
 
+  showMessage: notEmpty('currentMessage'),
+
   inputElementId: computed(function () {
     return `${this.get('elementId')}-search-items`;
   }),
@@ -237,6 +239,12 @@ export default Component.extend({
   },
 
   actions: {
+    /**
+     * Shows the validation message if one is given
+     */
+    showMultiValidationMessage (response) {
+      this.set('currentMessage', response.message);
+    },
     /**
      * Fired when a facet is selected
      */
