@@ -70,8 +70,8 @@ export default Component.extend({
    * Determine what preview component to use. This allows us to create
    * per-type UX for the preview
    */
-  preview: computed('currentItem', function () {
-    let type = this.get('currentItem.type');
+  preview: computed('currentModel.item', function () {
+    let type = this.get('currentModel.item.type');
     let componentName = 'item-picker/item-preview';
 
     switch (type.toLowerCase()) {
@@ -186,7 +186,7 @@ export default Component.extend({
     let isValidGuid = isGuid(q);
     this.setProperties({
       loading: true,
-      currentItem: null,
+      currentModel: null,
       items: null,
     });
 
@@ -293,13 +293,13 @@ export default Component.extend({
           });
         }
       } else {
-        if (this.get('currentItem.id') === model.item.id) {
-          this.set('currentItem', null);
+        if (this.get('currentModel.item.id') === model.item.id) {
+          this.set('currentModel.item', null);
         } else {
           this.setProperties({
             errorHash: null,
             selectAnyway: false,
-            currentItem: model.item
+            currentModel: model
           });
         }
       }
@@ -327,7 +327,7 @@ export default Component.extend({
       this.setProperties({
         errorHash: null,
         selectAnyway: false,
-        currentItem: null,
+        currentModel: null,
         itemsToAdd: []
       });
     }
