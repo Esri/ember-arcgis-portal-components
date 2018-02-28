@@ -204,8 +204,10 @@ export default Component.extend({
       sortField: 'title'
     };
 
-    // allow portalOpts to be passed in so we can access
-    // other portals besides the one our session is auth'd to
+    /**
+     Allow portalOpts to be passed in so we can access
+     other portals besides the one our session is auth'd to
+    */
     this.get('itemService').search(params, this.get('portalOpts'))
       .then((resp) => {
         this.set('items', resp);
