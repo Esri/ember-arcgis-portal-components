@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ### Changed
 - Updated `onItemClick` to expect a model instead of just an item
+### Added
+- Readded `form-group` class for optimum spacing
 
 ## [0.8.3]
 ### Added
