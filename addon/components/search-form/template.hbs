@@ -2,7 +2,7 @@
   <span class="input-group-btn">
     <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
   </span>
-  <div class="has-feedback has-clear">
+  <div class="form-group has-feedback has-clear">
     <label for="{{inputElementId}}" class="sr-only">{{if placeholder placeholder (t placeholderi18nKey)}}:</label>
     <input autocomplete={{if autocomplete autocomplete 'off'}} id={{inputElementId}} value={{readonly _q}} class="form-control form-control-tsf" placeholder={{if placeholder placeholder (t placeholderi18nKey)}} oninput={{action (mut _q) value="target.value"}} >
     {{#if _q}}
