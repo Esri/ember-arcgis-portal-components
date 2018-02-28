@@ -9,8 +9,6 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import { next } from '@ember/runloop';
-
 import { inject as service } from '@ember/service';
 import { computed } from '@ember/object';
 import Component from '@ember/component';
