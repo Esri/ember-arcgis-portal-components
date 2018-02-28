@@ -242,8 +242,9 @@ export default Component.extend({
   /**
    * Shows the validation message if one is given
    */
-  showMultiValidationMessage (message) {
-    this.set('currentMessage', message);
+  showMultiValidationMessage (data) {
+    this.set('currentMessage', data.message);
+    this.set('currentStatus', data.status);
   },
 
   actions: {
@@ -289,8 +290,11 @@ export default Component.extend({
 
         if (validator) {
           validator(model).then(response => {
-            if (response.state !== 'ok') {
-              this.showMultiValidationMessage(response.message);
+            if (response.status !== 'ok') {
+              this.showMultiValidationMessage(response);
+            } else {
+              this.set('currentMessage', null);
+              this.set('currentStatus', response.status);
             }
           });
         }

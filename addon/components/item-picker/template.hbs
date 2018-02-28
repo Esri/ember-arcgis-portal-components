@@ -14,7 +14,7 @@
   {{/if}}
 
   {{#if showMessage}}
-    <div class="alert alert-warning" role="alert">{{currentMessage}}</div>
+    <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
   {{/if}}
 
 <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
