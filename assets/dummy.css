@@ -6134,13 +6134,15 @@ button.close {
     display: none !important; } }
 
 .portal-search-form {
-  margin-bottom: 20px;
   border-bottom: 1px solid #a9a9a9; }
   .portal-search-form .form-group-tsf {
     margin-bottom: 0px; }
   .portal-search-form .form-control-tsf {
     height: 33px;
     width: 100%; }
+  .portal-search-form .clear-button {
+    z-index: 10;
+    pointer-events: auto; }
   .portal-search-form input {
     border: 0px;
     box-shadow: none;
@@ -6154,13 +6156,18 @@ div.panel-body:has(.item-picker) {
 
 .item-picker {
   position: relative;
-  min-height: 45rem; }
+  min-height: 45rem;
+  padding: 1.5% 2.5% 0 2.5%; }
   .item-picker .item-picker-datasets-pane, .item-picker .item-picker-items-pane {
     min-height: 55rem; }
   .item-picker ul.pagination {
     margin: 0 0 15px 0; }
   .item-picker .item-picker-status {
+    padding: 6px 0px;
+    height: 33px;
     margin: 8px 0; }
+    .item-picker .item-picker-status .btn, .item-picker .item-picker-status .btn-link {
+      padding: 0px 12px; }
   .item-picker ul.results-list {
     padding: 0; }
     .item-picker ul.results-list li:nth-child(even) {
@@ -6169,7 +6176,7 @@ div.panel-body:has(.item-picker) {
       list-style: none;
       padding: 0; }
       .item-picker ul.results-list li a {
-        padding: 0.5rem 1rem;
+        padding: 1rem;
         display: block;
         font-size: 1rem; }
         .item-picker ul.results-list li a h2 {
@@ -6177,20 +6184,24 @@ div.panel-body:has(.item-picker) {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 1.5rem; }
+          font-size: 14px;
+          font-weight: 600; }
         .item-picker ul.results-list li a .shared-by {
           color: #4c4c4c; }
       .item-picker ul.results-list li .item-picker-item-results-item-type {
         margin-top: 8px;
         margin-right: 10px; }
       .item-picker ul.results-list li.is-selected {
-        background-color: #d9edf7; }
+        background-color: #D2E9F9; }
       .item-picker ul.results-list li.select-multiple a:first-child {
         display: inline-block; }
       .item-picker ul.results-list li.select-multiple .item-picker-item-results-item-inner {
         display: inline-block; }
       .item-picker ul.results-list li.select-multiple input {
-        top: -22px; }
+        top: -28px;
+        left: 18px;
+        width: 30px;
+        height: 30px; }
   .item-picker .item-picker-radio-buttons {
     border-right: 1px solid #efefef;
     padding-left: 0px;
@@ -6228,9 +6239,12 @@ div.panel-body:has(.item-picker) {
     border-top: solid 1px #cccccc;
     border-left: solid 1px #cccccc;
     box-shadow: -6px 0px 6px -6px #cccccc; }
+    .item-picker .item-picker-current-item h4 {
+      font-size: 24px;
+      margin: 10px 0px; }
     .item-picker .item-picker-current-item .item-picker-current-item-preview {
       position: absolute;
-      height: calc(100% - 70px);
+      height: calc(100% - 10px);
       width: calc(100% - 30px);
       top: 1em;
       bottom: 10%;
@@ -6239,7 +6253,7 @@ div.panel-body:has(.item-picker) {
       .item-picker .item-picker-current-item .item-picker-current-item-preview img {
         height: 133px; }
       .item-picker .item-picker-current-item .item-picker-current-item-preview h2 {
-        font-size: 1.8rem;
+        font-size: 24px;
         color: #4c4c4c;
         margin: 0px auto 15px auto;
         font-weight: 500; }
@@ -6256,7 +6270,7 @@ div.panel-body:has(.item-picker) {
           height: 13px;
           position: absolute;
           bottom: 0px;
-          box-shadow: inset 0px -33px 32px -23px #fff; }
+          box-shadow: inset 0px -33px 32px -23px #ffffff; }
       .item-picker .item-picker-current-item .item-picker-current-item-preview .item-picker-current-item-preview-meta {
         font-size: 14px;
         margin: 0px auto 15px auto; }
@@ -6268,7 +6282,7 @@ div.panel-body:has(.item-picker) {
       right: 0px;
       width: 100%;
       border-spacing: 15px;
-      background-color: #fff;
+      background-color: #ffffff;
       padding-top: 15px; }
       .item-picker .item-picker-current-item .item-picker-controls .full-width-btn {
         padding-left: 15px;
@@ -6328,11 +6342,13 @@ div.panel-body:has(.item-picker) {
             margin: 0 auto;
             height: 12px;
             width: 12px; }
+  .item-picker .item-picker-results-container {
+    margin: 25px 0px; }
 
 .layer-picker-list {
   margin-top: 15px;
   overflow: scroll;
-  max-height: 125px; }
+  max-height: 100px; }
   .layer-picker-list .magic-radio {
     position: absolute;
     display: none; }
