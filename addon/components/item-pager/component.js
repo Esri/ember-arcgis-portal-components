@@ -31,6 +31,12 @@ export default Component.extend({
 
   tagName: 'nav',
 
+  // TODO: since this component can be used independently
+  // I think it should have it's own scope, i.e.
+  // addons.components.itemPager, also
+  // in opendata-ui i18nScope does not include the trailing "."
+  _i18nScope: 'addons.components.itemPicker.',
+
   totalPages: computed('totalCount', function () {
     return Math.ceil(this.get('totalCount') / this.get('pageSize'));
   }),

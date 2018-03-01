@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ### Added
 - Readded `form-group` class for a11y
+- item-pager supports bootstrap 4 (by adding a few classes)
+### Fixed
+- added semi-colon to fix lint error
 
 ## [0.8.3]
 ### Added
