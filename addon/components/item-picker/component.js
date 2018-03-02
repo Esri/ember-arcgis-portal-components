@@ -43,6 +43,7 @@ export default Component.extend({
   disableAddItems: not('hasItemsToAdd'),
   showNoItemsMsg: notEmpty('noItemsFoundMsg'),
   hasItemsToAdd: notEmpty('itemsToAdd'),
+  showMessage: notEmpty('currentMessage'),
   isValidating: false,
   selectAnyway: false,
   shouldValidate: false,
@@ -69,8 +70,8 @@ export default Component.extend({
    * Determine what preview component to use. This allows us to create
    * per-type UX for the preview
    */
-  preview: computed('currentItem', function () {
-    let type = this.get('currentItem.type');
+  preview: computed('currentModel.item', function () {
+    let type = this.get('currentModel.item.type');
     let componentName = 'item-picker/item-preview';
 
     switch (type.toLowerCase()) {
@@ -185,7 +186,7 @@ export default Component.extend({
     let isValidGuid = isGuid(q);
     this.setProperties({
       loading: true,
-      currentItem: null,
+      currentModel: null,
       items: null,
     });
 
@@ -203,8 +204,10 @@ export default Component.extend({
       sortField: 'title'
     };
 
-    // allow portalOpts to be passed in so we can access
-    // other portals besides the one our session is auth'd to
+    /**
+     Allow portalOpts to be passed in so we can access
+     other portals besides the one our session is auth'd to
+    */
     this.get('itemService').search(params, this.get('portalOpts'))
       .then((resp) => {
         this.set('items', resp);
@@ -234,6 +237,14 @@ export default Component.extend({
 
     this.set('selectedCatalog', selectedCatalog);
     this.set('selectedCatalogName', selectedCatalog.name);
+  },
+
+  /**
+   * Shows the validation message if one is given
+   */
+  showMultiValidationMessage (data) {
+    this.set('currentMessage', data.message);
+    this.set('currentStatus', data.status);
   },
 
   actions: {
@@ -266,23 +277,35 @@ export default Component.extend({
     /**
      * When an item is clicked in the list
      */
-    onItemClick (item) {
+    onItemClick (model) {
       if (this.get('selectMultiple')) {
+        let validator = this.get('onSelectionValidator');
         const itemsToAdd = this.get('itemsToAdd');
-        const existingObj = itemsToAdd.findBy('id', item.id);
+        const existingObj = itemsToAdd.findBy('id', model.item.id);
         if (!existingObj) {
-          itemsToAdd.pushObject(item);
+          itemsToAdd.pushObject(model.item);
         } else {
           itemsToAdd.removeObject(existingObj);
         }
+
+        if (validator) {
+          validator(model).then(response => {
+            if (response.status !== 'ok') {
+              this.showMultiValidationMessage(response);
+            } else {
+              this.set('currentMessage', null);
+              this.set('currentStatus', response.status);
+            }
+          });
+        }
       } else {
-        if (this.get('currentItem.id') === item.id) {
-          this.set('currentItem', null);
+        if (this.get('currentModel.item.id') === model.item.id) {
+          this.set('currentModel.item', null);
         } else {
           this.setProperties({
             errorHash: null,
             selectAnyway: false,
-            currentItem: item
+            currentModel: model
           });
         }
       }
@@ -300,14 +323,17 @@ export default Component.extend({
      * multi-select mode
      */
     deselectAll () {
-      this.set('itemsToAdd', []);
+      this.setProperties({
+        'itemsToAdd': [],
+        'currentMessage': null
+      });
     },
 
     cancelAction () {
       this.setProperties({
         errorHash: null,
         selectAnyway: false,
-        currentItem: null,
+        currentModel: null,
         itemsToAdd: []
       });
     }

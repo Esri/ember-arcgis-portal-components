@@ -33,7 +33,7 @@ export default Component.extend({
   selectAnyway: false,
   shouldValidate: false,
   showError: notEmpty('errorMessage'),
-  description: reads('model.description'),
+  description: reads('model.item.description'),
 
   /**
    * Compute the translation scope
@@ -59,8 +59,8 @@ export default Component.extend({
   /**
    * Get the translated form of the Item Type
    */
-  itemType: computed('_i18nScope', 'model.type', function () {
-    const itemType = this.get('model.type');
+  itemType: computed('_i18nScope', 'model.item.type', function () {
+    const itemType = this.get('model.item.type');
     let result = itemType;
     const key = `${this.get('_i18nScope')}shared.itemType.${itemType.camelize()}`;
     const intl = this.get('intl');
@@ -74,8 +74,8 @@ export default Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: computed('model', function () {
-    const item = this.get('model');
+  previewUrl: computed('model.item', function () {
+    const item = this.get('model.item');
     let previewURL;
     // if the item has a url property, use that...
     if (item.url) {

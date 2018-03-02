@@ -2,12 +2,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## Unreleased
+### Changed
+- Updated `onItemClick` to expect a model instead of just an item
+### Added
+- Readded `form-group` class for optimum spacing
+
 ## [0.9.0]
 ### Added
 - Readded `form-group` class for a11y
 - item-pager supports bootstrap 4 (by adding a few classes)
 ### Fixed
 - added semi-colon to fix lint error
+
 
 ## [0.8.3]
 ### Added
