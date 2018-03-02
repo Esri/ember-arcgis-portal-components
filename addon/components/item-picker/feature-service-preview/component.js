@@ -31,7 +31,7 @@ export default Component.extend({
   layout,
   selectAnyway: false,
   shouldValidate: false,
-  showError: notEmpty('errorMessage'),
+  showError: notEmpty('validationResult'),
 
   /**
    * Compute the translation scope
@@ -74,7 +74,7 @@ export default Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: computed('model.item', function () {
+  previewUrl: computed('model', function () {
     const item = this.get('model.item');
     let previewURL;
     // if the item has a url property, use that...
@@ -100,13 +100,13 @@ export default Component.extend({
    * ... we have an error
    * ... we need to choose a layer, and have not selected one
    */
-  isSelectDisabled: computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
-    const errorMessage = this.get('errorMessage');
+  isSelectDisabled: computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'validationResult.status', function () {
+    const validationResult = this.get('validationResult');
     let result = false;
     if (this.get('isValidating')) {
       result = true;
     }
-    if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+    if (validationResult && validationResult.status && validationResult.status === 'error') {
       result = true;
     } else {
       if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
@@ -200,7 +200,7 @@ export default Component.extend({
       .then((layersAndTables) => {
         this.setProperties({
           isLoading: false,
-          errorMessage: null,
+          validationResult: null,
           layerList: layersAndTables
         });
       })
@@ -211,7 +211,7 @@ export default Component.extend({
           selectedLayer: null,
         });
         debug(`Error fetching layers ${err}`);
-        this.set('errorMessage', {
+        this.set('validationResult', {
           status: 'error',
           message: err.message || 'Error accessing service.'
         });
@@ -258,10 +258,10 @@ export default Component.extend({
   /**
    * What class do we use for the message...
    */
-  messageClass: computed('errorMessage.status', function () {
-    if (this.get('errorMessage.status') === 'warning') {
+  messageClass: computed('validationResult.status', function () {
+    if (this.get('validationResult.status') === 'warning') {
       return 'alert-warning';
-    } else if (this.get('errorMessage.status') === 'error') {
+    } else if (this.get('validationResult.status') === 'error') {
       return 'alert-danger';
     }
   }),
@@ -291,7 +291,7 @@ export default Component.extend({
         validator(item)
           .then((resp) => {
             this.set('isValidating', false);
-            this.set('errorHash', resp.status);
+            this.set('validationResult', resp.status);
             if (resp.status.status === 'error') {
               return;
             } else if (resp.status.status === 'warning') {

@@ -11,7 +11,15 @@
 
 import Component from '@ember/component';
 import layout from './template';
-
+import { inject as service } from '@ember/service';
 export default Component.extend({
-  layout
+  layout,
+  intl: service(),
+  /**
+   * Compute the i18n key for the geometry type and return that
+   */
+  geometryTypeKey: computed('layer.geometryType', function () {
+    let key = `$this.get('i18nScope')}.shared.geometryType.${this.get('layer.geometryType')}`;
+    return key;
+  })
 });
