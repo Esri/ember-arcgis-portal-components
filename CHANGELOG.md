@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.9.2]
+## Changed
+- Updated feature service preview for e2e fix
+
 ## [0.9.1]
 ### Changed
 - Updated `onItemClick` to expect a model instead of just an item
