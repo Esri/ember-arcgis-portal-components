@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.9.3]
+## Changed
+- More fixes for feature service preview to fix e2e tests
+
 ## [0.9.2]
 ## Changed
 - Updated feature service preview for e2e fix
