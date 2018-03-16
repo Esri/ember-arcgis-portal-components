@@ -74,8 +74,8 @@ export default Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: computed('model', function () {
-    const item = this.get('model');
+  previewUrl: computed('model.item', function () {
+    const item = this.get('model.item');
     let previewURL;
     // if the item has a url property, use that...
     if (item.url) {
@@ -151,7 +151,6 @@ export default Component.extend({
     // upgrade the url and re-assign it to the item...
     let upgradeInfo = this.upgradeProtocol(serviceItem.url);
     serviceItem.url = upgradeInfo.url;
-
     // if the last segment of the url isNaN, we have a service url
     let isService = false;
     if (isNaN(serviceItem.url.split('/').reverse()[0])) {
@@ -195,7 +194,7 @@ export default Component.extend({
    * When the item is changed... re-fetch the layers and tables
    */
   onItemChanged () {
-    let item = this.get('model');
+    let item = this.get('model.item');
     this.set('isLoading', true);
     this.fetchServiceLayers(item)
       .then((layersAndTables) => {
