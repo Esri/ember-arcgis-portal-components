@@ -14,6 +14,8 @@ import { computed } from '@ember/object';
 import Component from '@ember/component';
 import singleTemplate from './single/template';
 import multipleTemplate from './multiple/template';
+import { tryInvoke } from '@ember/utils';
+import { later } from '@ember/runloop';
 
 export default Component.extend({
   layout: computed('selectMultiple', function () {
@@ -60,8 +62,7 @@ export default Component.extend({
   }),
 
   checked: computed('model.id', 'itemsToAdd.[]', function () {
-    const itemsToAdd = this.get('itemsToAdd');
-    return !!itemsToAdd.findBy('id', this.get('model.id'));
+    return this.get('itemsToAdd').includes(this.get('model'));
   }),
 
   url: computed('model.id', 'session.portalHostname', function () {
@@ -70,11 +71,10 @@ export default Component.extend({
 
   actions: {
     selectItem (item) {
-      let model = {
-        item: item
-      };
-      this.get('onClick')(model);
-    },
+      later(this, () => {
+        tryInvoke(this, 'onClick', [{item}]);
+      }, 0);
+    }
   }
 
 });
