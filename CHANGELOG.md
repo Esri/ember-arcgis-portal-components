@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.9.4]
+## Fixed
+- Fix issue where checkboxes would not become active on click in multi-select mode [link](https://esriarlington.tpondemand.com/entity/83698-checkboxes-dont-have-active-state-on)
+
+## Removed
+- Removed unnecessary tooltip from title
+
 ## [0.9.3]
 ## Changed
 - More fixes for feature service preview to fix e2e tests
