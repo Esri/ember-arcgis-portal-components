@@ -73,6 +73,6 @@
       changePage=(action "changePage")}}
 
     {{#if selectMultiple}}
-      <button type="button" class="btn btn-primary pull-right col-xs-1" disabled={{disableAddItems}} {{action selectAction itemsToAdd}}>{{t (concat _i18nScope "buttons.selectMultiple")}}</button>
+      <button type="button" class="btn btn-primary pull-right select-button" disabled={{disableAddItems}} {{action selectAction itemsToAdd}}>{{t (concat _i18nScope "buttons.selectMultiple")}}</button>
     {{/if}}
 </div>
