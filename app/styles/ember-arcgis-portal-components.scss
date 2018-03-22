@@ -82,11 +82,8 @@ div.panel-body:has(.item-picker) {
         .item-picker-item-results-item-inner {
           display: inline-block;
         }
-        input {
-          top: -28px;
-          left: 18px;
-          width:30px;
-          height:30px;
+        .checkbox-inline {
+          display: inline;
         }
       }
     }
