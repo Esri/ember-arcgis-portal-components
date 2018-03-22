@@ -81,9 +81,88 @@ div.panel-body:has(.item-picker) {
         }
         .item-picker-item-results-item-inner {
           display: inline-block;
+          padding-left: 30px;
         }
         .checkbox-inline {
           display: inline;
+        }
+        .magic-checkbox {
+          position: absolute;
+          display: none;
+        }
+        .magic-checkbox[disabled] {
+          cursor: not-allowed;
+        }
+        .magic-checkbox+span {
+          position: relative;
+          display: block;
+          padding-left: 30px;
+          cursor: pointer;
+          vertical-align: middle;
+        }
+        .magic-checkbox+span:hover:before {
+          animation-duration: 0.4s;
+          animation-fill-mode: both;
+          animation-name: hover-color;
+        }
+        .magic-checkbox+span:before {
+          position: absolute;
+          top: 0;
+          left: 0;
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          content: '';
+          border: 1px solid $calcite-gray-darker;
+        }
+        .magic-checkbox+span:after {
+          position: absolute;
+          display: none;
+          content: '';
+        }
+        .magic-checkbox[disabled]+span {
+          cursor: not-allowed;
+          color: $calcite-gray-core;
+        }
+        .magic-checkbox[disabled]+span:hover, .magic-checkbox[disabled]+span:before, .magic-checkbox[disabled]+span:after {
+          cursor: not-allowed;
+        }
+        .magic-checkbox[disabled]+span:hover:before {
+          border: 1px solid $calcite-gray-core;
+          animation-name: none;
+        }
+        .magic-checkbox[disabled]+span:before {
+          border-color: $calcite-gray-core;
+        }
+        .magic-checkbox:checked+span:before {
+          animation-name: none;
+        }
+        .magic-checkbox:checked+span:after {
+          display: block;
+        }
+        .magic-checkbox+span:before {
+          border-radius: 3px;
+        }
+        .magic-checkbox+span:after {
+          top: 2px;
+          left: 7px;
+          box-sizing: border-box;
+          width: 6px;
+          height: 12px;
+          transform: rotate(45deg);
+          border-width: 2px;
+          border-style: solid;
+          border-color: $white;
+          border-top: 0;
+          border-left: 0;
+        }
+        .magic-checkbox:checked+span:before {
+          border: $calcite-blue-dark;
+          background: $calcite-blue-dark;
+        }
+        .magic-checkbox:checked[disabled]+span:before {
+          border: $calcite-blue-dark;
+          background: $calcite-blue-dark;
         }
       }
     }
