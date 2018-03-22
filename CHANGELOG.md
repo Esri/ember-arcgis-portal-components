@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 ## Unreleased
+## Fixed
+- Checkboxes no longer jump in Safari when checked [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 
 ## [0.9.4]
 ## Fixed
