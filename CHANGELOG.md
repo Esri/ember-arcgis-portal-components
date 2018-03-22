@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 ## Unreleased
+## Fixed
+- On smaller screens, the “Select” button on the bottom right now has a fixed width [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 
 ## [0.9.4]
 ## Fixed
