@@ -65,14 +65,16 @@
       </div>
     {{/if}}
 
-    {{item-pager class="pull-left"
-      _i18nScope=_i18nScope
-      pageSize=pageSize
-      totalCount=totalCount
-      pageNumber=pageNumber
-      changePage=(action "changePage")}}
+    <div class="flex-row">
+      {{item-pager class="pull-left"
+        _i18nScope=_i18nScope
+        pageSize=pageSize
+        totalCount=totalCount
+        pageNumber=pageNumber
+        changePage=(action "changePage")}}
 
-    {{#if selectMultiple}}
-      <button type="button" class="btn btn-primary pull-right col-xs-1" disabled={{disableAddItems}} {{action selectAction itemsToAdd}}>{{t (concat _i18nScope "buttons.selectMultiple")}}</button>
-    {{/if}}
+      {{#if selectMultiple}}
+        <button type="button" class="btn btn-primary" disabled={{disableAddItems}} {{action selectAction itemsToAdd}}>{{t (concat _i18nScope "buttons.selectMultiple")}}</button>
+      {{/if}}
+    </div>
 </div>
