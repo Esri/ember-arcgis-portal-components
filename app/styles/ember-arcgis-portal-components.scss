@@ -265,8 +265,11 @@ div.panel-body:has(.item-picker) {
   .item-picker-results-container {
     margin: 25px 0px;
   }
-  .select-button {
-    width: 125px;
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 .layer-picker-list {
