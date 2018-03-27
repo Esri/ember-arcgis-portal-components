@@ -122,6 +122,8 @@ div.panel-body:has(.item-picker) {
     }
   }
   .item-picker-current-item {
+    // This is styling for the drawer that
+    // holds the metadata for the item
     z-index: 2;
     padding: 15px;
     position: absolute;
@@ -140,11 +142,8 @@ div.panel-body:has(.item-picker) {
       margin: 10px 0px;
     }
     .item-picker-current-item-preview {
-      position: absolute;
-      height: calc(100% - 10px);
-      width: calc(100% - 30px);
-      top: 1em;
-      bottom: 10%;
+      display: flex;
+      flex-direction: column;
       overflow: auto;
       min-height: 400px;
       img {
@@ -159,11 +158,10 @@ div.panel-body:has(.item-picker) {
       .shared-by-owner {
         font-size: 14px;
         display: inline-block;
-        margin: 0px auto;
       }
       .item-picker-current-item-preview-description {
         overflow: hidden;
-        height: 55px;
+        height: 70px;
         position: relative;
         .text-fade {
           width: 100%;
@@ -175,13 +173,15 @@ div.panel-body:has(.item-picker) {
       }
       .item-picker-current-item-preview-meta {
         font-size: 14px;
-        margin: 0px auto 15px auto;
+        margin-bottom: 15px;
         .glyphicon {
           margin-right: 5px;
         }
       }
     }
     .item-picker-controls {
+      display: flex;
+      flex-direction: column;
       position: absolute;
       bottom: 0px;
       right: 0px;
@@ -190,28 +190,19 @@ div.panel-body:has(.item-picker) {
       background-color: $white;
       padding-top: 15px;
       .full-width-btn {
+        margin-bottom: 15px;
         padding-left: 15px;
-        padding-right: 15px;
-        div {
-          display: table-row;
-          display: block;
-        }
       }
       .side-by-side {
-        display: table;
-        width: 100%;
-        div {
-          display: table-row;
+        display: flex;
+        padding-left: 15px;
+        margin-bottom: 15px;
+        align-items: baseline;
+        .back-btn {
+          margin-right: 5px
         }
-        a {
-          display: table-cell;
-          width: 50%;
-          white-space: normal;
-        }
-        button {
-          display: table-cell;
-          width: 100%;
-          white-space: normal;
+        .preview-btn {
+          margin-left: 5px
         }
       }
     }

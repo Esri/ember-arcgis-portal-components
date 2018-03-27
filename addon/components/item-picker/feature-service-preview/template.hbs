@@ -32,14 +32,10 @@
 
 <section class="item-picker-controls">
   <div class="full-width-btn">
-    <div>
     <button type="button" class="btn btn-primary btn-block" data-test="item-picker-select-button" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
-    </div>
   </div>
   <div class="side-by-side">
-    <div>
-      <button type="button" class="btn btn-default btn-block" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
-      <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block">{{t (concat _i18nScope "buttons.preview")}}</a>
-    </div>
+    <button type="button" class="btn btn-default btn-block back-btn" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
+    <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block preview-btn">{{t (concat _i18nScope "buttons.preview")}}</a>
   </div>
 </section>
