@@ -34,6 +34,10 @@ The item picker component allows a user to search a portal for items, see a prev
 
 Layer picker is part of the item picker. It allows for items with multiple layers to display them as radio buttons. This will then allow the user to select which layer they would like to use. The layer picker will display by default if the item is type `Feature Service` or `Map Service`.
 
+## Contributing
+The components in this addon are used in MANY MANY places. As such, changes made to existing components, especially any external API surfaces is prone to having catastrophic downstream effects. Thus - before making any changes, please read and understand the [design document](./docs/design-docs.md). We are working on adding more unit and integration tests, but this will be an on-going process. Until we have a very high-level of coverage, modifications to these components should be considered a high-risk activity.
+
+
 ### Generating a New Component
 
 When generating a new component, please structure your files in the following order. This will help standardize the files and keep everything in an organized format:

@@ -1,21 +1,6 @@
 # Design Docs
 
-## Components
+This addon contains multiple components, design docs for each are in separate files:
 
-### Item Picker
-
-`{{item-picker
-  selectAction=(action "onSelectItem")
-  selectMultiple=true
-  searchItemsOnInit=true
-  onSelectionValidator=(action "selectionValidator")
-  }}`
-
-
-
-
-Internally to the item picker components (including custom rows/preview components) use a model instead of just an item. The model has the format of `{item: {...}, options: {...}}`.
-
-The options hash can contain many different things depending on the context.
-
-For example - the `feature-service-preview` will use the `options` hash to pass forward the selected layer, along with the item to validation functions.
+- [item-picker](item-picker.md)
+- [search-form](search-form.md)

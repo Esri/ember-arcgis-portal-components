@@ -1,6 +1,6 @@
 import { A } from '@ember/array';
 /**
- * blah
+ * Create the query from the datalog, searchString
  */
 function createQuery (catalog, searchString, isHex) {
   const queryParts = A([]);
