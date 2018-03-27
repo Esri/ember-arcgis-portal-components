@@ -5,7 +5,7 @@ import Controller from '@ember/controller';
 import fetch from 'ember-network/fetch';
 
 export default Controller.extend({
-  selectedItem: null,
+  selectedModel: null,
 
   itemService: service('items-service'),
 
@@ -26,7 +26,7 @@ export default Controller.extend({
     }
   },
 
-  _validator (item) {
+  _validator (item, options) {
     const copyItem = copy(item, true);
     const isHttp = /^(http:)\/\//;
     const url = `${copyItem.url.replace(/\s+/g, '')}?f=json`;
@@ -91,9 +91,15 @@ export default Controller.extend({
   },
 
   actions: {
-    onSelectItem (selected) {
+    onSelectItem (item, options) {
       $('#myModal').modal('hide');
-      this.set('selectedItem', selected);
+      let model = {
+        item: item
+      };
+      if (options && options.layer) {
+        model.layer = options.layer;
+      }
+      this.set('selectedModel', model);
     },
 
     selectionValidator (item) {

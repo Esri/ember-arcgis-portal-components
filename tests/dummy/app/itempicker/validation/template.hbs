@@ -11,15 +11,24 @@
       selectAction=(action "onSelectItem")
       onSelectionValidator=(action "selectionValidator") }}' }}
     </pre>
+    <p>The validation function should have the following signature: </p>
+    <code>validator(item, options)</code>
+    <p>Where <code>options</code> may contain custom properties such as the selected layer etc.</p>
+
   </div>
   <div class="col-sm-6">
     <h3>Selected Item </h3>
-    {{#if selectedItem}}
+    {{#if selectedModel}}
       <div class="panel panel-default">
-        <div class="panel-heading"><h3 class="panel-title">{{selectedItem.title}}</h3></div>
+        <div class="panel-heading"><h3 class="panel-title">{{selectedModel.item.title}}</h3></div>
         <div class="panel-body">
-          {{sanitize-html selectedItem.description}}
+          {{sanitize-html selectedModel.item.description}}
         </div>
+        {{#if selectedModel.layer}}
+        <div class="panel-body">
+          Layer: {{selectedModel.layer.name}}
+        </div>
+        {{/if}}
       </div>
     {{else}}
       <div class="alert alert-warning" role="alert">
@@ -57,7 +66,7 @@
         <h4 class="modal-title" id="myModalLabel">Default Usage</h4>
       </div>
       <div class="modal-body">
-        {{item-picker 
+        {{item-picker
           selectAction=(action "onSelectItem")
           onSelectionValidator=(action "selectionValidator")}}
       </div>

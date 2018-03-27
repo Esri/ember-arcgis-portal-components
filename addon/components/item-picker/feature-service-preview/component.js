@@ -22,7 +22,7 @@ export default Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
   description: reads('model.item.description'),
   featureService: service('feature-service'),
-  forceLayerSelection: alias('showLayers'),
+  forceLayerSelection: alias('params.forceLayerSelection'),
   hasSelectedLayer: notEmpty('selectedLayer'),
   intl: service(),
   isLoading: true,
@@ -59,7 +59,6 @@ export default Component.extend({
   * ... a map service
   * ... a feature service
   */
-
   showLayers: computed('model.item.type', function () {
     const type = this.get('model.item.type');
     switch (type.toLowerCase()) {
@@ -148,6 +147,7 @@ export default Component.extend({
    */
   fetchServiceLayers (serviceItem) {
     const featureService = this.get('featureService');
+    serviceItem.url = serviceItem.url.trim();
     // upgrade the url and re-assign it to the item...
     let upgradeInfo = this.upgradeProtocol(serviceItem.url);
     serviceItem.url = upgradeInfo.url;
@@ -277,7 +277,7 @@ export default Component.extend({
     /**
      * When the user clicks the select button...
      */
-    onServiceSelected (item) {
+    onServiceSelected (model) {
       let options;
       if (this.get('forceLayerSelection')) {
         options = {
@@ -288,7 +288,7 @@ export default Component.extend({
 
       if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
         this.set('isValidating', true);
-        validator(item)
+        validator(model.item, options)
           .then((resp) => {
             this.set('isValidating', false);
             this.set('validationResult', resp.status);
@@ -298,11 +298,11 @@ export default Component.extend({
               this.set('selectAnyway', true);
               return;
             } else {
-              this.get('onItemSelected')(item, options);
+              this.get('onItemSelected')(model.item, options);
             }
           });
       } else {
-        this.get('onItemSelected')(item, options);
+        this.get('onItemSelected')(model.item, options);
       }
     }
   }

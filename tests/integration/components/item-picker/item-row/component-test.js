@@ -51,15 +51,15 @@ test('it renders selected', function (assert) {
 
 test('it properly handles click', function (assert) {
   const id = 'test-dataset-id';
-  const model = { id: id, title: 'This is the name' };
+  const item = { id: id, title: 'This is the name' };
   this.setProperties({
     currentItemId: id,
-    model: model
+    model: item
   });
 
   // test double for the external action
-  this.set('onClick', (item) => {
-    assert.equal(item.id, id, 'submitted value is passed to external action');
+  this.set('onClick', (model) => {
+    assert.equal(item.id, model.item.id, 'submitted value is passed to external action');
   });
 
   this.render(hbs`{{item-picker/item-row model=model currentItemId=currentItemId onClick=(action onClick)}}`);
@@ -107,15 +107,15 @@ test('multiple-mode: it renders checked', function (assert) {
 
 test('multiple-mode: it properly handles click', function (assert) {
   const id = 'test-dataset-id';
-  const model = { id: id, title: 'This is the name' };
+  const item = { id: id, title: 'This is the name' };
   this.setProperties({
-    model: model,
+    model: item,
     itemsToAdd: []
   });
 
   // test double for the external action
-  this.set('onClick', (item) => {
-    assert.equal(item.id, id, 'submitted value is passed to external action');
+  this.set('onClick', (model) => {
+    assert.equal(item.id, model.item.id, 'submitted value is passed to external action');
   });
 
   this.render(hbs`{{item-picker/item-row model=model selectMultiple=true itemsToAdd=itemsToAdd currentItemId=currentItemId onClick=(action onClick)}}`);

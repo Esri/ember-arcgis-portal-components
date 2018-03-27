@@ -56,16 +56,29 @@ When generating a new component, please structure your files in the following or
 |   [catalog](#facets-catalog)   |    Array         |   No   | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
 |   [onSelectionValidator](#validation-onselectionvalidator)   |    Function<br><small>(Closure Action)</small>  |   No   |    Allows an application to do more in-depth validation of an item before using it.  |
 |  [portalOpts](#portal-options-portalopts)    |   Object      |  No    |   Allows a different portal to be assigned to an item picker.       |
+|  [previewParams](#preview-params)    |   Object      |  No    |   Pass parameters to the Preview components       |
 |  [rowComponent](#custom-row-component-rowcomponent)    |   String<br><small>(Component)</small>      |  No    |   Allows a different row layout to be passed into the item picker.       |
 
 ### Examples
 
 #### Default Usage (selectAction)
 
-```js
+```hbs
 {{item-picker
       selectAction=(action "onSelectItem")}}
 ```
+
+The selectAction handler will be passed the selected item, and it may be passed a second `options` param which will contain contextually specific content. For example, if the item selected is a Feature Service, then the Preview will show a layer picker list. The selected layer will be pass in the options as `{layer: {...}}`
+
+```js
+actions: {
+  onSelectItem(item, options) {
+    ...
+  }
+}
+```
+
+
 
 #### Search on Initialize (searchItemsOnInit)
 
@@ -116,26 +129,43 @@ In the template:
   selectAction=(action "onSelectItem")}}
 ```
 
+#### Preview Params
+Different Preview components are used depending on the type of the item. The `previewParams` is a means to send in some parameters to these components.
+
+| param | description |
+| --- | --- |
+| showLayers | Used by the `feature-service-preview` component, and will cause a list of layers to be shown. |
+| forceLayerSelection | Used by the `feature-service-preview` component, and force the user to select a layer/table. |
+
+
 #### Validation (onSelectionValidator)
 
-In the controller:
+Validation functions should use the following signature `validate(item, options)`, and should return a `Promise` even if they don't do async operations. The selected item will always be passed in, but depending on the context, the options hash may contain additional information. For example, if a Map Service or Feature Service item is selected, the options hash will contain a `layer` object, allowing the validator to work with both the item and the specific layer.
+
+Valid status values are `ok`, `warning` and `error`. For warnings, the user will be given the option to select the item despite the warning. In the case of an error the item can not be selected.
+
+The message returned should be translated - do not rely on the item picker to translate messages.
 
 ```js
 actions: {
-  selectionValidator(item) {
+  selectionValidator(item, options) {
     // validation logic
     if (item.something) {
-      return {
+      return resolve({
         item: item,
-        status: 'error',
-        message: 'This item can not be used because ...'
-      }
+        status: {
+          status: 'error',
+          message: 'This item can not be used because ...'
+        }
+      });
     } else {
       // you can also manipulate the item here if you want...
-      return {
+      return resolve({
         item: item,
-        status: 'ok'
-      };
+        status: {
+          status: 'ok'
+        }
+      });
     }
   }
 }
@@ -148,6 +178,7 @@ In the template:
       selectAction=(action "onSelectItem")
       onSelectionValidator=(action "selectionValidator") }}
 ```
+
 
 #### Portal Options (portalOpts)
 
