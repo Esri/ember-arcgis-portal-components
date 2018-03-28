@@ -13,7 +13,7 @@ import { debug } from '@ember/debug';
 
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
-import { reads, alias, notEmpty } from '@ember/object/computed';
+import { reads, notEmpty } from '@ember/object/computed';
 import Component from '@ember/component';
 import layout from './template';
 
