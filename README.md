@@ -1,5 +1,15 @@
 # ember-arcgis-portal-components
 
+[![npm version][npm-img]][npm-url]
+[![build status][travis-img]][travis-url]
+[![apache licensed](https://img.shields.io/badge/license-Apache-green.svg?style=flat-square)](https://raw.githubusercontent.com/Esri/ember-arcgis-portal-components/master/LICENSE)
+
+[npm-img]: https://img.shields.io/npm/v/ember-arcgis-portal-components.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/ember-arcgis-portal-components
+[travis-img]: https://img.shields.io/travis/Esri/ember-arcgis-portal-components/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/Esri/ember-arcgis-portal-components
+
+
 > Ember Components for interacting with ArcGIS Online/Enterprise items.
 
 This repository contains standalone components from [ArcGIS Hub](https://hub.arcgis.com) for interacting with ArcGIS Online and Enterprise items, making it extremely simple to include a responsive search dialog in your own Ember, [Bootstrap](https://getbootstrap.com/) application.

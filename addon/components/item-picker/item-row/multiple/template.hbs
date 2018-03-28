@@ -1,7 +1,8 @@
 <span class="pull-right item-picker-item-results-item-type">{{typeOfData}}</span>
 <a href="" {{action 'selectItem' model}}>
   <div class="checkbox-inline">
-    <input type="checkbox" checked={{readonly checked}}>
+    <input class="magic-checkbox" type="checkbox" checked={{readonly checked}}>
+    <span></span>
   </div>
   <div class="item-picker-item-results-item-inner">
     <h2>
