@@ -40,6 +40,7 @@ before_install:
 
 install:
   - yarn install --no-lockfile --non-interactive --ignore-engines
+  - bower install
 
 script:
   - yarn lint:js
