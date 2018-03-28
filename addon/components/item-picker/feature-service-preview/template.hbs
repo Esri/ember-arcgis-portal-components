@@ -1,10 +1,10 @@
 <h4>{{model.item.title}}</h4>
-<span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</span>
 
 <div class="item-picker-current-item-preview-meta">
-  <div><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
-  <div><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
-  <div><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
+  <span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</span>
+  <span><i class="glyphicon icon-layers"></i>{{layerList.length}}</span>
+  <span><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</span>
+  <span><i class="glyphicon glyphicon-file"></i>{{itemType}}</span>
 </div>
 
 <div class="item-picker-current-item-preview-description">
