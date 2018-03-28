@@ -22,7 +22,7 @@ export default Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
   description: reads('model.item.description'),
   featureService: service('feature-service'),
-  forceLayerSelection: alias('params.forceLayerSelection'),
+  forceLayerSelection: reads('params.forceLayerSelection'),
   hasSelectedLayer: notEmpty('selectedLayer'),
   intl: service(),
   isLoading: true,
@@ -105,7 +105,7 @@ export default Component.extend({
     if (this.get('isValidating')) {
       result = true;
     }
-    if (validationResult && validationResult.status && validationResult.status === 'error') {
+    if (validationResult && validationResult.status === 'error') {
       result = true;
     } else {
       if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
