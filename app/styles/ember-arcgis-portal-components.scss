@@ -4,8 +4,8 @@
     z-index: 10;
     pointer-events: auto;
   }
-  input {
-    border: 0px;
+  .input-group div.has-clear.has-feedback input {
+    border: none;
     box-shadow: none;
     -webkit-box-shadow: none;
   }
