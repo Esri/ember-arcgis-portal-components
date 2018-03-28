@@ -1,7 +1,5 @@
 # TODO List
 
-## Item Row
-- remove event stuff
 
 ## Validation
 
