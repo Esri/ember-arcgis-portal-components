@@ -2,6 +2,21 @@
 
 The Item Picker encapsulates the selection of Items. At first this seems like a relatively straight-forward task, but, as we will see, there are a great many permutations that need to be addressed.
 
+## Options for Item Picker
+
+| Attribute | Type | Required | Purpose |
+|----|:-------:|:-------:|----------|
+|  [selectAction](#basic-usage) | Function<br><small>(Closure Action)</small> | Yes | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action. |
+|  [searchItemsOnInit](#basic-usage) | Boolean | No | Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
+|  [selectMultiple](#multiple-selection) | Boolean |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
+|  [catalog](#filterin-and-faceting)  |  Array |  No | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
+|  [onSelectionValidator](#item-validation) | Function<br><small>(Closure Action)</small>  | No | Allows an application to do more in-depth validation of an item before using it. |
+|  [portalOpts](#specifying-portal-instance) | Object | No |   Allows searches to be run against different portal instances. |
+|  [previewParams](#layer-selection) | Object |  No    |   Pass parameters to the Preview components, notably forcing layer selection |
+|  [rowComponent](#custom-row-components) | String<br><small>(Component)</small> | No |   Name of a component to use when rendering the rows. |
+
+
+
 ## Concepts and Usage
 
 ### Internal Model
@@ -255,6 +270,10 @@ The component will be used in the following context, and developers should refer
   }}
 ```
 
+### Custom Preview Components
+
+This will be supported in the future, but the intent is to allow the developer to specify a component that will be used for the "Preview". This component will need to handle any type of item that the associated catalog allows.
+
 #### Handling Multiple Selection
 
 Multiple selection is usually handled by showing a `<input type="checkbox"...` and there are some idiosyncrasies with getting event handlers and the checked state to be in sync.
@@ -272,3 +291,7 @@ actions: {
   }
 }
 ```
+
+## Child Components
+
+The item picker is composed of many child components. TODO: Add more docs / images here

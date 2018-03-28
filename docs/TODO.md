@@ -1,5 +1,11 @@
 # TODO List
 
+## Docs
+- component hierarchy and descriptions
+
+## Component Refactoring
+
+- extract `facets-list` into a component
 
 ## Validation
 
