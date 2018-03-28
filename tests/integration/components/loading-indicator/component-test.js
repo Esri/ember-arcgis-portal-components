@@ -1,16 +1,19 @@
-import { moduleForComponent, test } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-moduleForComponent('loading-indicator', 'Integration | Component | loading indicator', {
-  integration: true,
-  setup () {
-    const intl = this.container.lookup('service:intl');
-    intl.setLocale('en-us');
-  },
-});
+module('Integration | Component | loading indicator', function (hooks) {
+  setupRenderingTest(hooks);
 
-test('it renders', function (assert) {
-  assert.expect(1);
-  this.render(hbs`{{loading-indicator}}`);
-  assert.equal(this.$().text().trim(), 'Loading...');
+  hooks.beforeEach(function () {
+    const intl = this.owner.lookup('service:intl');
+    return intl.setLocale('en-us');
+  });
+
+  test('it renders', async function (assert) {
+    assert.expect(1);
+    await render(hbs`{{loading-indicator}}`);
+    assert.equal(this.$().text().trim(), 'Loading...');
+  });
 });

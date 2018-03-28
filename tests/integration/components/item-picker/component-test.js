@@ -1,43 +1,46 @@
 import { A } from '@ember/array';
-import { moduleForComponent, test } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import Service from '@ember/service';
 
-moduleForComponent('item-picker', 'Integration | Component | item picker', {
-  integration: true,
-  setup () {
-    let intl = this.container.lookup('service:intl');
+module('Integration | Component | item picker', function (hooks) {
+  setupRenderingTest(hooks);
+
+  hooks.beforeEach(function () {
+    let intl = this.owner.lookup('service:intl');
     intl.setLocale('en-us');
 
     const session = Service.extend({});
-    this.register('service:session', session);
-  }
-});
+    this.owner.register('service:session', session);
+  });
 
-test('it renders', function (assert) {
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });
+  test('it renders', async function (assert) {
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
 
-  this.render(hbs`{{item-picker }}`);
+    await render(hbs`{{item-picker }}`);
 
-  assert.equal(this.$().text().trim(), 'Search items:');
-});
+    assert.equal(this.$().text().trim(), 'Search items:');
+  });
 
-test('it renders results', function (assert) {
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });
-  const item = {
-    id: 'abc123',
-    title: 'This is the name',
-    description: 'This is the description',
-    owner: 'jupe',
-    modified: 1411060006000,
-    type: 'Web Map'
-  };
-  const items = A([item]);
-  this.set('items', { results: items });
-  this.render(hbs`{{item-picker items=items }}`);
-  assert.equal(this.$('.item-picker-item-results-item').length, 1);
-  assert.ok(!this.$('.item-picker-item-results-item').hasClass('is-selected'));
-  assert.equal(this.$('.item-picker-current-item').length, 0);
+  test('it renders results', async function (assert) {
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+    const item = {
+      id: 'abc123',
+      title: 'This is the name',
+      description: 'This is the description',
+      owner: 'jupe',
+      modified: 1411060006000,
+      type: 'Web Map'
+    };
+    const items = A([item]);
+    this.set('items', { results: items });
+    await render(hbs`{{item-picker items=items }}`);
+    assert.equal(this.$('.item-picker-item-results-item').length, 1);
+    assert.ok(!this.$('.item-picker-item-results-item').hasClass('is-selected'));
+    assert.equal(this.$('.item-picker-current-item').length, 0);
+  });
 });

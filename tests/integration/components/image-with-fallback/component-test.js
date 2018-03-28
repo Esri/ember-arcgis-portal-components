@@ -1,16 +1,17 @@
-import { moduleForComponent, test } from 'ember-qunit';
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-// NOTE: this component is in ember-arcgis-layout-cards
-moduleForComponent('image-with-fallback', 'Integration | Component | image with fallback', {
-  integration: true
-});
+module('Integration | Component | image with fallback', function (hooks) {
+  setupRenderingTest(hooks);
 
-test('it renders', function (assert) {
-  // Set any properties with this.set('myProperty', 'value');
-  // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
+  test('it renders', async function (assert) {
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });" + EOL + EOL +
 
-  this.render(hbs`{{image-with-fallback imgSrc="source" fallbackSrc="fallback-source"}}`);
+    await render(hbs`{{image-with-fallback imgSrc="source" fallbackSrc="fallback-source"}}`);
 
-  assert.equal(this.$().text().trim(), '');
+    assert.equal(this.$().text().trim(), '');
+  });
 });
