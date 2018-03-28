@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { render } from '@ember/test-helpers';
+import { render, click, find, findAll } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import Service from '@ember/service';
 
@@ -29,8 +29,8 @@ module('Integration | Component | item picker/item row', function (hooks) {
     });
     await render(hbs`{{item-picker/item-row model=model currentItemId=currentItemId onClick=(action onClick item)}}`);
 
-    assert.equal(this.$('h2').text().trim(), 'This is the name');
-    assert.ok(!this.$('.item-picker-item-results-item').hasClass('is-selected'));
+    assert.equal(find('h2').textContent.trim(), 'This is the name');
+    assert.ok(!find('.item-picker-item-results-item').classList.contains('is-selected'));
   });
 
   test('it renders selected', async function (assert) {
@@ -47,8 +47,8 @@ module('Integration | Component | item picker/item row', function (hooks) {
     });
     await render(hbs`{{item-picker/item-row model=model currentItemId=currentItemId onClick=(action onClick item)}}`);
 
-    assert.equal(this.$('h2').text().trim(), 'This is the name');
-    assert.ok(this.$('.item-picker-item-results-item').hasClass('is-selected'));
+    assert.equal(find('h2').textContent.trim(), 'This is the name');
+    assert.ok(find('.item-picker-item-results-item').classList.contains('is-selected'));
   });
 
   test('it properly handles click', async function (assert) {
@@ -65,7 +65,7 @@ module('Integration | Component | item picker/item row', function (hooks) {
     });
 
     await render(hbs`{{item-picker/item-row model=model currentItemId=currentItemId onClick=(action onClick)}}`);
-    this.$('li > a').click();
+    await click('li > a');
   });
 
   test('multiple-mode: it renders', async function (assert) {
@@ -87,11 +87,11 @@ module('Integration | Component | item picker/item row', function (hooks) {
       currentItemId=currentItemId
       onClick=(action onClick item)}}`);
 
-    assert.equal(this.$('h2').text().trim(), 'This is the name');
-    assert.equal(this.$('.shared-by').text().trim(), 'vader');
-    assert.equal(this.$('.checkbox-inline span').length, 1, 'should be one span');
-    assert.equal(this.$('.item-picker-item-results-item a').length, 1, 'should be one a');
-    assert.equal(this.$('.item-picker-item-results-item a input').length, 1, 'should be one a input');
+    assert.equal(find('h2').textContent.trim(), 'This is the name');
+    assert.equal(find('.shared-by').textContent.trim(), 'vader');
+    assert.equal(findAll('.checkbox-inline span').length, 1, 'should be one span');
+    assert.equal(findAll('.item-picker-item-results-item a').length, 1, 'should be one a');
+    assert.equal(findAll('.item-picker-item-results-item a input').length, 1, 'should be one a input');
     assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'), 'input should not be checked');
   });
 
@@ -114,8 +114,8 @@ module('Integration | Component | item picker/item row', function (hooks) {
       currentItemId=currentItemId
       onClick=(action onClick item)}}`);
 
-    assert.equal(this.$('h2').text().trim(), 'This is the name');
-    assert.equal(this.$('.shared-by').text().trim(), 'vader');
+    assert.equal(find('h2').textContent.trim(), 'This is the name');
+    assert.equal(find('.shared-by').textContent.trim(), 'vader');
     assert.ok(this.$('.item-picker-item-results-item a input').is(':checked'), 'should be checked');
   });
 
@@ -138,6 +138,6 @@ module('Integration | Component | item picker/item row', function (hooks) {
 
     assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'));
 
-    this.$('li > a').click();
+    await click('li > a');
   });
 });

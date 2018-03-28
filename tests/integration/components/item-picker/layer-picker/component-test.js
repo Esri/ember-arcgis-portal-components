@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { render } from '@ember/test-helpers';
+import { render, findAll } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
 module('Integration | Component | item picker/layer picker', function (hooks) {
@@ -31,7 +31,7 @@ module('Integration | Component | item picker/layer picker', function (hooks) {
     this.set('onLayerSelected', function () {});
     await render(hbs`{{item-picker/layer-picker model=model selectable=true onLayerSelected=onLayerSelected}}`);
 
-    assert.equal(this.$('.layer-picker-list').length, 1, 'Layer list is not empty');
-    assert.equal(this.$('ul').length, 1, 'There is at least 1 layer in the list');
+    assert.equal(findAll('.layer-picker-list').length, 1, 'Layer list is not empty');
+    assert.equal(findAll('ul').length, 1, 'There is at least 1 layer in the list');
   });
 });

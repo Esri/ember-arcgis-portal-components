@@ -1,7 +1,7 @@
 import { A } from '@ember/array';
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { render } from '@ember/test-helpers';
+import { render, find, findAll } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import Service from '@ember/service';
 
@@ -22,7 +22,7 @@ module('Integration | Component | item picker', function (hooks) {
 
     await render(hbs`{{item-picker }}`);
 
-    assert.equal(this.$().text().trim(), 'Search items:');
+    assert.equal(find('*').textContent.trim(), 'Search items:');
   });
 
   test('it renders results', async function (assert) {
@@ -39,8 +39,8 @@ module('Integration | Component | item picker', function (hooks) {
     const items = A([item]);
     this.set('items', { results: items });
     await render(hbs`{{item-picker items=items }}`);
-    assert.equal(this.$('.item-picker-item-results-item').length, 1);
-    assert.ok(!this.$('.item-picker-item-results-item').hasClass('is-selected'));
-    assert.equal(this.$('.item-picker-current-item').length, 0);
+    assert.equal(findAll('.item-picker-item-results-item').length, 1);
+    assert.ok(!find('.item-picker-item-results-item').classList.contains('is-selected'));
+    assert.equal(findAll('.item-picker-current-item').length, 0);
   });
 });
