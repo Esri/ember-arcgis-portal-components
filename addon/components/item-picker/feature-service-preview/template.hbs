@@ -21,10 +21,14 @@
   {{else}}
       {{#if showError}}
         <p class="alert {{messageClass}}" id="val-error">
-          {{errorMessage.message}}
+          {{validationResult.message}}
         </p>
       {{else}}
-        {{item-picker/layer-picker model=layerList selectable=forceLayerSelection onLayerSelected=(action "onLayerSelected")}}
+        {{item-picker/layer-picker
+          model=layerList
+          i18nScope=_i18nScope
+          selectable=forceLayerSelection
+          onLayerSelected=(action "onLayerSelected")}}
       {{/if}}
   {{/if}}
   </section>

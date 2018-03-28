@@ -15,7 +15,7 @@ import Component from '@ember/component';
 import singleTemplate from './single/template';
 import multipleTemplate from './multiple/template';
 import { tryInvoke } from '@ember/utils';
-import { later } from '@ember/runloop';
+import { next } from '@ember/runloop';
 
 export default Component.extend({
   layout: computed('selectMultiple', function () {
@@ -62,7 +62,8 @@ export default Component.extend({
   }),
 
   checked: computed('model.id', 'itemsToAdd.[]', function () {
-    return this.get('itemsToAdd').includes(this.get('model'));
+    let chk = this.get('itemsToAdd').includes(this.get('model'));
+    return chk;
   }),
 
   url: computed('model.id', 'session.portalHostname', function () {
@@ -71,9 +72,11 @@ export default Component.extend({
 
   actions: {
     selectItem (item) {
-      later(this, () => {
+      // this is needed because of what appears to be a glimmer race condition.
+      // if not present, the checked state of the checkbox will be out of sync
+      next(this, () => {
         tryInvoke(this, 'onClick', [{item}]);
-      }, 0);
+      });
     }
   }
 
