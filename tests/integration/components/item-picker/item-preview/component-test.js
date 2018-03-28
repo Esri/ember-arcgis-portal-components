@@ -11,7 +11,7 @@ moduleForComponent('item-picker/item-preview', 'Integration | Component | item p
 
 test('it renders', function (assert) {
   const id = 'test-dataset-id';
-  const model = {
+  const item = {
     id: id,
     title: 'This is the name',
     description: 'This is the description',
@@ -20,7 +20,7 @@ test('it renders', function (assert) {
     type: 'Web Map'
   };
 
-  this.set('model', model);
+  this.set('model', {item: item});
   this.set('onSelectionValidator', function () {});
   this.set('onItemSelected', function () {});
   this.set('cancelAction', function () {});

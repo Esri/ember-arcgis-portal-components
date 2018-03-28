@@ -1,18 +1,11 @@
 <div class="layer-picker-list">
   <ul class="nav nav-pills nav-stacked">
     {{#each model as |layer|}}
-      {{#if selectable}}
-      <input
-        type="radio"
-        name="selectedLayer"
-        checked={{layer.checked}}
-        value={{layer.id}}
-        class="magic-radio"
-        id={{layer.name}}
-        onchange={{action onLayerSelected layer}}
-      />
-      {{/if}}
-      <label for="{{layer.name}}">{{layer.name}}</label>
+      {{item-picker/layer-picker-row
+        layer=layer
+        selectable=selectable
+        onLayerSelected=(action onLayerSelected)
+      }}
     {{/each}}
   </ul>
 </div>
