@@ -20,12 +20,19 @@ import Component from '@ember/component';
 import layout from './template';
 import queryHelpers from 'ember-arcgis-portal-components/utils/query-helpers';
 import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
-export default Component.extend({
-  layout,
-  intl: service(),
-  itemService: service('items-service'),
-  classNames: [ 'item-picker', 'clearfix' ],
 
+export default Component.extend({
+  classNames: [ 'item-picker', 'clearfix' ],
+  disableAddItems: not('hasItemsToAdd'),
+  hasItemsToAdd: notEmpty('itemsToAdd'),
+  intl: service(),
+  isValidating: false,
+  itemService: service('items-service'),
+  layout,
+  selectAnyway: false,
+  shouldValidate: false,
+  showMessage: notEmpty('currentMessage'),
+  showNoItemsMsg: notEmpty('noItemsFoundMsg'),
   /**
    * Startup the component... we may need to issue an immediate search...
    */
@@ -39,14 +46,6 @@ export default Component.extend({
       this._doSearch(this.get('q'));
     }
   },
-
-  disableAddItems: not('hasItemsToAdd'),
-  showNoItemsMsg: notEmpty('noItemsFoundMsg'),
-  hasItemsToAdd: notEmpty('itemsToAdd'),
-  showMessage: notEmpty('currentMessage'),
-  isValidating: false,
-  selectAnyway: false,
-  shouldValidate: false,
 
   /**
    * Compute the translation scope

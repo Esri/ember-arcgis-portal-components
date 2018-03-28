@@ -77,6 +77,14 @@
             "imageService": "Image Service",
             "webMap": "Web Map",
             "webMappingApplication": "Web Mapping Application"
+          },
+          "geometryType": {
+            "esriGeometryPolygon": "Polygon",
+            "esriGeometryLine": "Line",
+            "esriGeometryPoint": "Point",
+            "esriGeometryMultipoint": "Multipoint",
+            "esriGeometryPolyline": "Polyline",
+            "table": "Table"
           }
         }
       }

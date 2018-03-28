@@ -22,7 +22,7 @@ export default Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
   description: reads('model.item.description'),
   featureService: service('feature-service'),
-  forceLayerSelection: alias('showLayers'),
+  forceLayerSelection: alias('params.forceLayerSelection'),
   hasSelectedLayer: notEmpty('selectedLayer'),
   intl: service(),
   isLoading: true,
@@ -31,7 +31,7 @@ export default Component.extend({
   layout,
   selectAnyway: false,
   shouldValidate: false,
-  showError: notEmpty('errorMessage'),
+  showError: notEmpty('validationResult'),
 
   /**
    * Compute the translation scope
@@ -59,7 +59,6 @@ export default Component.extend({
   * ... a map service
   * ... a feature service
   */
-
   showLayers: computed('model.item.type', function () {
     const type = this.get('model.item.type');
     switch (type.toLowerCase()) {
@@ -74,7 +73,7 @@ export default Component.extend({
   /**
    * Construct the preview url
    */
-  previewUrl: computed('model.item', function () {
+  previewUrl: computed('model', function () {
     const item = this.get('model.item');
     let previewURL;
     // if the item has a url property, use that...
@@ -100,13 +99,13 @@ export default Component.extend({
    * ... we have an error
    * ... we need to choose a layer, and have not selected one
    */
-  isSelectDisabled: computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
-    const errorMessage = this.get('errorMessage');
+  isSelectDisabled: computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'validationResult.status', function () {
+    const validationResult = this.get('validationResult');
     let result = false;
     if (this.get('isValidating')) {
       result = true;
     }
-    if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+    if (validationResult && validationResult.status && validationResult.status === 'error') {
       result = true;
     } else {
       if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
@@ -148,6 +147,7 @@ export default Component.extend({
    */
   fetchServiceLayers (serviceItem) {
     const featureService = this.get('featureService');
+    serviceItem.url = serviceItem.url.trim();
     // upgrade the url and re-assign it to the item...
     let upgradeInfo = this.upgradeProtocol(serviceItem.url);
     serviceItem.url = upgradeInfo.url;
@@ -200,7 +200,7 @@ export default Component.extend({
       .then((layersAndTables) => {
         this.setProperties({
           isLoading: false,
-          errorMessage: null,
+          validationResult: null,
           layerList: layersAndTables
         });
       })
@@ -211,7 +211,7 @@ export default Component.extend({
           selectedLayer: null,
         });
         debug(`Error fetching layers ${err}`);
-        this.set('errorMessage', {
+        this.set('validationResult', {
           status: 'error',
           message: err.message || 'Error accessing service.'
         });
@@ -258,10 +258,10 @@ export default Component.extend({
   /**
    * What class do we use for the message...
    */
-  messageClass: computed('errorMessage.status', function () {
-    if (this.get('errorMessage.status') === 'warning') {
+  messageClass: computed('validationResult.status', function () {
+    if (this.get('validationResult.status') === 'warning') {
       return 'alert-warning';
-    } else if (this.get('errorMessage.status') === 'error') {
+    } else if (this.get('validationResult.status') === 'error') {
       return 'alert-danger';
     }
   }),
@@ -277,10 +277,9 @@ export default Component.extend({
     /**
      * When the user clicks the select button...
      */
-    onServiceSelected (item) {
-      let options;
+    onServiceSelected (model) {
       if (this.get('forceLayerSelection')) {
-        options = {
+        model.options = {
           layer: this.get('selectedLayer')
         };
       }
@@ -288,21 +287,21 @@ export default Component.extend({
 
       if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
         this.set('isValidating', true);
-        validator(item)
+        validator(model)
           .then((resp) => {
             this.set('isValidating', false);
-            this.set('errorHash', resp.status);
+            this.set('validationResult', resp.status);
             if (resp.status.status === 'error') {
               return;
             } else if (resp.status.status === 'warning') {
               this.set('selectAnyway', true);
               return;
             } else {
-              this.get('onItemSelected')(item, options);
+              this.get('onItemSelected')(model.item, model.options);
             }
           });
       } else {
-        this.get('onItemSelected')(item, options);
+        this.get('onItemSelected')(model.item, model.options);
       }
     }
   }
