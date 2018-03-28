@@ -51,15 +51,15 @@ test('it renders selected', function (assert) {
 
 test('it properly handles click', function (assert) {
   const id = 'test-dataset-id';
-  const model = { id: id, title: 'This is the name' };
+  const item = { id: id, title: 'This is the name' };
   this.setProperties({
     currentItemId: id,
-    model: model
+    model: item
   });
 
   // test double for the external action
-  this.set('onClick', (item) => {
-    assert.equal(item.id, id, 'submitted value is passed to external action');
+  this.set('onClick', (model) => {
+    assert.equal(item.id, model.item.id, 'submitted value is passed to external action');
   });
 
   this.render(hbs`{{item-picker/item-row model=model currentItemId=currentItemId onClick=(action onClick)}}`);
@@ -73,18 +73,24 @@ test('multiple-mode: it renders', function (assert) {
   });
 
   const id = 'test-item-id';
-  const model = { id: id, title: 'This is the name' };
+  const model = { id: id, title: 'This is the name', type: 'Web Map', owner: 'vader' };
   this.setProperties({
     model: model,
     itemsToAdd: []
   });
-  this.render(hbs`{{item-picker/item-row model=model selectMultiple=true itemsToAdd=itemsToAdd currentItemId=currentItemId onClick=(action onClick item)}}`);
+  this.render(hbs`{{item-picker/item-row
+    model=model
+    selectMultiple=true
+    itemsToAdd=itemsToAdd
+    currentItemId=currentItemId
+    onClick=(action onClick item)}}`);
 
   assert.equal(this.$('h2').text().trim(), 'This is the name');
-  assert.equal(this.$('.item-picker-item-results-item span').length, 1);
-  assert.equal(this.$('.item-picker-item-results-item a').length, 1);
-  assert.equal(this.$('.item-picker-item-results-item a input').length, 1);
-  assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'));
+  assert.equal(this.$('.shared-by').text().trim(), 'vader');
+  assert.equal(this.$('.checkbox-inline span').length, 1, 'should be one span');
+  assert.equal(this.$('.item-picker-item-results-item a').length, 1, 'should be one a');
+  assert.equal(this.$('.item-picker-item-results-item a input').length, 1, 'should be one a input');
+  assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'), 'input should not be checked');
 });
 
 test('multiple-mode: it renders checked', function (assert) {
@@ -94,28 +100,34 @@ test('multiple-mode: it renders checked', function (assert) {
   });
 
   const id = 'test-item-id';
-  const model = { id: id, title: 'This is the name' };
+  const model = { id: id, title: 'This is the name', type: 'Web Map', owner: 'vader' };
   this.setProperties({
     model: model,
-    itemsToAdd: [ { id: id } ]
+    itemsToAdd: [ model ]
   });
-  this.render(hbs`{{item-picker/item-row model=model selectMultiple=true itemsToAdd=itemsToAdd currentItemId=currentItemId onClick=(action onClick item)}}`);
+  this.render(hbs`{{item-picker/item-row
+    model=model
+    selectMultiple=true
+    itemsToAdd=itemsToAdd
+    currentItemId=currentItemId
+    onClick=(action onClick item)}}`);
 
   assert.equal(this.$('h2').text().trim(), 'This is the name');
-  assert.ok(this.$('.item-picker-item-results-item a input').is(':checked'));
+  assert.equal(this.$('.shared-by').text().trim(), 'vader');
+  assert.ok(this.$('.item-picker-item-results-item a input').is(':checked'), 'should be checked');
 });
 
 test('multiple-mode: it properly handles click', function (assert) {
   const id = 'test-dataset-id';
-  const model = { id: id, title: 'This is the name' };
+  const item = { id: id, title: 'This is the name' };
   this.setProperties({
-    model: model,
+    model: item,
     itemsToAdd: []
   });
 
   // test double for the external action
-  this.set('onClick', (item) => {
-    assert.equal(item.id, id, 'submitted value is passed to external action');
+  this.set('onClick', (model) => {
+    assert.equal(item.id, model.item.id, 'submitted value is passed to external action');
   });
 
   this.render(hbs`{{item-picker/item-row model=model selectMultiple=true itemsToAdd=itemsToAdd currentItemId=currentItemId onClick=(action onClick)}}`);

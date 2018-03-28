@@ -1,0 +1,12 @@
+{{#if selectable}}
+<input
+  type="radio"
+  name="selectedLayer"
+  checked={{layer.checked}}
+  value={{layer.id}}
+  class="magic-radio"
+  id={{layer.name}}
+  onchange={{action onLayerSelected layer}}
+/>
+{{/if}}
+<label for="{{layer.name}}">{{layer.name}} ({{t geometryTypeKey }})</label>

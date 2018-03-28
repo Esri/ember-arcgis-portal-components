@@ -32,7 +32,7 @@ export default Component.extend({
   isValidating: false,
   selectAnyway: false,
   shouldValidate: false,
-  showError: notEmpty('errorMessage'),
+  showError: notEmpty('validationResult'),
   description: reads('model.item.description'),
 
   /**
@@ -98,10 +98,10 @@ export default Component.extend({
   /**
    * What class should be used for any messages
    */
-  messageClass: computed('errorMessage', function () {
-    if (this.get('errorMessage.status') === 'warning') {
+  messageClass: computed('validationResult', function () {
+    if (this.get('validationResult.status') === 'warning') {
       return 'alert-warning';
-    } else if (this.get('errorMessage.status') === 'error') {
+    } else if (this.get('validationResult.status') === 'error') {
       return 'alert-danger';
     }
   }),
@@ -115,7 +115,7 @@ export default Component.extend({
         validator(item)
           .then((resp) => {
             this.set('isValidating', false);
-            this.set('errorHash', resp.status);
+            this.set('validationResult', resp.status);
             if (resp.status.status === 'error') {
               return;
             } else if (resp.status.status === 'warning') {

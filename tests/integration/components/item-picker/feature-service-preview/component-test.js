@@ -35,7 +35,7 @@ test('it renders', function (assert) {
   };
 
   this.setProperties({
-    currentItem: item,
+    currentItem: {item: item},
     isLoading: false,
     layerList: [],
     selectedLayer: null,
