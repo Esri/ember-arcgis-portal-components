@@ -18,7 +18,7 @@ import layout from './template';
 export default Component.extend({
   layout,
   tagName: 'form',
-  classNames: ['portal-search-form', 'form-group-tsf', 'form-group'],
+  classNames: ['portal-search-form', 'form-group'],
 
   /**
    * Compute the translation scope

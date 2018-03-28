@@ -1,18 +1,11 @@
 .portal-search-form {
   border-bottom: 1px solid $calcite-gray-light;
-  .form-group-tsf {
-    margin-bottom: 0px;
-  }
-  .form-control-tsf {
-    height: 33px;
-    width: 100%;
-  }
-  .clear-button{
+  .clear-button {
     z-index: 10;
     pointer-events: auto;
   }
-  input {
-    border: 0px;
+  .input-group div.has-clear.has-feedback input {
+    border: none;
     box-shadow: none;
     -webkit-box-shadow: none;
   }
