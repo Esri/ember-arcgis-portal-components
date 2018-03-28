@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Fixed
 - Checkboxes no longer jump in Safari when checked [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 - On smaller screens, the “Select” button on the bottom right now has a fixed width [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
+- Old and unused classes have now been removed and the border is no longer visible in the monorepo [link](https://esriarlington.tpondemand.com/entity/83659-chore-search-classes-need-to-cleanup)
 
 ## [0.9.4]
 ## Fixed
