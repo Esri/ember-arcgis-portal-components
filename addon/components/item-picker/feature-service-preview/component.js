@@ -278,9 +278,8 @@ export default Component.extend({
      * When the user clicks the select button...
      */
     onServiceSelected (model) {
-      let options;
       if (this.get('forceLayerSelection')) {
-        options = {
+        model.options = {
           layer: this.get('selectedLayer')
         };
       }
@@ -288,7 +287,7 @@ export default Component.extend({
 
       if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
         this.set('isValidating', true);
-        validator(model.item, options)
+        validator(model)
           .then((resp) => {
             this.set('isValidating', false);
             this.set('validationResult', resp.status);
@@ -298,11 +297,11 @@ export default Component.extend({
               this.set('selectAnyway', true);
               return;
             } else {
-              this.get('onItemSelected')(model.item, options);
+              this.get('onItemSelected')(model.item, model.options);
             }
           });
       } else {
-        this.get('onItemSelected')(model.item, options);
+        this.get('onItemSelected')(model.item, model.options);
       }
     }
   }

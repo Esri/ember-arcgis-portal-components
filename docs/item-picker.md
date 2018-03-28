@@ -254,3 +254,21 @@ The component will be used in the following context, and developers should refer
   onClick=(action "onItemClick") // action you can fire to inform the rest of the item picker of a selection
   }}
 ```
+
+#### Handling Multiple Selection
+
+Multiple selection is usually handled by showing a `<input type="checkbox"...` and there are some idiosyncrasies with getting event handlers and the checked state to be in sync.
+
+What we've found is that the use of a `next` in the component's `selectItem` action solves this. This example code is from the `item-row` component.
+
+```js
+actions: {
+  selectItem (item) {
+    // this is needed because of what appears to be a glimmer race condition.
+    // if not present, the checked state of the checkbox will be out of sync
+    next(this, () => {
+      tryInvoke(this, 'onClick', [{item}]);
+    });
+  }
+}
+```
