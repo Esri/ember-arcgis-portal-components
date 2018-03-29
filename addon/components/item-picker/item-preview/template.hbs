@@ -1,21 +1,20 @@
-<div>
-  {{#if showError}}
-    <p class="alert {{messageClass}}" id="val-error">
-      {{validationResult.message}}
-    </p>
-  {{/if}}
-  {{image-with-fallback imgSrc=thumbnailUrl fallbackSrc='ember-arcgis-portal-components/assets/images/default-dataset-thumb.png'}}
-  <h4>{{model.item.title}}</h4>
+{{#if showError}}
+  <p class="alert {{messageClass}}" id="val-error">
+    {{validationResult.message}}
+  </p>
+{{/if}}
+{{image-with-fallback imgSrc=thumbnailUrl fallbackSrc='ember-arcgis-portal-components/assets/images/default-dataset-thumb.png'}}
+<h4>{{model.item.title}}</h4>
 
-  <div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
-  <div><i class="glyphicon glyphicon-calendar"></i>{{ format-time model.item.modified }}</div>
-  <div><i class="glyphicon glyphicon-file"></i>{{ itemType }}</div>
+<div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
+<div><i class="glyphicon glyphicon-calendar"></i>{{ format-time model.item.modified }}</div>
+<div><i class="glyphicon glyphicon-file"></i>{{ itemType }}</div>
 
-  <div class="item-picker-current-item-preview-description">
-    {{sanitize-html description}}
-    <div class="text-fade"></div>
-  </div>
+<div class="item-picker-current-item-preview-description">
+  {{sanitize-html description}}
+  <div class="text-fade"></div>
 </div>
+
 
 <section class="item-picker-controls">
     <div class="full-width-btn">

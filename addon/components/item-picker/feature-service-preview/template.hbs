@@ -1,38 +1,37 @@
-<div>
-  <h4>{{model.item.title}}</h4>
+<h4>{{model.item.title}}</h4>
 
-  <div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
-  <div><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
-  <div><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
-  <div><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
+<div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
+<div><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
+<div><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
+<div><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
 
-  <div class="item-picker-current-item-preview-description">
-    {{sanitize-html description}}
-    <div class="text-fade"></div>
-  </div>
-
-  {{#if showLayers}}
-    <section class="layer-picker-controls">
-    <h6>{{t (concat _i18nScope "layerList")}}</h6>
-
-    {{#if isLoading}}
-      {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
-    {{else}}
-        {{#if showError}}
-          <p class="alert {{messageClass}}" id="val-error">
-            {{validationResult.message}}
-          </p>
-        {{else}}
-          {{item-picker/layer-picker
-            model=layerList
-            i18nScope=_i18nScope
-            selectable=forceLayerSelection
-            onLayerSelected=(action "onLayerSelected")}}
-        {{/if}}
-    {{/if}}
-    </section>
-  {{/if}}
+<div class="item-picker-current-item-preview-description">
+  {{sanitize-html description}}
+  <div class="text-fade"></div>
 </div>
+
+{{#if showLayers}}
+  <section class="layer-picker-controls">
+  <h6>{{t (concat _i18nScope "layerList")}}</h6>
+
+  {{#if isLoading}}
+    {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
+  {{else}}
+      {{#if showError}}
+        <p class="alert {{messageClass}}" id="val-error">
+          {{validationResult.message}}
+        </p>
+      {{else}}
+        {{item-picker/layer-picker
+          model=layerList
+          i18nScope=_i18nScope
+          selectable=forceLayerSelection
+          onLayerSelected=(action "onLayerSelected")}}
+      {{/if}}
+  {{/if}}
+  </section>
+{{/if}}
+
 
 <section class="item-picker-controls">
   <div class="full-width-btn">

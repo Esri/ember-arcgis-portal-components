@@ -214,7 +214,7 @@ div.panel-body:has(.item-picker) {
       flex-direction: column;
       overflow: auto;
       height: 100%;
-      justify-content: space-between;
+      margin: -10px 0;
       img {
         height: 133px;
       }
@@ -230,9 +230,9 @@ div.panel-body:has(.item-picker) {
       }
       .item-picker-current-item-preview-description {
         overflow: hidden;
-        height: 70px;
+        flex: 1 1 30%;
         position: relative;
-        margin-top: 5%;
+        margin: 5% 0px;
         .text-fade {
           width: 100%;
           height: 13px;
@@ -251,6 +251,7 @@ div.panel-body:has(.item-picker) {
     }
     .item-picker-controls {
       display: flex;
+      margin-top: auto;
       flex-direction: column;
       width: 100%;
       border-spacing: 15px;
