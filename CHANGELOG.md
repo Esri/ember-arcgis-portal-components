@@ -11,11 +11,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `feature-service-preview` action-up with `{item, options}`
 - `item-row` selectItem action uses `next`
 - general cleanup and consistency for using `model` internally, and returning `{item, options}`
-
 ## Fixed
 - Checkboxes no longer jump in Safari when checked [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 - On smaller screens, the “Select” button on the bottom right now has a fixed width [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 - Old and unused classes have now been removed and the border is no longer visible in the monorepo [link](https://esriarlington.tpondemand.com/entity/83659-chore-search-classes-need-to-cleanup)
+## Removed
+- Extra padding on item picker has been removed [link](https://github.com/Esri/ember-arcgis-portal-components/issues/63)
 
 ## [0.9.4]
 ## Fixed
