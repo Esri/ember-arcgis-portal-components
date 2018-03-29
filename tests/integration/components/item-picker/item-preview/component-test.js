@@ -36,9 +36,8 @@ test('it renders', function (assert) {
   // assert.equal(this.$().text().trim(), '');
   const el = this.$('.item-picker-current-item-preview');
   assert.equal(el.find('h4').text().trim(), 'This is the name');
-  assert.equal(el.find('span.shared-by-owner').text().trim(), 'Shared by: jupe');
+  assert.equal(el.find('div.shared-by-owner').text().trim(), 'Shared by: jupe');
   assert.equal(el.find('.item-picker-current-item-preview-description').text().trim(), 'This is the description');
-  assert.equal(el.find('.item-picker-current-item-preview-meta > span').length, 3);
-  assert.equal(el.find('.item-picker-current-item-preview-meta > span:nth-child(2)').text().trim(), '9/18/2014');
-  assert.equal(el.find('.item-picker-current-item-preview-meta > span:nth-child(3)').text().trim(), 'Web Map');
+  assert.equal(el.find('.item-date-modified').text().trim(), '9/18/2014');
+  assert.equal(el.find('.item-item-type').text().trim(), 'Web Map');
 });
