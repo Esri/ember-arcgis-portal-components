@@ -1,45 +1,45 @@
-<h4>{{model.item.title}}</h4>
+<div>
+  <h4>{{model.item.title}}</h4>
 
-<div class="item-picker-current-item-preview-meta">
-  <span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</span>
-  <span><i class="glyphicon icon-layers"></i>{{layerList.length}}</span>
-  <span><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</span>
-  <span><i class="glyphicon glyphicon-file"></i>{{itemType}}</span>
-</div>
+  <div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
+  <div><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
+  <div><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
+  <div><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
 
-<div class="item-picker-current-item-preview-description">
-  {{sanitize-html description}}
-  <div class="text-fade"></div>
-</div>
+  <div class="item-picker-current-item-preview-description">
+    {{sanitize-html description}}
+    <div class="text-fade"></div>
+  </div>
 
-{{#if showLayers}}
-  <section class="layer-picker-controls">
-  <h6>{{t (concat _i18nScope "layerList")}}</h6>
+  {{#if showLayers}}
+    <section class="layer-picker-controls">
+    <h6>{{t (concat _i18nScope "layerList")}}</h6>
 
-  {{#if isLoading}}
-    {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
-  {{else}}
-      {{#if showError}}
-        <p class="alert {{messageClass}}" id="val-error">
-          {{validationResult.message}}
-        </p>
-      {{else}}
-        {{item-picker/layer-picker
-          model=layerList
-          i18nScope=_i18nScope
-          selectable=forceLayerSelection
-          onLayerSelected=(action "onLayerSelected")}}
-      {{/if}}
+    {{#if isLoading}}
+      {{loading-indicator msg=(t (concat _i18nScope "loadingLayers"))}}
+    {{else}}
+        {{#if showError}}
+          <p class="alert {{messageClass}}" id="val-error">
+            {{validationResult.message}}
+          </p>
+        {{else}}
+          {{item-picker/layer-picker
+            model=layerList
+            i18nScope=_i18nScope
+            selectable=forceLayerSelection
+            onLayerSelected=(action "onLayerSelected")}}
+        {{/if}}
+    {{/if}}
+    </section>
   {{/if}}
-  </section>
-{{/if}}
+</div>
 
 <section class="item-picker-controls">
   <div class="full-width-btn">
-    <button type="button" class="btn btn-primary btn-block" data-test="item-picker-select-button" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
+    <button type="button" class="btn btn-primary" data-test="item-picker-select-button" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
   </div>
   <div class="side-by-side">
-    <button type="button" class="btn btn-default btn-block back-btn" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
-    <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block preview-btn">{{t (concat _i18nScope "buttons.preview")}}</a>
+    <button type="button" class="btn btn-default back-btn" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
+    <a href="{{previewUrl}}" target="_blank" class="btn btn-default preview-btn">{{t (concat _i18nScope "buttons.preview")}}</a>
   </div>
 </section>

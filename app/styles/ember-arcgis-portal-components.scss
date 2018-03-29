@@ -1,4 +1,4 @@
-.portal-search-form {
+pull-.portal-search-form {
   border-bottom: 1px solid $calcite-gray-light;
   .clear-button {
     z-index: 10;
@@ -20,6 +20,7 @@ div.panel-body:has(.item-picker) {
 .item-picker {
   position: relative;
   min-height: 45rem;
+  padding: 0% 2.5%;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
@@ -199,7 +200,6 @@ div.panel-body:has(.item-picker) {
     left: 55%;
     right: 0;
     bottom: 0;
-    min-height: 45rem;
     margin-bottom: -15px;
     background-color: $white;
     border-top: solid 1px $calcite-gray-lighter;
@@ -213,7 +213,8 @@ div.panel-body:has(.item-picker) {
       display: flex;
       flex-direction: column;
       overflow: auto;
-      min-height: 400px;
+      height: 100%;
+      justify-content: space-between;
       img {
         height: 133px;
       }
@@ -231,6 +232,7 @@ div.panel-body:has(.item-picker) {
         overflow: hidden;
         height: 70px;
         position: relative;
+        margin-top: 5%;
         .text-fade {
           width: 100%;
           height: 13px;
@@ -252,26 +254,30 @@ div.panel-body:has(.item-picker) {
     .item-picker-controls {
       display: flex;
       flex-direction: column;
-      position: absolute;
-      bottom: 0px;
-      right: 0px;
       width: 100%;
       border-spacing: 15px;
       background-color: $white;
       padding-top: 15px;
       .full-width-btn {
+        display: flex;
         margin-bottom: 15px;
         padding-left: 15px;
+        button {
+          flex: 1;
+        }
       }
       .side-by-side {
         display: flex;
         padding-left: 15px;
         margin-bottom: 15px;
         align-items: baseline;
+        justify-content: space-between;
         .back-btn {
+          flex: 1;
           margin-right: 5px
         }
         .preview-btn {
+          flex: 1;
           margin-left: 5px
         }
       }
