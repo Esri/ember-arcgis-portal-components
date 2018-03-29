@@ -1,11 +1,9 @@
 <h4>{{model.item.title}}</h4>
-<span class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</span>
 
-<div class="item-picker-current-item-preview-meta">
-  <div><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
-  <div><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
-  <div><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
-</div>
+<div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
+<div class="item-metadata-layer-count"><i class="glyphicon icon-layers"></i>{{layerList.length}}</div>
+<div class="item-metadata-date-modified"><i class="glyphicon glyphicon-calendar"></i>{{format-time model.item.modified}}</div>
+<div class="item-metadata-item-type"><i class="glyphicon glyphicon-file"></i>{{itemType}}</div>
 
 <div class="item-picker-current-item-preview-description">
   {{sanitize-html description}}
@@ -34,16 +32,13 @@
   </section>
 {{/if}}
 
+
 <section class="item-picker-controls">
   <div class="full-width-btn">
-    <div>
-    <button type="button" class="btn btn-primary btn-block" data-test="item-picker-select-button" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
-    </div>
+    <button type="button" class="btn btn-primary" data-test="item-picker-select-button" disabled={{isSelectDisabled}} {{action "onServiceSelected" model}}>{{selectButtonText}}</button>
   </div>
   <div class="side-by-side">
-    <div>
-      <button type="button" class="btn btn-default btn-block" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
-      <a href="{{previewUrl}}" target="_blank" class="btn btn-default btn-block">{{t (concat _i18nScope "buttons.preview")}}</a>
-    </div>
+    <button type="button" class="btn btn-default back-btn" {{action onCancel}}>{{t (concat _i18nScope "buttons.back")}}</button>
+    <a href="{{previewUrl}}" target="_blank" class="btn btn-default preview-btn">{{t (concat _i18nScope "buttons.preview")}}</a>
   </div>
 </section>

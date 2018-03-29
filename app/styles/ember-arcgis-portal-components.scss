@@ -1,4 +1,4 @@
-.portal-search-form {
+pull-.portal-search-form {
   border-bottom: 1px solid $calcite-gray-light;
   .clear-button {
     z-index: 10;
@@ -20,6 +20,7 @@ div.panel-body:has(.item-picker) {
 .item-picker {
   position: relative;
   min-height: 45rem;
+  padding: 0% 2.5%;
   .item-picker-datasets-pane, .item-picker-items-pane {
     min-height: 55rem;
   }
@@ -190,14 +191,15 @@ div.panel-body:has(.item-picker) {
     }
   }
   .item-picker-current-item {
-    z-index: 2;
+    // This is styling for the drawer that
+    // holds the metadata for the item
+    z-index: 3;
     padding: 15px;
     position: absolute;
     top: 0;
     left: 55%;
     right: 0;
     bottom: 0;
-    min-height: 45rem;
     margin-bottom: -15px;
     background-color: $white;
     border-top: solid 1px $calcite-gray-lighter;
@@ -208,13 +210,10 @@ div.panel-body:has(.item-picker) {
       margin: 10px 0px;
     }
     .item-picker-current-item-preview {
-      position: absolute;
-      height: calc(100% - 10px);
-      width: calc(100% - 30px);
-      top: 1em;
-      bottom: 10%;
+      display: flex;
+      flex-direction: column;
       overflow: auto;
-      min-height: 400px;
+      height: 100%;
       img {
         height: 133px;
       }
@@ -227,12 +226,12 @@ div.panel-body:has(.item-picker) {
       .shared-by-owner {
         font-size: 14px;
         display: inline-block;
-        margin: 0px auto;
       }
       .item-picker-current-item-preview-description {
         overflow: hidden;
-        height: 55px;
+        flex: 0 1 30%;
         position: relative;
+        margin: 5% 0px;
         .text-fade {
           width: 100%;
           height: 13px;
@@ -243,43 +242,41 @@ div.panel-body:has(.item-picker) {
       }
       .item-picker-current-item-preview-meta {
         font-size: 14px;
-        margin: 0px auto 15px auto;
+        margin-bottom: 15px;
         .glyphicon {
           margin-right: 5px;
         }
       }
     }
     .item-picker-controls {
-      position: absolute;
-      bottom: 0px;
-      right: 0px;
+      display: flex;
+      margin-top: auto;
+      flex-direction: column;
       width: 100%;
       border-spacing: 15px;
       background-color: $white;
       padding-top: 15px;
       .full-width-btn {
+        display: flex;
+        margin-bottom: 15px;
         padding-left: 15px;
-        padding-right: 15px;
-        div {
-          display: table-row;
-          display: block;
+        button {
+          flex: 1;
         }
       }
       .side-by-side {
-        display: table;
-        width: 100%;
-        div {
-          display: table-row;
+        display: flex;
+        padding-left: 15px;
+        margin-bottom: 15px;
+        align-items: baseline;
+        justify-content: space-between;
+        .back-btn {
+          flex: 1;
+          margin-right: 5px
         }
-        a {
-          display: table-cell;
-          width: 50%;
-          white-space: normal;
-        }
-        button {
-          display: table-cell;
-          width: 100%;
-          white-space: normal;
+        .preview-btn {
+          flex: 1;
+          margin-left: 5px
         }
       }
     }

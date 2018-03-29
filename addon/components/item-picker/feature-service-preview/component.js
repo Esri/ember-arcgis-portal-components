@@ -13,7 +13,7 @@ import { debug } from '@ember/debug';
 
 import { computed } from '@ember/object';
 import { inject as service } from '@ember/service';
-import { reads, alias, notEmpty } from '@ember/object/computed';
+import { reads, notEmpty } from '@ember/object/computed';
 import Component from '@ember/component';
 import layout from './template';
 
@@ -22,7 +22,7 @@ export default Component.extend({
   classNames: [ 'item-picker-current-item-preview' ],
   description: reads('model.item.description'),
   featureService: service('feature-service'),
-  forceLayerSelection: alias('params.forceLayerSelection'),
+  forceLayerSelection: reads('params.forceLayerSelection'),
   hasSelectedLayer: notEmpty('selectedLayer'),
   intl: service(),
   isLoading: true,
@@ -105,7 +105,7 @@ export default Component.extend({
     if (this.get('isValidating')) {
       result = true;
     }
-    if (validationResult && validationResult.status && validationResult.status === 'error') {
+    if (validationResult && validationResult.status === 'error') {
       result = true;
     } else {
       if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
