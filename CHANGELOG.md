@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## Unreleased
+## [1.0.0]
 ## Added
 - magic-checkbox class is now used in multi-select mode
 - markdown docs for item-picker
