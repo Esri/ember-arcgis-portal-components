@@ -7,8 +7,8 @@
 <h4>{{model.item.title}}</h4>
 
 <div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
-<div><i class="glyphicon glyphicon-calendar"></i>{{ format-time model.item.modified }}</div>
-<div><i class="glyphicon glyphicon-file"></i>{{ itemType }}</div>
+<div class="item-date-modified"><i class="glyphicon glyphicon-calendar"></i>{{ format-time model.item.modified }}</div>
+<div class="item-item-type"><i class="glyphicon glyphicon-file"></i>{{ itemType }}</div>
 
 <div class="item-picker-current-item-preview-description">
   {{sanitize-html description}}
