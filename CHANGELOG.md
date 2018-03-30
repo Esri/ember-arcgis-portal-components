@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ## Fixed
 - Sidebar now takes full height of the modal instead of taking the height of results
+## Changed
+- Text of preview back button is now 'Close'
 
 ## [1.0.0]
 ## Added
