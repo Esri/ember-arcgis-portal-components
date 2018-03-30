@@ -32,7 +32,7 @@
           "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again."
         },
         "buttons": {
-          "back": "Back",
+          "close": "Close",
           "select": "Select",
           "validating": "Validating data...",
           "selectAnyway": "Select Anyway",
