@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 ## Fixed
+- Preview panel now closes when clicking an active row [link](https://github.com/Esri/ember-arcgis-portal-components/issues/76)
 - Sidebar now takes full height of the modal instead of taking the height of results
 ## Changed
 - Text of preview back button is now 'Close'
