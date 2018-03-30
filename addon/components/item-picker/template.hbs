@@ -17,7 +17,7 @@
     <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
   {{/if}}
 
-{{#if currentModel}}
+{{#if currentModel.item}}
   <section class="item-picker-current-item">
     {{component preview
       _i18nScope=_i18nScope
