@@ -17,6 +17,19 @@
     <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
   {{/if}}
 
+{{#if currentModel}}
+  <section class="item-picker-current-item">
+    {{component preview
+      _i18nScope=_i18nScope
+      model=currentModel
+      params=previewParams
+      onSelectionValidator=onSelectionValidator
+      onItemSelected=(action 'onPreviewSelected')
+      onCancel=(action 'cancelAction')
+    }}
+  </section>
+{{/if}}
+
 <div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
     {{search-form q=q onSearch=(action "doSearch")}}
 
@@ -39,19 +52,6 @@
           {{/each}}
         {{/if}}
       </ul>
-
-      {{#if currentModel}}
-        <section class="item-picker-current-item">
-          {{component preview
-            _i18nScope=_i18nScope
-            model=currentModel
-            params=previewParams
-            onSelectionValidator=onSelectionValidator
-            onItemSelected=(action 'onPreviewSelected')
-            onCancel=(action 'cancelAction')
-          }}
-        </section>
-      {{/if}}
     </div>
 
     {{#if selectMultiple}}
