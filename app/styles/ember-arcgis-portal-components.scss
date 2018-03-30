@@ -193,10 +193,10 @@ div.panel-body:has(.item-picker) {
   .item-picker-current-item {
     // This is styling for the drawer that
     // holds the metadata for the item
-    z-index: 3;
+    z-index: 4;
     padding: 15px;
     position: absolute;
-    top: 0;
+    top: 33px;
     left: 55%;
     right: 0;
     bottom: 0;
@@ -229,9 +229,9 @@ div.panel-body:has(.item-picker) {
       }
       .item-picker-current-item-preview-description {
         overflow: hidden;
-        flex: 0 1 30%;
+        flex: 0 1 auto;
         position: relative;
-        margin: 5% 0px;
+        margin-top: 5%;
         .text-fade {
           width: 100%;
           height: 13px;
