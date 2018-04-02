@@ -4,6 +4,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.2]
+## Fixed
+- Removed stray string causing styling issues
+## Removed
+- Removed tooltips on hover of titles in item picker
+
 ## [1.0.1]
 ## Fixed
 - Preview panel now closes when clicking an active row [link](https://github.com/Esri/ember-arcgis-portal-components/issues/76)
@@ -187,6 +193,7 @@ em
 - Number of search result rows can now be set by: `rowCount`
 - item-preview pane now has a preview button which links out to the item in question.
 
-[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Esri/ember-arcgis-portal-components/compare/v0.9.4...v1.0.0
