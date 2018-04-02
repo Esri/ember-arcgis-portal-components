@@ -257,11 +257,11 @@ div.panel-body:has(.item-picker) {
       background-color: $white;
       padding-top: 15px;
       .full-width-btn {
-        display: flex;
         margin-bottom: 15px;
         padding-left: 15px;
+        flex: 1 0 100%;
         button {
-          flex: 1;
+          width: 100%
         }
       }
       .side-by-side {
