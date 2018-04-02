@@ -18,6 +18,7 @@
   "repository": "https://github.com/Esri/ember-arcgis-portal-components",
   "scripts": {
     "build": "ember build",
+    "clean": "rm -rf node_modules bower_components",
     "lint:js": "eslint ./*.js addon addon-test-support app config lib server test-support tests",
     "start": "ember serve",
     "test": "ember test --silent",
