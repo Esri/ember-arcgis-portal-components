@@ -89,7 +89,7 @@ module('Integration | Component | item picker/item row', function (hooks) {
 
     assert.equal(find('h2').textContent.trim(), 'This is the name');
     assert.equal(find('.shared-by').textContent.trim(), 'vader');
-    assert.equal(findAll('.checkbox-inline span').length, 1, 'should be one span');
+    assert.equal(findAll('.magic-checkbox').length, 1, 'should be one checkbox');
     assert.equal(findAll('.item-picker-item-results-item a').length, 1, 'should be one a');
     assert.equal(findAll('.item-picker-item-results-item a input').length, 1, 'should be one a input');
     assert.notOk(this.$('.item-picker-item-results-item a input').is(':checked'), 'input should not be checked');
