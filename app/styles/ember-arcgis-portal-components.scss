@@ -45,7 +45,7 @@ div.panel-body:has(.item-picker) {
       list-style: none;
       padding: 0;
       a {
-        padding: 1rem;
+        padding: 1.5rem 1rem;
         display: block;
         font-size: 1rem;
         h2 {
@@ -75,9 +75,6 @@ div.panel-body:has(.item-picker) {
         .item-picker-item-results-item-inner {
           display: inline-block;
           padding-left: 30px;
-        }
-        .checkbox-inline {
-          display: inline;
         }
         .magic-checkbox {
           position: absolute;
