@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.3]
+## Fixed
+- Text fadeout is now placed at the bottom of the description container instead of the description itself
+
 ## [1.0.2]
 ## Fixed
 - Removed stray string causing styling issues
@@ -193,7 +197,8 @@ em
 - Number of search result rows can now be set by: `rowCount`
 - item-preview pane now has a preview button which links out to the item in question.
 
-[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Esri/ember-arcgis-portal-components/compare/v0.9.4...v1.0.0
