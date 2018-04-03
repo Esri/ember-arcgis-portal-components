@@ -254,6 +254,19 @@ define('dummy/components/item-picker/item-row/component', ['exports', 'ember-arc
     }
   });
 });
+define('dummy/components/item-picker/layer-picker-row/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/layer-picker-row/component'], function (exports, _component) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function () {
+      return _component.default;
+    }
+  });
+});
 define('dummy/components/item-picker/layer-picker/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/layer-picker/component'], function (exports, _component) {
   'use strict';
 
@@ -375,6 +388,11 @@ define('dummy/ember-arcgis-portal-components/tests/addon.lint-test', [], functio
     assert.ok(true, 'addon/components/item-picker/item-row/component.js should pass ESLint\n\n');
   });
 
+  QUnit.test('addon/components/item-picker/layer-picker-row/component.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'addon/components/item-picker/layer-picker-row/component.js should pass ESLint\n\n');
+  });
+
   QUnit.test('addon/components/item-picker/layer-picker/component.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'addon/components/item-picker/layer-picker/component.js should pass ESLint\n\n');
@@ -438,6 +456,11 @@ define('dummy/ember-arcgis-portal-components/tests/app.lint-test', [], function 
   QUnit.test('app/components/item-picker/item-row/component.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'app/components/item-picker/item-row/component.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('app/components/item-picker/layer-picker-row/component.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'app/components/item-picker/layer-picker-row/component.js should pass ESLint\n\n');
   });
 
   QUnit.test('app/components/item-picker/layer-picker/component.js', function (assert) {
@@ -1880,7 +1903,7 @@ define('dummy/itempicker/validation/controller', ['exports', 'ember-network/fetc
     value: true
   });
   exports.default = Ember.Controller.extend({
-    selectedItem: null,
+    selectedModel: null,
 
     itemService: Ember.inject.service('items-service'),
 
@@ -1900,7 +1923,7 @@ define('dummy/itempicker/validation/controller', ['exports', 'ember-network/fetc
         };
       }
     },
-    _validator: function _validator(item) {
+    _validator: function _validator(item, options) {
       var _this = this;
 
       var copyItem = Ember.copy(item, true);
@@ -1963,9 +1986,15 @@ define('dummy/itempicker/validation/controller', ['exports', 'ember-network/fetc
 
 
     actions: {
-      onSelectItem: function onSelectItem(selected) {
+      onSelectItem: function onSelectItem(item, options) {
         Ember.$('#myModal').modal('hide');
-        this.set('selectedItem', selected);
+        var model = {
+          item: item
+        };
+        if (options && options.layer) {
+          model.layer = options.layer;
+        }
+        this.set('selectedModel', model);
       },
       selectionValidator: function selectionValidator(item) {
         return this._validator(item);
@@ -1987,7 +2016,7 @@ define("dummy/itempicker/validation/template", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "4YURxxG/", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[9,\"class\",\"row\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h2\"],[7],[0,\"Validate Items\"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-6\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Validator\"],[8],[0,\"\\n    \"],[6,\"p\"],[7],[0,\"To validate items simply add an action \"],[6,\"code\"],[7],[0,\"onSelectionValidator\"],[8],[8],[0,\"\\n\\n      \"],[6,\"pre\"],[7],[0,\"\\n\"],[1,\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")\\n      onSelectionValidator=(action \\\"selectionValidator\\\") }}\",false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-6\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Selected Item \"],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"selectedItem\"]]],null,{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"panel panel-default\"],[7],[0,\"\\n        \"],[6,\"div\"],[9,\"class\",\"panel-heading\"],[7],[6,\"h3\"],[9,\"class\",\"panel-title\"],[7],[1,[20,[\"selectedItem\",\"title\"]],false],[8],[8],[0,\"\\n        \"],[6,\"div\"],[9,\"class\",\"panel-body\"],[7],[0,\"\\n          \"],[1,[25,\"sanitize-html\",[[20,[\"selectedItem\",\"description\"]]],null],false],[0,\"\\n        \"],[8],[0,\"\\n      \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"alert alert-warning\"],[9,\"role\",\"alert\"],[7],[0,\"\\n        \"],[6,\"p\"],[9,\"class\",\"text-center\"],[7],[0,\"No Item Selected\"],[8],[0,\"\\n      \"],[8],[0,\"\\n\"]],\"parameters\":[]}],[0,\"  \"],[8],[0,\"\\n\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Modal Example \"],[8],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary\"],[9,\"data-toggle\",\"modal\"],[9,\"data-target\",\"#myModal\"],[7],[0,\"Select an Item\"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Inline Panel Example\"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"panel panel-default\"],[7],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"panel-heading\"],[7],[0,\"\\n        \"],[6,\"h3\"],[9,\"class\",\"panel-title\"],[7],[0,\"Search ArcGIS.com for Items\"],[8],[0,\"\\n      \"],[8],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"panel-body\"],[7],[0,\"\\n        \"],[1,[25,\"item-picker\",null,[[\"selectAction\",\"onSelectionValidator\",\"rowCount\"],[[25,\"action\",[[19,0,[]],\"onSelectItem\"],null],[25,\"action\",[[19,0,[]],\"selectionValidator\"],null],5]]],false],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"modal fade\"],[9,\"id\",\"myModal\"],[9,\"tabindex\",\"-1\"],[9,\"role\",\"dialog\"],[9,\"aria-labelledby\",\"myModalLabel\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"modal-dialog modal-lg\"],[9,\"role\",\"document\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"modal-content\"],[7],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"modal-header\"],[7],[0,\"\\n        \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"close\"],[9,\"data-dismiss\",\"modal\"],[9,\"aria-label\",\"Close\"],[7],[6,\"span\"],[9,\"aria-hidden\",\"true\"],[7],[0,\"×\"],[8],[8],[0,\"\\n        \"],[6,\"h4\"],[9,\"class\",\"modal-title\"],[9,\"id\",\"myModalLabel\"],[7],[0,\"Default Usage\"],[8],[0,\"\\n      \"],[8],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"modal-body\"],[7],[0,\"\\n        \"],[1,[25,\"item-picker\",null,[[\"selectAction\",\"onSelectionValidator\"],[[25,\"action\",[[19,0,[]],\"onSelectItem\"],null],[25,\"action\",[[19,0,[]],\"selectionValidator\"],null]]]],false],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "dummy/itempicker/validation/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "R5iSO0dl", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[9,\"class\",\"row\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h2\"],[7],[0,\"Validate Items\"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-6\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Validator\"],[8],[0,\"\\n    \"],[6,\"p\"],[7],[0,\"To validate items simply add an action \"],[6,\"code\"],[7],[0,\"onSelectionValidator\"],[8],[8],[0,\"\\n\\n      \"],[6,\"pre\"],[7],[0,\"\\n\"],[1,\"{{item-picker\\n      selectAction=(action \\\"onSelectItem\\\")\\n      onSelectionValidator=(action \\\"selectionValidator\\\") }}\",false],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"p\"],[7],[0,\"The validation function should have the following signature: \"],[8],[0,\"\\n    \"],[6,\"code\"],[7],[0,\"validator(item, options)\"],[8],[0,\"\\n    \"],[6,\"p\"],[7],[0,\"Where \"],[6,\"code\"],[7],[0,\"options\"],[8],[0,\" may contain custom properties such as the selected layer etc.\"],[8],[0,\"\\n\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-6\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Selected Item \"],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"selectedModel\"]]],null,{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"panel panel-default\"],[7],[0,\"\\n        \"],[6,\"div\"],[9,\"class\",\"panel-heading\"],[7],[6,\"h3\"],[9,\"class\",\"panel-title\"],[7],[1,[20,[\"selectedModel\",\"item\",\"title\"]],false],[8],[8],[0,\"\\n        \"],[6,\"div\"],[9,\"class\",\"panel-body\"],[7],[0,\"\\n          \"],[1,[25,\"sanitize-html\",[[20,[\"selectedModel\",\"item\",\"description\"]]],null],false],[0,\"\\n        \"],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"selectedModel\",\"layer\"]]],null,{\"statements\":[[0,\"        \"],[6,\"div\"],[9,\"class\",\"panel-body\"],[7],[0,\"\\n          Layer: \"],[1,[20,[\"selectedModel\",\"layer\",\"name\"]],false],[0,\"\\n        \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"alert alert-warning\"],[9,\"role\",\"alert\"],[7],[0,\"\\n        \"],[6,\"p\"],[9,\"class\",\"text-center\"],[7],[0,\"No Item Selected\"],[8],[0,\"\\n      \"],[8],[0,\"\\n\"]],\"parameters\":[]}],[0,\"  \"],[8],[0,\"\\n\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Modal Example \"],[8],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary\"],[9,\"data-toggle\",\"modal\"],[9,\"data-target\",\"#myModal\"],[7],[0,\"Select an Item\"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"col-sm-12\"],[7],[0,\"\\n    \"],[6,\"h3\"],[7],[0,\"Inline Panel Example\"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"panel panel-default\"],[7],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"panel-heading\"],[7],[0,\"\\n        \"],[6,\"h3\"],[9,\"class\",\"panel-title\"],[7],[0,\"Search ArcGIS.com for Items\"],[8],[0,\"\\n      \"],[8],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"panel-body\"],[7],[0,\"\\n        \"],[1,[25,\"item-picker\",null,[[\"selectAction\",\"onSelectionValidator\",\"rowCount\"],[[25,\"action\",[[19,0,[]],\"onSelectItem\"],null],[25,\"action\",[[19,0,[]],\"selectionValidator\"],null],5]]],false],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[2,\" Modal \"],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"modal fade\"],[9,\"id\",\"myModal\"],[9,\"tabindex\",\"-1\"],[9,\"role\",\"dialog\"],[9,\"aria-labelledby\",\"myModalLabel\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"modal-dialog modal-lg\"],[9,\"role\",\"document\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"modal-content\"],[7],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"modal-header\"],[7],[0,\"\\n        \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"close\"],[9,\"data-dismiss\",\"modal\"],[9,\"aria-label\",\"Close\"],[7],[6,\"span\"],[9,\"aria-hidden\",\"true\"],[7],[0,\"×\"],[8],[8],[0,\"\\n        \"],[6,\"h4\"],[9,\"class\",\"modal-title\"],[9,\"id\",\"myModalLabel\"],[7],[0,\"Default Usage\"],[8],[0,\"\\n      \"],[8],[0,\"\\n      \"],[6,\"div\"],[9,\"class\",\"modal-body\"],[7],[0,\"\\n        \"],[1,[25,\"item-picker\",null,[[\"selectAction\",\"onSelectionValidator\"],[[25,\"action\",[[19,0,[]],\"onSelectItem\"],null],[25,\"action\",[[19,0,[]],\"selectionValidator\"],null]]]],false],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "dummy/itempicker/validation/template.hbs" } });
 });
 define('dummy/mixins/active-link', ['exports', 'ember-cli-active-link-wrapper/mixins/active-link'], function (exports, _activeLink) {
   'use strict';
@@ -2835,7 +2864,7 @@ define("dummy/translations/en-us", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = { "addons": { "components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "back": "Back", "preview": "Preview", "select": "Select", "selectAnyway": "Select Anyway", "selectMultiple": "Select", "validating": "Validating data..." }, "datasets": "Datasets", "deselectAll": "Deselect All", "errors": { "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again." }, "itemDetails": "Item Details", "items": "Items", "layerList": "Layers and Tables", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "loadingLayers": "Loading Layers...", "noItems": { "withQuery": "No items matched your search.", "withoutQuery": "No items found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" }, "loadingIndicator": { "defaultMessage": "Loading..." }, "searchForm": { "searchItems": "Search items" } } } };
+  exports.default = { "addons": { "components": { "itemPicker": { "aria": { "chartable-icon": "Attribute can be charted", "disabled": "Disabled", "first_pg": "First Page", "last_pg": "Last Page", "next": "Next", "prev": "Previous" }, "buttons": { "close": "Close", "preview": "Preview", "select": "Select", "selectAnyway": "Select Anyway", "selectMultiple": "Select", "validating": "Validating data..." }, "datasets": "Datasets", "deselectAll": "Deselect All", "errors": { "httpsNotSupported": "This service does not support HTTPS. Please update your server settings and try again." }, "itemDetails": "Item Details", "items": "Items", "layerList": "Layers and Tables", "licenses": { "custom": "Custom License", "none": "No license specified" }, "loading": "loading", "loadingLayers": "Loading Layers...", "noItems": { "withQuery": "No items matched your search.", "withoutQuery": "No items found." }, "rows": "{count} Rows", "searchDatasets": "Search datasets", "searchItems": "Search items", "selectedCount": "Total Selected: {count}", "shared": { "content_types": { "document": "Document", "raster": "Raster Dataset", "spatial": "Spatial Dataset", "storymap": "Story Map", "table": "Tabular Dataset", "webmap": "Web Map", "webmappingapp": "Web Mapping Application" }, "fieldType": { "esriFieldTypeBlob": "Blob", "esriFieldTypeDate": "Date or Time", "esriFieldTypeDouble": "Number", "esriFieldTypeGUID": "Unique ID", "esriFieldTypeGeometry": "Geometry", "esriFieldTypeGlobalID": "Unique ID", "esriFieldTypeInteger": "Number", "esriFieldTypeOID": "Unique ID", "esriFieldTypeRaster": "Raster", "esriFieldTypeSingle": "Number", "esriFieldTypeSmallInteger": "Number", "esriFieldTypeString": "Text" }, "geometryType": { "esriGeometryLine": "Line", "esriGeometryMultipoint": "Multipoint", "esriGeometryPoint": "Point", "esriGeometryPolygon": "Polygon", "esriGeometryPolyline": "Polyline", "table": "Table" }, "itemType": { "featureService": "Feature Service", "imageService": "Image Service", "mapService": "Map Service", "webMap": "Web Map", "webMappingApplication": "Web Mapping Application" } }, "sharedBy": "Shared by" }, "loadingIndicator": { "defaultMessage": "Loading..." }, "searchForm": { "searchItems": "Search items" } } } };
 });
 define('dummy/utils/intl/missing-message', ['exports', 'ember-intl/utils/missing-message'], function (exports, _missingMessage) {
   'use strict';
@@ -2911,6 +2940,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"0.9.0+951c68f3"});
+  require("dummy/app")["default"].create({"name":"ember-arcgis-portal-components","version":"1.0.3+533d19fa"});
 }
 //# sourceMappingURL=dummy.map

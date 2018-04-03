@@ -339,6 +339,676 @@ var runningTests = false;
     module.exports = { require: require, define: define };
   }
 })(this);
+;/**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * https://raw.github.com/facebook/regenerator/master/LICENSE file. An
+ * additional grant of patent rights can be found in the PATENTS file in
+ * the same directory.
+ */
+
+!(function(global) {
+  "use strict";
+
+  var hasOwn = Object.prototype.hasOwnProperty;
+  var undefined; // More compressible than void 0.
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  var inModule = typeof module === "object";
+  var runtime = global.regeneratorRuntime;
+  if (runtime) {
+    if (inModule) {
+      // If regeneratorRuntime is defined globally and we're in a module,
+      // make the exports object identical to regeneratorRuntime.
+      module.exports = runtime;
+    }
+    // Don't bother evaluating the rest of this file if the runtime was
+    // already defined globally.
+    return;
+  }
+
+  // Define the runtime globally (as expected by generated code) as either
+  // module.exports (if we're in a module) or a new, empty object.
+  runtime = global.regeneratorRuntime = inModule ? module.exports : {};
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []);
+
+    // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+    return generator;
+  }
+  runtime.wrap = wrap;
+
+  // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+  function tryCatch(fn, obj, arg) {
+    try {
+      return { type: "normal", arg: fn.call(obj, arg) };
+    } catch (err) {
+      return { type: "throw", arg: err };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed";
+
+  // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+  var ContinueSentinel = {};
+
+  // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+  function Generator() {}
+  function GeneratorFunction() {}
+  function GeneratorFunctionPrototype() {}
+
+  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype;
+  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunctionPrototype[toStringTagSymbol] = GeneratorFunction.displayName = "GeneratorFunction";
+
+  // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function(method) {
+      prototype[method] = function(arg) {
+        return this._invoke(method, arg);
+      };
+    });
+  }
+
+  runtime.isGeneratorFunction = function(genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor
+      ? ctor === GeneratorFunction ||
+        // For the native GeneratorFunction constructor, the best we can
+        // do is to check its .name property.
+        (ctor.displayName || ctor.name) === "GeneratorFunction"
+      : false;
+  };
+
+  runtime.mark = function(genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      if (!(toStringTagSymbol in genFun)) {
+        genFun[toStringTagSymbol] = "GeneratorFunction";
+      }
+    }
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  };
+
+  // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `value instanceof AwaitArgument` to determine if the yielded value is
+  // meant to be awaited. Some may consider the name of this method too
+  // cutesy, but they are curmudgeons.
+  runtime.awrap = function(arg) {
+    return new AwaitArgument(arg);
+  };
+
+  function AwaitArgument(arg) {
+    this.arg = arg;
+  }
+
+  function AsyncIterator(generator) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+        if (value instanceof AwaitArgument) {
+          return Promise.resolve(value.arg).then(function(value) {
+            invoke("next", value, resolve, reject);
+          }, function(err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return Promise.resolve(value).then(function(unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration. If the Promise is rejected, however, the
+          // result for this iteration will be rejected with the same
+          // reason. Note that rejections of yielded Promises are not
+          // thrown back into the generator function, as is the case
+          // when an awaited Promise is rejected. This difference in
+          // behavior between yield and await is important, because it
+          // allows the consumer to decide what to do with the yielded
+          // rejection (swallow it and continue, manually .throw it back
+          // into the generator, abandon iteration, whatever). With
+          // await, by contrast, there is no opportunity to examine the
+          // rejection reason outside the generator function, so the
+          // only option is to throw it from the await expression, and
+          // let the generator function handle the exception.
+          result.value = unwrapped;
+          resolve(result);
+        }, reject);
+      }
+    }
+
+    if (typeof process === "object" && process.domain) {
+      invoke = process.domain.bind(invoke);
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new Promise(function(resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise =
+        // If enqueue has been called before, then we want to wait until
+        // all previous Promises have been resolved before calling invoke,
+        // so that results are always delivered in the correct order. If
+        // enqueue has not been called before, then it is important to
+        // call invoke immediately, without waiting on a callback to fire,
+        // so that the async generator function has the opportunity to do
+        // any necessary setup in a predictable way. This predictability
+        // is why the Promise constructor synchronously invokes its
+        // executor callback, and why async functions synchronously
+        // execute code before the first await. Since we implement simple
+        // async functions in terms of async generators, it is especially
+        // important to get this right, even though it requires care.
+        previousPromise ? previousPromise.then(
+          callInvokeWithMethodAndArg,
+          // Avoid propagating failures to Promises returned by later
+          // invocations of the iterator.
+          callInvokeWithMethodAndArg
+        ) : callInvokeWithMethodAndArg();
+    }
+
+    // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+
+  // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
+    var iter = new AsyncIterator(
+      wrap(innerFn, outerFn, self, tryLocsList)
+    );
+
+    return runtime.isGeneratorFunction(outerFn)
+      ? iter // If outerFn is a generator, return the full iterator.
+      : iter.next().then(function(result) {
+          return result.done ? result.value : iter.next();
+        });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        }
+
+        // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+        return doneResult();
+      }
+
+      while (true) {
+        var delegate = context.delegate;
+        if (delegate) {
+          if (method === "return" ||
+              (method === "throw" && delegate.iterator[method] === undefined)) {
+            // A return or throw (when the delegate iterator has no throw
+            // method) always terminates the yield* loop.
+            context.delegate = null;
+
+            // If the delegate iterator has a return method, give it a
+            // chance to clean up.
+            var returnMethod = delegate.iterator["return"];
+            if (returnMethod) {
+              var record = tryCatch(returnMethod, delegate.iterator, arg);
+              if (record.type === "throw") {
+                // If the return method threw an exception, let that
+                // exception prevail over the original return or throw.
+                method = "throw";
+                arg = record.arg;
+                continue;
+              }
+            }
+
+            if (method === "return") {
+              // Continue with the outer return, now that the delegate
+              // iterator has been terminated.
+              continue;
+            }
+          }
+
+          var record = tryCatch(
+            delegate.iterator[method],
+            delegate.iterator,
+            arg
+          );
+
+          if (record.type === "throw") {
+            context.delegate = null;
+
+            // Like returning generator.throw(uncaught), but without the
+            // overhead of an extra function call.
+            method = "throw";
+            arg = record.arg;
+            continue;
+          }
+
+          // Delegate generator ran and handled its own exceptions so
+          // regardless of what the method was, we continue as if it is
+          // "next" with an undefined arg.
+          method = "next";
+          arg = undefined;
+
+          var info = record.arg;
+          if (info.done) {
+            context[delegate.resultName] = info.value;
+            context.next = delegate.nextLoc;
+          } else {
+            state = GenStateSuspendedYield;
+            return info;
+          }
+
+          context.delegate = null;
+        }
+
+        if (method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = arg;
+
+        } else if (method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw arg;
+          }
+
+          if (context.dispatchException(arg)) {
+            // If the dispatched exception was caught by a catch block,
+            // then let that catch block handle the exception normally.
+            method = "next";
+            arg = undefined;
+          }
+
+        } else if (method === "return") {
+          context.abrupt("return", arg);
+        }
+
+        state = GenStateExecuting;
+
+        var record = tryCatch(innerFn, self, context);
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done
+            ? GenStateCompleted
+            : GenStateSuspendedYield;
+
+          var info = {
+            value: record.arg,
+            done: context.done
+          };
+
+          if (record.arg === ContinueSentinel) {
+            if (context.delegate && method === "next") {
+              // Deliberately forget the last sent value so that we don't
+              // accidentally pass it on to the delegate.
+              arg = undefined;
+            }
+          } else {
+            return info;
+          }
+
+        } else if (record.type === "throw") {
+          state = GenStateCompleted;
+          // Dispatch the exception by looping back around to the
+          // context.dispatchException(arg) call above.
+          method = "throw";
+          arg = record.arg;
+        }
+      }
+    };
+  }
+
+  // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+  defineIteratorMethods(Gp);
+
+  Gp[iteratorSymbol] = function() {
+    return this;
+  };
+
+  Gp[toStringTagSymbol] = "Generator";
+
+  Gp.toString = function() {
+    return "[object Generator]";
+  };
+
+  function pushTryEntry(locs) {
+    var entry = { tryLoc: locs[0] };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{ tryLoc: "root" }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  runtime.keys = function(object) {
+    var keys = [];
+    for (var key in object) {
+      keys.push(key);
+    }
+    keys.reverse();
+
+    // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      }
+
+      // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1, next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined;
+          next.done = true;
+
+          return next;
+        };
+
+        return next.next = next;
+      }
+    }
+
+    // Return an iterator with no values.
+    return { next: doneResult };
+  }
+  runtime.values = values;
+
+  function doneResult() {
+    return { value: undefined, done: true };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+
+    reset: function(skipTempReset) {
+      this.prev = 0;
+      this.next = 0;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
+      this.done = false;
+      this.delegate = null;
+
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" &&
+              hasOwn.call(this, name) &&
+              !isNaN(+name.slice(1))) {
+            this[name] = undefined;
+          }
+        }
+      }
+    },
+
+    stop: function() {
+      this.done = true;
+
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+
+    dispatchException: function(exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+        return !!caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+
+    abrupt: function(type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc <= this.prev &&
+            hasOwn.call(entry, "finallyLoc") &&
+            this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry &&
+          (type === "break" ||
+           type === "continue") &&
+          finallyEntry.tryLoc <= arg &&
+          arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.next = finallyEntry.finallyLoc;
+      } else {
+        this.complete(record);
+      }
+
+      return ContinueSentinel;
+    },
+
+    complete: function(record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" ||
+          record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = record.arg;
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+    },
+
+    finish: function(finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+
+    "catch": function(tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+          return thrown;
+        }
+      }
+
+      // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+      throw new Error("illegal catch attempt");
+    },
+
+    delegateYield: function(iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      return ContinueSentinel;
+    }
+  };
+})(
+  // Among the various tricks for obtaining a reference to the global
+  // object, this seems to be the most reliable technique that does not
+  // use indirect eval (which violates Content Security Policy).
+  typeof global === "object" ? global :
+  typeof window === "object" ? window :
+  typeof self === "object" ? self : this
+);
+
 ;/*!
  * jQuery JavaScript Library v3.3.1
  * https://jquery.com/
@@ -85331,11 +86001,17 @@ if ( typeof define === "function" ) {
     value: true
   });
   exports.default = Ember.Component.extend({
-    layout: _template.default,
-    intl: Ember.inject.service(),
-    itemService: Ember.inject.service('items-service'),
     classNames: ['item-picker', 'clearfix'],
-
+    disableAddItems: Ember.computed.not('hasItemsToAdd'),
+    hasItemsToAdd: Ember.computed.notEmpty('itemsToAdd'),
+    intl: Ember.inject.service(),
+    isValidating: false,
+    itemService: Ember.inject.service('items-service'),
+    layout: _template.default,
+    selectAnyway: false,
+    shouldValidate: false,
+    showMessage: Ember.computed.notEmpty('currentMessage'),
+    showNoItemsMsg: Ember.computed.notEmpty('noItemsFoundMsg'),
     /**
      * Startup the component... we may need to issue an immediate search...
      */
@@ -85350,13 +86026,6 @@ if ( typeof define === "function" ) {
       }
     },
 
-
-    disableAddItems: Ember.computed.not('hasItemsToAdd'),
-    showNoItemsMsg: Ember.computed.notEmpty('noItemsFoundMsg'),
-    hasItemsToAdd: Ember.computed.notEmpty('itemsToAdd'),
-    isValidating: false,
-    selectAnyway: false,
-    shouldValidate: false,
 
     /**
      * Compute the translation scope
@@ -85380,8 +86049,8 @@ if ( typeof define === "function" ) {
      * Determine what preview component to use. This allows us to create
      * per-type UX for the preview
      */
-    preview: Ember.computed('currentItem', function () {
-      var type = this.get('currentItem.type');
+    preview: Ember.computed('currentModel.item', function () {
+      var type = this.get('currentModel.item.type');
       var componentName = 'item-picker/item-preview';
 
       switch (type.toLowerCase()) {
@@ -85501,7 +86170,7 @@ if ( typeof define === "function" ) {
       var isValidGuid = (0, _isGuid.default)(q);
       this.setProperties({
         loading: true,
-        currentItem: null,
+        currentModel: null,
         items: null
       });
 
@@ -85519,8 +86188,10 @@ if ( typeof define === "function" ) {
         sortField: 'title'
       };
 
-      // allow portalOpts to be passed in so we can access
-      // other portals besides the one our session is auth'd to
+      /**
+       Allow portalOpts to be passed in so we can access
+       other portals besides the one our session is auth'd to
+      */
       this.get('itemService').search(params, this.get('portalOpts')).then(function (resp) {
         _this.set('items', resp);
       }, function (err) {
@@ -85549,6 +86220,15 @@ if ( typeof define === "function" ) {
 
       this.set('selectedCatalog', selectedCatalog);
       this.set('selectedCatalogName', selectedCatalog.name);
+    },
+
+
+    /**
+     * Shows the validation message if one is given
+     */
+    showMultiValidationMessage: function showMultiValidationMessage(data) {
+      this.set('currentMessage', data.message);
+      this.set('currentStatus', data.status);
     },
 
 
@@ -85585,23 +86265,37 @@ if ( typeof define === "function" ) {
       /**
        * When an item is clicked in the list
        */
-      onItemClick: function onItemClick(item) {
+      onItemClick: function onItemClick(model) {
+        var _this2 = this;
+
         if (this.get('selectMultiple')) {
+          var validator = this.get('onSelectionValidator');
           var itemsToAdd = this.get('itemsToAdd');
-          var existingObj = itemsToAdd.findBy('id', item.id);
+          var existingObj = itemsToAdd.findBy('id', model.item.id);
           if (!existingObj) {
-            itemsToAdd.pushObject(item);
+            itemsToAdd.pushObject(model.item);
           } else {
             itemsToAdd.removeObject(existingObj);
           }
+
+          if (validator) {
+            validator(model).then(function (response) {
+              if (response.status !== 'ok') {
+                _this2.showMultiValidationMessage(response);
+              } else {
+                _this2.set('currentMessage', null);
+                _this2.set('currentStatus', response.status);
+              }
+            });
+          }
         } else {
-          if (this.get('currentItem.id') === item.id) {
-            this.set('currentItem', null);
+          if (this.get('currentModel.item.id') === model.item.id) {
+            this.set('currentModel.item', null);
           } else {
             this.setProperties({
               errorHash: null,
               selectAnyway: false,
-              currentItem: item
+              currentModel: model
             });
           }
         }
@@ -85621,13 +86315,16 @@ if ( typeof define === "function" ) {
        * multi-select mode
        */
       deselectAll: function deselectAll() {
-        this.set('itemsToAdd', []);
+        this.setProperties({
+          'itemsToAdd': [],
+          'currentMessage': null
+        });
       },
       cancelAction: function cancelAction() {
         this.setProperties({
           errorHash: null,
           selectAnyway: false,
-          currentItem: null,
+          currentModel: null,
           itemsToAdd: []
         });
       }
@@ -85643,9 +86340,9 @@ if ( typeof define === "function" ) {
   exports.default = Ember.Component.extend({
 
     classNames: ['item-picker-current-item-preview'],
-    description: Ember.computed.reads('model.description'),
+    description: Ember.computed.reads('model.item.description'),
     featureService: Ember.inject.service('feature-service'),
-    forceLayerSelection: Ember.computed.alias('showLayers'),
+    forceLayerSelection: Ember.computed.reads('params.forceLayerSelection'),
     hasSelectedLayer: Ember.computed.notEmpty('selectedLayer'),
     intl: Ember.inject.service(),
     isLoading: true,
@@ -85654,7 +86351,7 @@ if ( typeof define === "function" ) {
     layout: _template.default,
     selectAnyway: false,
     shouldValidate: false,
-    showError: Ember.computed.notEmpty('errorMessage'),
+    showError: Ember.computed.notEmpty('validationResult'),
 
     /**
      * Compute the translation scope
@@ -85682,9 +86379,8 @@ if ( typeof define === "function" ) {
     * ... a map service
     * ... a feature service
     */
-
-    showLayers: Ember.computed('model.type', function () {
-      var type = this.get('model.type');
+    showLayers: Ember.computed('model.item.type', function () {
+      var type = this.get('model.item.type');
       switch (type.toLowerCase()) {
         case 'feature service':
         case 'map service':
@@ -85698,7 +86394,7 @@ if ( typeof define === "function" ) {
      * Construct the preview url
      */
     previewUrl: Ember.computed('model', function () {
-      var item = this.get('model');
+      var item = this.get('model.item');
       var previewURL = void 0;
       // if the item has a url property, use that...
       if (item.url) {
@@ -85723,13 +86419,13 @@ if ( typeof define === "function" ) {
      * ... we have an error
      * ... we need to choose a layer, and have not selected one
      */
-    isSelectDisabled: Ember.computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'errorMessage.status', function () {
-      var errorMessage = this.get('errorMessage');
+    isSelectDisabled: Ember.computed('forceLayerSelection', 'selectedLayer', 'isValidating', 'validationResult.status', function () {
+      var validationResult = this.get('validationResult');
       var result = false;
       if (this.get('isValidating')) {
         result = true;
       }
-      if (errorMessage && errorMessage.status && errorMessage.status === 'error') {
+      if (validationResult && validationResult.status === 'error') {
         result = true;
       } else {
         if (this.get('forceLayerSelection') && this.get('selectedLayer') === null) {
@@ -85774,10 +86470,10 @@ if ( typeof define === "function" ) {
       var _this = this;
 
       var featureService = this.get('featureService');
+      serviceItem.url = serviceItem.url.trim();
       // upgrade the url and re-assign it to the item...
       var upgradeInfo = this.upgradeProtocol(serviceItem.url);
       serviceItem.url = upgradeInfo.url;
-
       // if the last segment of the url isNaN, we have a service url
       var isService = false;
       if (isNaN(serviceItem.url.split('/').reverse()[0])) {
@@ -85822,12 +86518,12 @@ if ( typeof define === "function" ) {
     onItemChanged: function onItemChanged() {
       var _this2 = this;
 
-      var item = this.get('model');
+      var item = this.get('model.item');
       this.set('isLoading', true);
       this.fetchServiceLayers(item).then(function (layersAndTables) {
         _this2.setProperties({
           isLoading: false,
-          errorMessage: null,
+          validationResult: null,
           layerList: layersAndTables
         });
       }).catch(function (err) {
@@ -85837,7 +86533,7 @@ if ( typeof define === "function" ) {
           selectedLayer: null
         });
         Ember.debug('Error fetching layers ' + err);
-        _this2.set('errorMessage', {
+        _this2.set('validationResult', {
           status: 'error',
           message: err.message || 'Error accessing service.'
         });
@@ -85852,7 +86548,7 @@ if ( typeof define === "function" ) {
       // only do this if we are going to show the layers
       if (this.get('showLayers')) {
         var model = this.get('model');
-        if (this.get('cachedModel.id') !== model.id) {
+        if (this.get('cachedModel.item.id') !== model.item.id) {
           // reset some state...
           this.set('cachedModel', model);
           this.onItemChanged();
@@ -85870,8 +86566,8 @@ if ( typeof define === "function" ) {
     /**
      * Get the translated form of the Item Type
      */
-    itemType: Ember.computed('_i18nScope', 'model.type', function () {
-      var itemType = this.get('model.type');
+    itemType: Ember.computed('_i18nScope', 'model.item.type', function () {
+      var itemType = this.get('model.item.type');
       var result = itemType;
       var key = this.get('_i18nScope') + 'shared.itemType.' + itemType.camelize();
       var intl = this.get('intl');
@@ -85885,10 +86581,10 @@ if ( typeof define === "function" ) {
     /**
      * What class do we use for the message...
      */
-    messageClass: Ember.computed('errorMessage.status', function () {
-      if (this.get('errorMessage.status') === 'warning') {
+    messageClass: Ember.computed('validationResult.status', function () {
+      if (this.get('validationResult.status') === 'warning') {
         return 'alert-warning';
-      } else if (this.get('errorMessage.status') === 'error') {
+      } else if (this.get('validationResult.status') === 'error') {
         return 'alert-danger';
       }
     }),
@@ -85905,12 +86601,11 @@ if ( typeof define === "function" ) {
       /**
        * When the user clicks the select button...
        */
-      onServiceSelected: function onServiceSelected(item) {
+      onServiceSelected: function onServiceSelected(model) {
         var _this3 = this;
 
-        var options = void 0;
         if (this.get('forceLayerSelection')) {
-          options = {
+          model.options = {
             layer: this.get('selectedLayer')
           };
         }
@@ -85918,20 +86613,20 @@ if ( typeof define === "function" ) {
 
         if (validator && typeof validator === 'function' && !this.get('selectAnyway')) {
           this.set('isValidating', true);
-          validator(item).then(function (resp) {
+          validator(model).then(function (resp) {
             _this3.set('isValidating', false);
-            _this3.set('errorHash', resp.status);
+            _this3.set('validationResult', resp.status);
             if (resp.status.status === 'error') {
               return;
             } else if (resp.status.status === 'warning') {
               _this3.set('selectAnyway', true);
               return;
             } else {
-              _this3.get('onItemSelected')(item, options);
+              _this3.get('onItemSelected')(model.item, model.options);
             }
           });
         } else {
-          this.get('onItemSelected')(item, options);
+          this.get('onItemSelected')(model.item, model.options);
         }
       }
     }
@@ -85941,7 +86636,7 @@ if ( typeof define === "function" ) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "DKx5AFXS", "block": "{\"symbols\":[],\"statements\":[[6,\"h4\"],[7],[1,[20,[\"model\",\"title\"]],false],[8],[0,\"\\n\"],[6,\"span\"],[9,\"class\",\"shared-by-owner\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[0,\": \"],[1,[20,[\"model\",\"owner\"]],false],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-meta\"],[7],[0,\"\\n  \"],[6,\"div\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon icon-layers\"],[7],[8],[1,[20,[\"layerList\",\"length\"]],false],[8],[0,\"\\n  \"],[6,\"div\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-calendar\"],[7],[8],[1,[25,\"format-time\",[[20,[\"model\",\"modified\"]]],null],false],[8],[0,\"\\n  \"],[6,\"div\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-file\"],[7],[8],[1,[18,\"itemType\"],false],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-description\"],[7],[0,\"\\n  \"],[1,[25,\"sanitize-html\",[[20,[\"description\"]]],null],false],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"text-fade\"],[7],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"showLayers\"]]],null,{\"statements\":[[0,\"  \"],[6,\"section\"],[9,\"class\",\"layer-picker-controls\"],[7],[0,\"\\n  \"],[6,\"h6\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"layerList\"],null]],null],false],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"isLoading\"]]],null,{\"statements\":[[0,\"    \"],[1,[25,\"loading-indicator\",null,[[\"msg\"],[[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"loadingLayers\"],null]],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[20,[\"showError\"]]],null,{\"statements\":[[0,\"        \"],[6,\"p\"],[10,\"class\",[26,[\"alert \",[18,\"messageClass\"]]]],[9,\"id\",\"val-error\"],[7],[0,\"\\n          \"],[1,[20,[\"errorMessage\",\"message\"]],false],[0,\"\\n        \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"        \"],[1,[25,\"item-picker/layer-picker\",null,[[\"model\",\"selectable\",\"onLayerSelected\"],[[20,[\"layerList\"]],[20,[\"forceLayerSelection\"]],[25,\"action\",[[19,0,[]],\"onLayerSelected\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]}],[0,\"  \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[6,\"section\"],[9,\"class\",\"item-picker-controls\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"full-width-btn\"],[7],[0,\"\\n    \"],[6,\"div\"],[7],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary btn-block\"],[9,\"data-test\",\"item-picker-select-button\"],[10,\"disabled\",[18,\"isSelectDisabled\"],null],[3,\"action\",[[19,0,[]],\"onServiceSelected\",[20,[\"model\"]]]],[7],[1,[18,\"selectButtonText\"],false],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"side-by-side\"],[7],[0,\"\\n    \"],[6,\"div\"],[7],[0,\"\\n      \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-default btn-block\"],[3,\"action\",[[19,0,[]],[20,[\"onCancel\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[8],[0,\"\\n      \"],[6,\"a\"],[10,\"href\",[26,[[18,\"previewUrl\"]]]],[9,\"target\",\"_blank\"],[9,\"class\",\"btn btn-default btn-block\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[8],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/feature-service-preview/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "reJ1aTIi", "block": "{\"symbols\":[],\"statements\":[[6,\"h4\"],[7],[1,[20,[\"model\",\"item\",\"title\"]],false],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"shared-by-owner\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[0,\": \"],[1,[20,[\"model\",\"item\",\"owner\"]],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-metadata-layer-count\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon icon-layers\"],[7],[8],[1,[20,[\"layerList\",\"length\"]],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-metadata-date-modified\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-calendar\"],[7],[8],[1,[25,\"format-time\",[[20,[\"model\",\"item\",\"modified\"]]],null],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-metadata-item-type\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-file\"],[7],[8],[1,[18,\"itemType\"],false],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-description\"],[7],[0,\"\\n  \"],[1,[25,\"sanitize-html\",[[20,[\"description\"]]],null],false],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"text-fade\"],[7],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"showLayers\"]]],null,{\"statements\":[[0,\"  \"],[6,\"section\"],[9,\"class\",\"layer-picker-controls\"],[7],[0,\"\\n  \"],[6,\"h6\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"layerList\"],null]],null],false],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"isLoading\"]]],null,{\"statements\":[[0,\"    \"],[1,[25,\"loading-indicator\",null,[[\"msg\"],[[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"loadingLayers\"],null]],null]]]],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[20,[\"showError\"]]],null,{\"statements\":[[0,\"        \"],[6,\"p\"],[10,\"class\",[26,[\"alert \",[18,\"messageClass\"]]]],[9,\"id\",\"val-error\"],[7],[0,\"\\n          \"],[1,[20,[\"validationResult\",\"message\"]],false],[0,\"\\n        \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"        \"],[1,[25,\"item-picker/layer-picker\",null,[[\"model\",\"i18nScope\",\"selectable\",\"onLayerSelected\"],[[20,[\"layerList\"]],[20,[\"_i18nScope\"]],[20,[\"forceLayerSelection\"]],[25,\"action\",[[19,0,[]],\"onLayerSelected\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[]}]],\"parameters\":[]}],[0,\"  \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\\n\"],[6,\"section\"],[9,\"class\",\"item-picker-controls\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"full-width-btn\"],[7],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary\"],[9,\"data-test\",\"item-picker-select-button\"],[10,\"disabled\",[18,\"isSelectDisabled\"],null],[3,\"action\",[[19,0,[]],\"onServiceSelected\",[20,[\"model\"]]]],[7],[1,[18,\"selectButtonText\"],false],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"side-by-side\"],[7],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-default back-btn\"],[3,\"action\",[[19,0,[]],[20,[\"onCancel\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.close\"],null]],null],false],[8],[0,\"\\n    \"],[6,\"a\"],[10,\"href\",[26,[[18,\"previewUrl\"]]]],[9,\"target\",\"_blank\"],[9,\"class\",\"btn btn-default preview-btn\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/feature-service-preview/template.hbs" } });
 });
 ;define('ember-arcgis-portal-components/components/item-picker/item-preview/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/item-preview/template'], function (exports, _template) {
   'use strict';
@@ -85966,8 +86661,8 @@ if ( typeof define === "function" ) {
     isValidating: false,
     selectAnyway: false,
     shouldValidate: false,
-    showError: Ember.computed.notEmpty('errorMessage'),
-    description: Ember.computed.reads('model.description'),
+    showError: Ember.computed.notEmpty('validationResult'),
+    description: Ember.computed.reads('model.item.description'),
 
     /**
      * Compute the translation scope
@@ -85993,8 +86688,8 @@ if ( typeof define === "function" ) {
     /**
      * Get the translated form of the Item Type
      */
-    itemType: Ember.computed('_i18nScope', 'model.type', function () {
-      var itemType = this.get('model.type');
+    itemType: Ember.computed('_i18nScope', 'model.item.type', function () {
+      var itemType = this.get('model.item.type');
       var result = itemType;
       var key = this.get('_i18nScope') + 'shared.itemType.' + itemType.camelize();
       var intl = this.get('intl');
@@ -86008,8 +86703,8 @@ if ( typeof define === "function" ) {
     /**
      * Construct the preview url
      */
-    previewUrl: Ember.computed('model', function () {
-      var item = this.get('model');
+    previewUrl: Ember.computed('model.item', function () {
+      var item = this.get('model.item');
       var previewURL = void 0;
       // if the item has a url property, use that...
       if (item.url) {
@@ -86032,10 +86727,10 @@ if ( typeof define === "function" ) {
     /**
      * What class should be used for any messages
      */
-    messageClass: Ember.computed('errorMessage', function () {
-      if (this.get('errorMessage.status') === 'warning') {
+    messageClass: Ember.computed('validationResult', function () {
+      if (this.get('validationResult.status') === 'warning') {
         return 'alert-warning';
-      } else if (this.get('errorMessage.status') === 'error') {
+      } else if (this.get('validationResult.status') === 'error') {
         return 'alert-danger';
       }
     }),
@@ -86050,7 +86745,7 @@ if ( typeof define === "function" ) {
           this.set('isValidating', true);
           validator(item).then(function (resp) {
             _this.set('isValidating', false);
-            _this.set('errorHash', resp.status);
+            _this.set('validationResult', resp.status);
             if (resp.status.status === 'error') {
               return;
             } else if (resp.status.status === 'warning') {
@@ -86072,7 +86767,7 @@ if ( typeof define === "function" ) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "8fFFWdYJ", "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[20,[\"showError\"]]],null,{\"statements\":[[0,\"  \"],[6,\"p\"],[10,\"class\",[26,[\"alert \",[18,\"messageClass\"]]]],[9,\"id\",\"val-error\"],[7],[0,\"\\n    \"],[1,[20,[\"errorMessage\",\"message\"]],false],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[1,[25,\"image-with-fallback\",null,[[\"imgSrc\",\"fallbackSrc\"],[[20,[\"thumbnailUrl\"]],\"ember-arcgis-portal-components/assets/images/default-dataset-thumb.png\"]]],false],[0,\"\\n\"],[6,\"h4\"],[7],[1,[20,[\"model\",\"title\"]],false],[8],[0,\"\\n\"],[6,\"span\"],[9,\"class\",\"shared-by-owner\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[0,\": \"],[1,[20,[\"model\",\"owner\"]],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-meta\"],[7],[0,\"\\n\\t\"],[6,\"div\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-calendar\"],[7],[8],[1,[25,\"format-time\",[[20,[\"model\",\"modified\"]]],null],false],[8],[0,\"\\n  \"],[6,\"div\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-file\"],[7],[8],[1,[18,\"itemType\"],false],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-description\"],[7],[0,\"\\n  \"],[1,[25,\"sanitize-html\",[[20,[\"description\"]]],null],false],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"text-fade\"],[7],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[6,\"section\"],[9,\"class\",\"item-picker-controls\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"full-width-btn\"],[7],[0,\"\\n      \"],[6,\"div\"],[7],[0,\"\\n      \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary btn-block\"],[9,\"data-test\",\"item-picker-select-button\"],[3,\"action\",[[19,0,[]],[20,[\"onItemSelected\"]],[20,[\"model\"]]]],[7],[1,[18,\"selectButtonText\"],false],[8],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"side-by-side\"],[7],[0,\"\\n      \"],[6,\"div\"],[7],[0,\"\\n        \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-default btn-block\"],[3,\"action\",[[19,0,[]],[20,[\"onCancel\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.back\"],null]],null],false],[8],[0,\"\\n        \"],[6,\"a\"],[10,\"href\",[26,[[18,\"previewUrl\"]]]],[9,\"target\",\"_blank\"],[9,\"class\",\"btn btn-default btn-block\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[8],[0,\"\\n      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "7ikLSPy9", "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[20,[\"showError\"]]],null,{\"statements\":[[0,\"  \"],[6,\"p\"],[10,\"class\",[26,[\"alert \",[18,\"messageClass\"]]]],[9,\"id\",\"val-error\"],[7],[0,\"\\n    \"],[1,[20,[\"validationResult\",\"message\"]],false],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[1,[25,\"image-with-fallback\",null,[[\"imgSrc\",\"fallbackSrc\"],[[20,[\"thumbnailUrl\"]],\"ember-arcgis-portal-components/assets/images/default-dataset-thumb.png\"]]],false],[0,\"\\n\"],[6,\"h4\"],[7],[1,[20,[\"model\",\"item\",\"title\"]],false],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"shared-by-owner\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"sharedBy\"],null]],null],false],[0,\": \"],[1,[20,[\"model\",\"item\",\"owner\"]],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-date-modified\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-calendar\"],[7],[8],[1,[25,\"format-time\",[[20,[\"model\",\"item\",\"modified\"]]],null],false],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"item-item-type\"],[7],[6,\"i\"],[9,\"class\",\"glyphicon glyphicon-file\"],[7],[8],[1,[18,\"itemType\"],false],[8],[0,\"\\n\\n\"],[6,\"div\"],[9,\"class\",\"item-picker-current-item-preview-description\"],[7],[0,\"\\n  \"],[1,[25,\"sanitize-html\",[[20,[\"description\"]]],null],false],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"text-fade\"],[7],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\\n\"],[6,\"section\"],[9,\"class\",\"item-picker-controls\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"full-width-btn\"],[7],[0,\"\\n      \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary\"],[9,\"data-test\",\"item-picker-select-button\"],[3,\"action\",[[19,0,[]],[20,[\"onItemSelected\"]],[20,[\"model\",\"item\"]]]],[7],[1,[18,\"selectButtonText\"],false],[8],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"side-by-side\"],[7],[0,\"\\n      \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-default back-btn\"],[3,\"action\",[[19,0,[]],[20,[\"onCancel\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.close\"],null]],null],false],[8],[0,\"\\n      \"],[6,\"a\"],[10,\"href\",[26,[[18,\"previewUrl\"]]]],[9,\"target\",\"_blank\"],[9,\"class\",\"btn btn-default preview-btn\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.preview\"],null]],null],false],[8],[0,\"\\n    \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-preview/template.hbs" } });
 });
 ;define('ember-arcgis-portal-components/components/item-picker/item-row/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/item-row/single/template', 'ember-arcgis-portal-components/components/item-picker/item-row/multiple/template'], function (exports, _template, _template2) {
   'use strict';
@@ -86125,8 +86820,8 @@ if ( typeof define === "function" ) {
     }),
 
     checked: Ember.computed('model.id', 'itemsToAdd.[]', function () {
-      var itemsToAdd = this.get('itemsToAdd');
-      return !!itemsToAdd.findBy('id', this.get('model.id'));
+      var chk = this.get('itemsToAdd').includes(this.get('model'));
+      return chk;
     }),
 
     url: Ember.computed('model.id', 'session.portalHostname', function () {
@@ -86137,8 +86832,10 @@ if ( typeof define === "function" ) {
       selectItem: function selectItem(item) {
         var _this = this;
 
+        // this is needed because of what appears to be a glimmer race condition.
+        // if not present, the checked state of the checkbox will be out of sync
         Ember.run.next(this, function () {
-          _this.get('onClick')(item);
+          Ember.tryInvoke(_this, 'onClick', [{ item: item }]);
         });
       }
     }
@@ -86149,13 +86846,46 @@ if ( typeof define === "function" ) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "CCTFmB6Q", "block": "{\"symbols\":[],\"statements\":[[6,\"span\"],[9,\"class\",\"pull-right item-picker-item-results-item-type\"],[7],[1,[18,\"typeOfData\"],false],[8],[0,\"\\n\"],[6,\"a\"],[9,\"href\",\"\"],[3,\"action\",[[19,0,[]],\"selectItem\",[20,[\"model\"]]]],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"checkbox-inline\"],[7],[0,\"\\n    \"],[6,\"input\"],[9,\"type\",\"checkbox\"],[10,\"checked\",[25,\"readonly\",[[20,[\"checked\"]]],null],null],[7],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"item-picker-item-results-item-inner\"],[7],[0,\"\\n    \"],[6,\"h2\"],[9,\"data-toggle\",\"tooltip\"],[10,\"title\",[26,[[20,[\"model\",\"title\"]]]]],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"title\"]],false],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"shared-by\"],[7],[0,\"\\n\"],[4,\"if\",[[20,[\"events\"]]],null,{\"statements\":[[0,\"        (\"],[1,[18,\"numberOfItems\"],false],[0,\") \"],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"relatedEvents\"],null]],null],false],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"        \"],[1,[20,[\"model\",\"owner\"]],false],[0,\"\\n\"]],\"parameters\":[]}],[0,\"    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-row/multiple/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "2M3EtanC", "block": "{\"symbols\":[],\"statements\":[[6,\"span\"],[9,\"class\",\"pull-right item-picker-item-results-item-type\"],[7],[1,[18,\"typeOfData\"],false],[8],[0,\"\\n\"],[6,\"a\"],[9,\"href\",\"\"],[3,\"action\",[[19,0,[]],\"selectItem\",[20,[\"model\"]]]],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"checkbox-inline\"],[7],[0,\"\\n    \"],[6,\"input\"],[9,\"class\",\"magic-checkbox\"],[9,\"type\",\"checkbox\"],[10,\"checked\",[25,\"readonly\",[[20,[\"checked\"]]],null],null],[7],[8],[0,\"\\n    \"],[6,\"span\"],[7],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"item-picker-item-results-item-inner\"],[7],[0,\"\\n    \"],[6,\"h2\"],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"title\"]],false],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"shared-by\"],[7],[0,\"\\n        \"],[1,[20,[\"model\",\"owner\"]],false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-row/multiple/template.hbs" } });
 });
 ;define("ember-arcgis-portal-components/components/item-picker/item-row/single/template", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "7uIYQHFp", "block": "{\"symbols\":[],\"statements\":[[6,\"span\"],[9,\"class\",\"pull-right item-picker-item-results-item-type\"],[7],[1,[18,\"typeOfData\"],false],[8],[0,\"\\n\"],[6,\"a\"],[9,\"href\",\"\"],[3,\"action\",[[19,0,[]],\"selectItem\",[20,[\"model\"]]]],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"item-picker-item-results-item-inner\"],[7],[0,\"\\n    \"],[6,\"h2\"],[9,\"data-toggle\",\"tooltip\"],[10,\"title\",[26,[[20,[\"model\",\"title\"]]]]],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"title\"]],false],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"shared-by\"],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"owner\"]],false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-row/single/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "M8IOb4zl", "block": "{\"symbols\":[],\"statements\":[[6,\"span\"],[9,\"class\",\"pull-right item-picker-item-results-item-type\"],[7],[1,[18,\"typeOfData\"],false],[8],[0,\"\\n\"],[6,\"a\"],[9,\"href\",\"\"],[3,\"action\",[[19,0,[]],\"selectItem\",[20,[\"model\"]]]],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"item-picker-item-results-item-inner\"],[7],[0,\"\\n    \"],[6,\"h2\"],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"title\"]],false],[0,\"\\n    \"],[8],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"shared-by\"],[7],[0,\"\\n      \"],[1,[20,[\"model\",\"owner\"]],false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/item-row/single/template.hbs" } });
+});
+;define('ember-arcgis-portal-components/components/item-picker/layer-picker-row/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/layer-picker-row/template'], function (exports, _template) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = Ember.Component.extend({
+    layout: _template.default,
+    intl: Ember.inject.service(),
+    /**
+     * Compute the translation scope
+     */
+    _i18nScope: Ember.computed('i18nScope', function () {
+      return this.getWithDefault('i18nScope', 'addons.components.itemPicker') + '.';
+    }),
+    /**
+     * Compute the i18n key for the geometry type and return that
+     */
+    geometryTypeKey: Ember.computed('layer', function () {
+      var layer = this.get('layer');
+      var type = layer.geometryType || 'table';
+      var key = this.get('_i18nScope') + 'shared.geometryType.' + type;
+      console.debug('Key is ' + key);
+      return key;
+    })
+  });
+});
+;define("ember-arcgis-portal-components/components/item-picker/layer-picker-row/template", ["exports"], function (exports) {
+  "use strict";
+
+  exports.__esModule = true;
+  exports.default = Ember.HTMLBars.template({ "id": "JO2LHgqJ", "block": "{\"symbols\":[],\"statements\":[[4,\"if\",[[20,[\"selectable\"]]],null,{\"statements\":[[6,\"input\"],[9,\"type\",\"radio\"],[9,\"name\",\"selectedLayer\"],[10,\"checked\",[20,[\"layer\",\"checked\"]],null],[10,\"value\",[20,[\"layer\",\"id\"]],null],[9,\"class\",\"magic-radio\"],[10,\"id\",[20,[\"layer\",\"name\"]],null],[10,\"onchange\",[25,\"action\",[[19,0,[]],[20,[\"onLayerSelected\"]],[20,[\"layer\"]]],null],null],[7],[8],[0,\"\\n\"]],\"parameters\":[]},null],[6,\"label\"],[10,\"for\",[26,[[20,[\"layer\",\"name\"]]]]],[7],[1,[20,[\"layer\",\"name\"]],false],[0,\" (\"],[1,[25,\"t\",[[20,[\"geometryTypeKey\"]]],null],false],[0,\")\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/layer-picker-row/template.hbs" } });
 });
 ;define('ember-arcgis-portal-components/components/item-picker/layer-picker/component', ['exports', 'ember-arcgis-portal-components/components/item-picker/layer-picker/template'], function (exports, _template) {
   'use strict';
@@ -86165,19 +86895,20 @@ if ( typeof define === "function" ) {
   });
   exports.default = Ember.Component.extend({
     layout: _template.default
+
   });
 });
 ;define("ember-arcgis-portal-components/components/item-picker/layer-picker/template", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "x8YGxr07", "block": "{\"symbols\":[\"layer\"],\"statements\":[[6,\"div\"],[9,\"class\",\"layer-picker-list\"],[7],[0,\"\\n  \"],[6,\"ul\"],[9,\"class\",\"nav nav-pills nav-stacked\"],[7],[0,\"\\n\"],[4,\"each\",[[20,[\"model\"]]],null,{\"statements\":[[4,\"if\",[[20,[\"selectable\"]]],null,{\"statements\":[[0,\"      \"],[6,\"input\"],[9,\"type\",\"radio\"],[9,\"name\",\"selectedLayer\"],[10,\"checked\",[19,1,[\"checked\"]],null],[10,\"value\",[19,1,[\"id\"]],null],[9,\"class\",\"magic-radio\"],[10,\"id\",[19,1,[\"name\"]],null],[10,\"onchange\",[25,\"action\",[[19,0,[]],[20,[\"onLayerSelected\"]],[19,1,[]]],null],null],[7],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[6,\"label\"],[10,\"for\",[26,[[19,1,[\"name\"]]]]],[7],[1,[19,1,[\"name\"]],false],[8],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/layer-picker/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "1H21ypHH", "block": "{\"symbols\":[\"layer\"],\"statements\":[[6,\"div\"],[9,\"class\",\"layer-picker-list\"],[7],[0,\"\\n  \"],[6,\"ul\"],[9,\"class\",\"nav nav-pills nav-stacked\"],[7],[0,\"\\n\"],[4,\"each\",[[20,[\"model\"]]],null,{\"statements\":[[0,\"      \"],[1,[25,\"item-picker/layer-picker-row\",null,[[\"layer\",\"selectable\",\"onLayerSelected\"],[[19,1,[]],[20,[\"selectable\"]],[25,\"action\",[[19,0,[]],[20,[\"onLayerSelected\"]]],null]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/layer-picker/template.hbs" } });
 });
 ;define("ember-arcgis-portal-components/components/item-picker/template", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "oeSMC9gT", "block": "{\"symbols\":[\"item\",\"appType\"],\"statements\":[[4,\"if\",[[20,[\"showFacets\"]]],null,{\"statements\":[[0,\"    \"],[6,\"div\"],[9,\"class\",\"item-picker-radio-buttons col-xs-2\"],[7],[0,\"\\n\"],[4,\"each\",[[20,[\"catalog\"]]],null,{\"statements\":[[4,\"radio-button\",null,[[\"value\",\"groupValue\",\"changed\",\"classNames\"],[[19,2,[\"name\"]],[20,[\"selectedCatalogName\"]],\"chooseCatalog\",[25,\"concat\",[\"item-picker-radio-button-\",[25,\"dasherize\",[[19,2,[\"name\"]]],null]],null]]],{\"statements\":[[0,\"          \"],[6,\"span\"],[7],[1,[19,2,[\"name\"]],false],[8],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"    \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[6,\"div\"],[10,\"class\",[26,[[25,\"if\",[[20,[\"showFacets\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[7],[0,\"\\n    \"],[1,[25,\"search-form\",null,[[\"q\",\"onSearch\"],[[20,[\"q\"]],[25,\"action\",[[19,0,[]],\"doSearch\"],null]]]],false],[0,\"\\n\\n    \"],[6,\"div\"],[9,\"class\",\"item-picker-results-container\"],[7],[0,\"\\n      \"],[6,\"ul\"],[9,\"class\",\"results-list\"],[7],[0,\"\\n\"],[4,\"if\",[[20,[\"loading\"]]],null,{\"statements\":[[0,\"          \"],[6,\"li\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"loading\"],null]],null],false],[0,\"...\"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[20,[\"noItemsFoundMsg\"]]],null,{\"statements\":[[0,\"          \"],[6,\"li\"],[7],[6,\"h3\"],[7],[1,[18,\"noItemsFoundMsg\"],false],[8],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"each\",[[20,[\"items\",\"results\"]]],null,{\"statements\":[[0,\"            \"],[1,[25,\"component\",[[20,[\"row\"]]],[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"model\",\"currentItemId\",\"onClick\"],[[20,[\"selectMultiple\"]],[20,[\"itemsToAdd\"]],[20,[\"_i18nScope\"]],[19,1,[]],[20,[\"currentItem\",\"id\"]],[25,\"action\",[[19,0,[]],\"onItemClick\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"        \"]],\"parameters\":[]}]],\"parameters\":[]}],[0,\"      \"],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"currentItem\"]]],null,{\"statements\":[[0,\"        \"],[6,\"section\"],[9,\"class\",\"item-picker-current-item\"],[7],[0,\"\\n          \"],[1,[25,\"component\",[[20,[\"preview\"]]],[[\"_i18nScope\",\"model\",\"params\",\"onSelectionValidator\",\"onItemSelected\",\"onCancel\"],[[20,[\"_i18nScope\"]],[20,[\"currentItem\"]],[20,[\"previewParams\"]],[20,[\"onSelectionValidator\"]],[25,\"action\",[[19,0,[]],\"onPreviewSelected\"],null],[25,\"action\",[[19,0,[]],\"cancelAction\"],null]]]],false],[0,\"\\n        \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"selectMultiple\"]]],null,{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"item-picker-status\"],[7],[0,\"\\n        \"],[6,\"span\"],[7],[0,\"\\n          \"],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[20,[\"itemsToAdd\",\"length\"]]]]],false],[0,\"\\n        \"],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"hasItemsToAdd\"]]],null,{\"statements\":[[0,\"          \"],[6,\"button\"],[9,\"class\",\"btn btn-link\"],[3,\"action\",[[19,0,[]],\"deselectAll\"]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"deselectAll\"],null]],null],false],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n    \"],[1,[25,\"item-pager\",null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[20,[\"_i18nScope\"]],[20,[\"pageSize\"]],[20,[\"totalCount\"]],[20,[\"pageNumber\"]],[25,\"action\",[[19,0,[]],\"changePage\"],null]]]],false],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"selectMultiple\"]]],null,{\"statements\":[[0,\"      \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary pull-right col-xs-1\"],[10,\"disabled\",[18,\"disableAddItems\"],null],[3,\"action\",[[19,0,[]],[20,[\"selectAction\"]],[20,[\"itemsToAdd\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[8],[0,\"\\n\"]],\"parameters\":[]},null],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "9FSBADV9", "block": "{\"symbols\":[\"item\",\"appType\"],\"statements\":[[4,\"if\",[[20,[\"showFacets\"]]],null,{\"statements\":[[0,\"    \"],[6,\"div\"],[9,\"class\",\"item-picker-radio-buttons col-xs-2\"],[7],[0,\"\\n\"],[4,\"each\",[[20,[\"catalog\"]]],null,{\"statements\":[[4,\"radio-button\",null,[[\"value\",\"groupValue\",\"changed\",\"classNames\"],[[19,2,[\"name\"]],[20,[\"selectedCatalogName\"]],\"chooseCatalog\",[25,\"concat\",[\"item-picker-radio-button-\",[25,\"dasherize\",[[19,2,[\"name\"]]],null]],null]]],{\"statements\":[[0,\"          \"],[6,\"span\"],[7],[1,[19,2,[\"name\"]],false],[8],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[2]},null],[0,\"    \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[20,[\"showMessage\"]]],null,{\"statements\":[[0,\"    \"],[6,\"div\"],[10,\"class\",[26,[\"alert alert-\",[18,\"currentStatus\"]]]],[9,\"role\",\"alert\"],[7],[1,[18,\"currentMessage\"],false],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[4,\"if\",[[20,[\"currentModel\",\"item\"]]],null,{\"statements\":[[0,\"  \"],[6,\"section\"],[9,\"class\",\"item-picker-current-item\"],[7],[0,\"\\n    \"],[1,[25,\"component\",[[20,[\"preview\"]]],[[\"_i18nScope\",\"model\",\"params\",\"onSelectionValidator\",\"onItemSelected\",\"onCancel\"],[[20,[\"_i18nScope\"]],[20,[\"currentModel\"]],[20,[\"previewParams\"]],[20,[\"onSelectionValidator\"]],[25,\"action\",[[19,0,[]],\"onPreviewSelected\"],null],[25,\"action\",[[19,0,[]],\"cancelAction\"],null]]]],false],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n\"],[6,\"div\"],[10,\"class\",[26,[[25,\"if\",[[20,[\"showFacets\"]],\"col-xs-10\",\"col-xs-12\"],null]]]],[7],[0,\"\\n    \"],[1,[25,\"search-form\",null,[[\"q\",\"onSearch\"],[[20,[\"q\"]],[25,\"action\",[[19,0,[]],\"doSearch\"],null]]]],false],[0,\"\\n\\n    \"],[6,\"div\"],[9,\"class\",\"item-picker-results-container\"],[7],[0,\"\\n      \"],[6,\"ul\"],[9,\"class\",\"results-list\"],[7],[0,\"\\n\"],[4,\"if\",[[20,[\"loading\"]]],null,{\"statements\":[[0,\"          \"],[6,\"li\"],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"loading\"],null]],null],false],[0,\"...\"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"if\",[[20,[\"noItemsFoundMsg\"]]],null,{\"statements\":[[0,\"          \"],[6,\"li\"],[7],[6,\"h3\"],[7],[1,[18,\"noItemsFoundMsg\"],false],[8],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[4,\"each\",[[20,[\"items\",\"results\"]]],null,{\"statements\":[[0,\"            \"],[1,[25,\"component\",[[20,[\"row\"]]],[[\"selectMultiple\",\"itemsToAdd\",\"_i18nScope\",\"onSelectionValidator\",\"model\",\"currentItemId\",\"onClick\"],[[20,[\"selectMultiple\"]],[20,[\"itemsToAdd\"]],[20,[\"_i18nScope\"]],[20,[\"onSelectionValidator\"]],[19,1,[]],[20,[\"currentModel\",\"item\",\"id\"]],[25,\"action\",[[19,0,[]],\"onItemClick\"],null]]]],false],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"        \"]],\"parameters\":[]}]],\"parameters\":[]}],[0,\"      \"],[8],[0,\"\\n    \"],[8],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"selectMultiple\"]]],null,{\"statements\":[[0,\"      \"],[6,\"div\"],[9,\"class\",\"item-picker-status\"],[7],[0,\"\\n        \"],[6,\"span\"],[7],[0,\"\\n          \"],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"selectedCount\"],null]],[[\"count\"],[[20,[\"itemsToAdd\",\"length\"]]]]],false],[0,\"\\n        \"],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"hasItemsToAdd\"]]],null,{\"statements\":[[0,\"          \"],[6,\"button\"],[9,\"class\",\"btn btn-link\"],[3,\"action\",[[19,0,[]],\"deselectAll\"]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"deselectAll\"],null]],null],false],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"      \"],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"flex-row\"],[7],[0,\"\\n      \"],[1,[25,\"item-pager\",null,[[\"class\",\"_i18nScope\",\"pageSize\",\"totalCount\",\"pageNumber\",\"changePage\"],[\"pull-left\",[20,[\"_i18nScope\"]],[20,[\"pageSize\"]],[20,[\"totalCount\"]],[20,[\"pageNumber\"]],[25,\"action\",[[19,0,[]],\"changePage\"],null]]]],false],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"selectMultiple\"]]],null,{\"statements\":[[0,\"        \"],[6,\"button\"],[9,\"type\",\"button\"],[9,\"class\",\"btn btn-primary pull-right\"],[10,\"disabled\",[18,\"disableAddItems\"],null],[3,\"action\",[[19,0,[]],[20,[\"selectAction\"]],[20,[\"itemsToAdd\"]]]],[7],[1,[25,\"t\",[[25,\"concat\",[[20,[\"_i18nScope\"]],\"buttons.selectMultiple\"],null]],null],false],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"    \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/item-picker/template.hbs" } });
 });
 ;define('ember-arcgis-portal-components/components/loading-indicator/component', ['exports', 'ember-arcgis-portal-components/components/loading-indicator/template'], function (exports, _template) {
   'use strict';
@@ -86222,7 +86953,7 @@ if ( typeof define === "function" ) {
   exports.default = Ember.Component.extend({
     layout: _template.default,
     tagName: 'form',
-    classNames: ['portal-search-form', 'form-group-tsf', 'form-group'],
+    classNames: ['portal-search-form', 'form-group'],
 
     /**
      * Compute the translation scope
@@ -86262,7 +86993,7 @@ if ( typeof define === "function" ) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "P0HajOQA", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[9,\"class\",\"input-group pull-left\"],[7],[0,\"\\n  \"],[6,\"span\"],[9,\"class\",\"input-group-btn\"],[7],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"submit\"],[9,\"class\",\"btn\"],[7],[6,\"span\"],[9,\"class\",\"glyphicon glyphicon-search\"],[7],[8],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"has-feedback has-clear\"],[7],[0,\"\\n    \"],[6,\"label\"],[10,\"for\",[26,[[18,\"inputElementId\"]]]],[9,\"class\",\"sr-only\"],[7],[1,[25,\"if\",[[20,[\"placeholder\"]],[20,[\"placeholder\"]],[25,\"t\",[[20,[\"placeholderi18nKey\"]]],null]],null],false],[0,\":\"],[8],[0,\"\\n    \"],[6,\"input\"],[10,\"autocomplete\",[25,\"if\",[[20,[\"autocomplete\"]],[20,[\"autocomplete\"]],\"off\"],null],null],[10,\"id\",[18,\"inputElementId\"],null],[10,\"value\",[25,\"readonly\",[[20,[\"_q\"]]],null],null],[9,\"class\",\"form-control form-control-tsf\"],[10,\"placeholder\",[25,\"if\",[[20,[\"placeholder\"]],[20,[\"placeholder\"]],[25,\"t\",[[20,[\"placeholderi18nKey\"]]],null]],null],null],[10,\"oninput\",[25,\"action\",[[19,0,[]],[25,\"mut\",[[20,[\"_q\"]]],null]],[[\"value\"],[\"target.value\"]]],null],[7],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"_q\"]]],null,{\"statements\":[[0,\"      \"],[6,\"button\"],[9,\"class\",\"form-control-feedback clear-button\"],[3,\"action\",[[19,0,[]],\"cancel\"]],[7],[6,\"span\"],[9,\"class\",\"glyphicon glyphicon-remove\"],[7],[8],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"clearfix\"],[7],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/search-form/template.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "+nqgPncd", "block": "{\"symbols\":[],\"statements\":[[6,\"div\"],[9,\"class\",\"input-group pull-left\"],[7],[0,\"\\n  \"],[6,\"span\"],[9,\"class\",\"input-group-btn\"],[7],[0,\"\\n    \"],[6,\"button\"],[9,\"type\",\"submit\"],[9,\"class\",\"btn\"],[7],[6,\"span\"],[9,\"class\",\"glyphicon glyphicon-search\"],[7],[8],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"has-feedback has-clear\"],[7],[0,\"\\n    \"],[6,\"label\"],[10,\"for\",[26,[[18,\"inputElementId\"]]]],[9,\"class\",\"sr-only\"],[7],[1,[25,\"if\",[[20,[\"placeholder\"]],[20,[\"placeholder\"]],[25,\"t\",[[20,[\"placeholderi18nKey\"]]],null]],null],false],[0,\":\"],[8],[0,\"\\n    \"],[6,\"input\"],[10,\"autocomplete\",[25,\"if\",[[20,[\"autocomplete\"]],[20,[\"autocomplete\"]],\"off\"],null],null],[10,\"id\",[18,\"inputElementId\"],null],[10,\"value\",[25,\"readonly\",[[20,[\"_q\"]]],null],null],[9,\"class\",\"form-control\"],[10,\"placeholder\",[25,\"if\",[[20,[\"placeholder\"]],[20,[\"placeholder\"]],[25,\"t\",[[20,[\"placeholderi18nKey\"]]],null]],null],null],[10,\"oninput\",[25,\"action\",[[19,0,[]],[25,\"mut\",[[20,[\"_q\"]]],null]],[[\"value\"],[\"target.value\"]]],null],[7],[8],[0,\"\\n\"],[4,\"if\",[[20,[\"_q\"]]],null,{\"statements\":[[0,\"      \"],[6,\"button\"],[9,\"class\",\"form-control-feedback clear-button\"],[3,\"action\",[[19,0,[]],\"cancel\"]],[7],[6,\"span\"],[9,\"class\",\"glyphicon glyphicon-remove\"],[7],[8],[8],[0,\"\\n\"]],\"parameters\":[]},null],[0,\"  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\"],[6,\"div\"],[9,\"class\",\"clearfix\"],[7],[8],[0,\"\\n\"]],\"hasEval\":false}", "meta": { "moduleName": "ember-arcgis-portal-components/components/search-form/template.hbs" } });
 });
 ;define('ember-arcgis-portal-components/utils/force-https', ['exports'], function (exports) {
   'use strict';
@@ -86318,7 +87049,7 @@ if ( typeof define === "function" ) {
   });
 
   /**
-   * blah
+   * Create the query from the datalog, searchString
    */
   function createQuery(catalog, searchString, isHex) {
     var queryParts = Ember.A([]);
