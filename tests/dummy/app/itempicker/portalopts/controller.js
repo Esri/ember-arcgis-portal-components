@@ -1,7 +1,7 @@
 import { computed } from '@ember/object';
 import { debug } from '@ember/debug';
 import Controller from '@ember/controller';
-import fetch from 'ember-network/fetch';
+import fetch from 'fetch';
 export default Controller.extend({
 
   getToken (username, password, portalBaseUrl) {
