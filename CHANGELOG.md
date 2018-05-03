@@ -3,10 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-### Changed
-- replace ember-network w/ ember-fetch
+
+## [1.0.6]
 ### Fixed
 - Padding issue on item picker modals [84646](https://esriarlington.tpondemand.com/entity/84646-chore-fixing-the-padding-issue-on)
+
+## [1.0.5]
+### Changed
+- replace ember-network w/ ember-fetch
 
 ## [1.0.4]
 ### Fixed
