@@ -5,57 +5,59 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - replace ember-network w/ ember-fetch
+### Fixed
+- Padding issue on item picker modals [84646](https://esriarlington.tpondemand.com/entity/84646-chore-fixing-the-padding-issue-on)
 
 ## [1.0.4]
-## Fixed
+### Fixed
 - Style issue where the checkbox and title were not centered in the row in multi mode
 
 ## [1.0.3]
-## Fixed
+### Fixed
 - Text fadeout is now placed at the bottom of the description container instead of the description itself
 
 ## [1.0.2]
-## Fixed
+### Fixed
 - Removed stray string causing styling issues
-## Removed
+### Removed
 - Removed tooltips on hover of titles in item picker
 
 ## [1.0.1]
-## Fixed
+### Fixed
 - Preview panel now closes when clicking an active row [link](https://github.com/Esri/ember-arcgis-portal-components/issues/76)
 - Sidebar now takes full height of the modal instead of taking the height of results
-## Changed
+### Changed
 - Text of preview back button is now 'Close'
 
 ## [1.0.0]
-## Added
+### Added
 - magic-checkbox class is now used in multi-select mode
 - markdown docs for item-picker
-## Changed
+### Changed
 - `feature-service-preview` action-up with `{item, options}`
 - `item-row` selectItem action uses `next`
 - general cleanup and consistency for using `model` internally, and returning `{item, options}`
 - preview pane now uses flex box instead of absolute positioning
-## Fixed
+### Fixed
 - Checkboxes no longer jump in Safari when checked [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 - On smaller screens, the “Select” button on the bottom right now has a fixed width [link](https://esriarlington.tpondemand.com/entity/83629-filter-by-initiative-styling-issues-withtooltips)
 - Old and unused classes have now been removed and the border is no longer visible in the monorepo [link](https://esriarlington.tpondemand.com/entity/83659-chore-search-classes-need-to-cleanup)
-## Removed
+### Removed
 - Extra padding on item picker has been removed [link](https://github.com/Esri/ember-arcgis-portal-components/issues/63)
 
 ## 0.9.4
-## Fixed
+### Fixed
 - Fix issue where checkboxes would not become active on click in multi-select mode [link](https://esriarlington.tpondemand.com/entity/83698-checkboxes-dont-have-active-state-on)
 
-## Removed
+### Removed
 - Removed unnecessary tooltip from title
 
 ## 0.9.3
-## Changed
+### Changed
 - More fixes for feature service preview to fix e2e tests
 
 ## 0.9.2
-## Changed
+### Changed
 - Updated feature service preview for e2e fix
 
 ## 0.9.1
