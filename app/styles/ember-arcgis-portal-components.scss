@@ -9,6 +9,9 @@
     box-shadow: none;
     -webkit-box-shadow: none;
   }
+  .input-group div.has-clear input::-ms-clear {
+    display: none;
+  }
   button {
     background-color: transparent;
     border: 0px;
