@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Hides duplicate 'clear-input' pseudoelement in text inputs on IE/Edge [83956](https://esriarlington.tpondemand.com/entity/83956)
 
 ## [1.0.6]
 ### Fixed
