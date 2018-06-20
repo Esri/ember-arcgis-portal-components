@@ -62,8 +62,7 @@ export default Component.extend({
   }),
 
   checked: computed('model.id', 'itemsToAdd.[]', function () {
-    let chk = this.get('itemsToAdd').includes(this.get('model'));
-    return chk;
+    return this.get('itemsToAdd').findBy('id', this.get('model.id'));
   }),
 
   url: computed('model.id', 'session.portalHostname', function () {

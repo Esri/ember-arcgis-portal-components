@@ -39,6 +39,9 @@ export default Component.extend({
   init () {
     this._super(...arguments);
     this.set('itemsToAdd', []);
+    if (this.get('priorSelections')) {
+      this.set('itemsToAdd', this.get('priorSelections'));
+    }
     if (this.get('searchItemsOnInit')) {
       if (this.get('catalog')) {
         this._setInitialCatalog(this.get('catalog'));
