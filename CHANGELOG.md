@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Hides duplicate 'clear-input' pseudoelement in text inputs on IE/Edge [83956](https://esriarlington.tpondemand.com/entity/83956)
 
+### Changed
+- item-picker will now check for previous selections on init
+
 ## [1.0.6]
 ### Fixed
 - Padding issue on item picker modals [84646](https://esriarlington.tpondemand.com/entity/84646-chore-fixing-the-padding-issue-on)
