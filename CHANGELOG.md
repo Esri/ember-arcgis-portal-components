@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Hides duplicate 'clear-input' pseudoelement in text inputs on IE/Edge [83956](https://esriarlington.tpondemand.com/entity/83956)
 
 ### Changed
-- item-picker will now check for previous selections on init
+- item-picker will now initialize with passed in selections if any are passed in
 
 ## [1.0.6]
 ### Fixed
