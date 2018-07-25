@@ -76,4 +76,21 @@ module('Integration | Component | item picker', function (hooks) {
     assert.ok(findAll('.item-picker-item-results-item input:checked').length);
     assert.ok(findAll('.item-picker-item-results-item input:not(:checked)').length);
   });
+
+  test('Vertical flex mode toggles with verticalFlex attribute', async function (assert) {
+    this.setProperties({
+      items: { results: [] },
+      selectAction () {}
+    });
+
+    await render(hbs`{{item-picker verticalFlex=true items=items selectMultiple=true selectAction=(action selectAction)}}`);
+
+    assert.ok(this.element.querySelector('div').classList.contains('item-picker-vertical-flex'),
+      'item-picker-vertical-flex class added when verticalFlex == true');
+
+    await render(hbs`{{item-picker verticalFlex=false items=items selectMultiple=true selectAction=(action selectAction)}}`);
+
+    assert.notOk(this.element.querySelector('div').classList.contains('item-picker-vertical-flex'),
+      'item-picker-vertical-flex class NOT added when verticalFlex != true');
+  });
 });

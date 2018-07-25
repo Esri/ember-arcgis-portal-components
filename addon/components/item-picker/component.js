@@ -23,6 +23,7 @@ import isGuid from 'ember-arcgis-portal-components/utils/is-guid';
 
 export default Component.extend({
   classNames: [ 'item-picker', 'clearfix' ],
+  classNameBindings: ['verticalFlex:item-picker-vertical-flex'],
   disableAddItems: not('hasItemsToAdd'),
   hasItemsToAdd: notEmpty('itemsToAdd'),
   intl: service(),
@@ -33,6 +34,9 @@ export default Component.extend({
   shouldValidate: false,
   showMessage: notEmpty('currentMessage'),
   showNoItemsMsg: notEmpty('noItemsFoundMsg'),
+  // responsiveHeight mode == the component will only show 8 items per page and flex with
+  // the height of the screen... especially useful for responsive modals
+  verticalFlex: false,
   /**
    * Startup the component... we may need to issue an immediate search...
    */
@@ -102,8 +106,12 @@ export default Component.extend({
 
   query: '',
 
-  pageSize: computed(function () {
-    return this.get('rowCount') || 10;
+  defaultPageSize: computed('disableFlexyMode', function () {
+    return this.get('disableFlexyMode') ? 10 : 8;
+  }),
+
+  pageSize: computed('defaultPageSize', function () {
+    return this.get('rowCount') || this.get('defaultPageSize');
   }),
 
   items: A([]),

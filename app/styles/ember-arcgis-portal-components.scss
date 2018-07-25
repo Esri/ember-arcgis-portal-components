@@ -40,10 +40,16 @@ div.panel-body:has(.item-picker) {
   }
   ul.results-list {
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
     li:nth-child(even) {
       background: $calcite-gray-lightest
     }
     li {
+      overflow: hidden;
+      flex: 1;
       list-style: none;
       padding: 0;
       a {
@@ -328,6 +334,7 @@ div.panel-body:has(.item-picker) {
   }
   .item-picker-results-container {
     margin: 25px 0px;
+    height: 100%;
   }
   .flex-row {
     display: flex;
@@ -413,5 +420,35 @@ div.panel-body:has(.item-picker) {
   }
   .magic-radio:checked[disabled]+label:after {
     background: $calcite-blue-dark;
+  }
+}
+
+// These media queries are not nested in their elements because they only
+// apply if .item-picker-vertical-flex is applied.
+.item-picker-vertical-flex {
+  @media screen and (max-height: 940px) {
+    height: calc(100vh - 300px);
+    .results-col {
+      height:calc(#{100vh} - 415px);
+    }
+  }
+
+  @media screen and (max-height: 785px) {
+    .results-col ul.results-list li a .shared-by {
+      font-size: 10px;
+    }
+  }
+
+  @media screen and (max-height: 760px) {
+    .results-col ul.results-list li a .shared-by {
+      display: none;
+    }
+  }
+
+  @media screen and (max-height: 750px) {
+    height: 450px;
+    .results-col {
+      height: 335px;
+    }
   }
 }

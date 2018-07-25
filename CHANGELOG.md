@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added vertical flex mode [85042](https://esriarlington.tpondemand.com/entity/85042-modals-minimum-height-is-very-tall)
+
 ### Fixed
 - Hides duplicate 'clear-input' pseudoelement in text inputs on IE/Edge [83956](https://esriarlington.tpondemand.com/entity/83956)
 
