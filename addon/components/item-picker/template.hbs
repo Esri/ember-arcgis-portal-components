@@ -1,21 +1,21 @@
-  {{#if showFacets}}
-    <div class="item-picker-radio-buttons col-xs-2">
-      {{#each catalog as |appType|}}
-        {{#radio-button
-          value=appType.name
-          groupValue=selectedCatalogName
-          changed="chooseCatalog"
-          classNames=(concat "item-picker-radio-button-" (dasherize appType.name))
-        }}
-          <span>{{appType.name}}</span>
-        {{/radio-button}}
-      {{/each}}
-    </div>
-  {{/if}}
+{{#if showFacets}}
+  <div class="item-picker-radio-buttons col-xs-2">
+    {{#each catalog as |appType|}}
+      {{#radio-button
+        value=appType.name
+        groupValue=selectedCatalogName
+        changed="chooseCatalog"
+        classNames=(concat "item-picker-radio-button-" (dasherize appType.name))
+      }}
+        <span>{{appType.name}}</span>
+      {{/radio-button}}
+    {{/each}}
+  </div>
+{{/if}}
 
-  {{#if showMessage}}
-    <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
-  {{/if}}
+{{#if showMessage}}
+  <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
+{{/if}}
 
 {{#if currentModel.item}}
   <section class="item-picker-current-item">
@@ -30,7 +30,7 @@
   </section>
 {{/if}}
 
-<div class="{{if showFacets "col-xs-10" "col-xs-12"}}">
+<div class="results-col {{if showFacets "col-xs-10" "col-xs-12"}}">
     {{search-form q=q onSearch=(action "doSearch")}}
 
     <div class="item-picker-results-container">

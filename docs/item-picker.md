@@ -8,6 +8,7 @@ The Item Picker encapsulates the selection of Items. At first this seems like a 
 |----|:-------:|:-------:|----------|
 |  [selectAction](#basic-usage) | Function<br><small>(Closure Action)</small> | Yes | This action is run when the `Select` button inside the item picker is pressed. This should be a closure action. |
 |  [searchItemsOnInit](#basic-usage) | Boolean | No | Allows the item picker to execute a search and show the results as soon as it is rendered. This searches the active catalog on launch. If no active catalog is set, it will use the first available catalog. |
+|  [verticalFlex](#basic-usage) | Boolean | No | If set to true, the component will become vertically responsive at screen height 940px |
 |  [selectMultiple](#multiple-selection) | Boolean |  No|  Allows the item picker to select multiple items at once. An <strong>array</strong> of items will be passed to the closure action.   |
 |  [catalog](#filterin-and-faceting)  |  Array |  No | Allows the item picker to be filtered based on ArcGIS Online (AGO) queries. If the `catalog` array has more than one entry, a "facets" list will be shown on the left of the component, and it will use the `name` property. |
 |  [onSelectionValidator](#item-validation) | Function<br><small>(Closure Action)</small>  | No | Allows an application to do more in-depth validation of an item before using it. |
@@ -55,6 +56,14 @@ By default, the item picker will wait for the user to enter a query before issui
 ```hbs
 {{item-picker
     searchItemsOnInit=true
+    selectAction=(action "onSelectItem")}}
+```
+
+Also by default, the item picker has a set height. If verticalFlex is set to true, it will begin to be responsive at screen height 980px. This feature is designed for use in modals.
+
+```hbs
+{{item-picker
+    verticalFlex=true
     selectAction=(action "onSelectItem")}}
 ```
 
