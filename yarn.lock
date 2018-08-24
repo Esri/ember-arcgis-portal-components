@@ -7683,6 +7683,12 @@ torii-provider-arcgis@0.11.0:
     ember-cli-babel "^5.1.5"
     torii "0.8.4"
 
+torii@0.10.1:
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/torii/-/torii-0.10.1.tgz#caad0a81e82189fc0483b65e68ee28041ad3590f"
+  dependencies:
+    ember-cli-babel "^6.11.0"
+
 torii@0.8.4:
   version "0.8.4"
   resolved "https://registry.yarnpkg.com/torii/-/torii-0.8.4.tgz#12ba0b51af0594ad6f0f16294c71fe13c82c7686"
