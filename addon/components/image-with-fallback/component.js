@@ -9,27 +9,27 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import { isArray } from '@ember/array';
-
-import { computed } from '@ember/object';
-import { bind, run } from '@ember/runloop';
+import {isArray} from '@ember/array';
+import {computed} from '@ember/object';
+import {bind, run} from '@ember/runloop';
 import Component from '@ember/component';
 import forceHttps from 'ember-arcgis-portal-components/utils/force-https';
 
 // NOTE: the test for this is in
 // packages/opendata-ui/tests/integration/components/image-with-fallback/component-test.js
 export default Component.extend({
+
   didInsertElement () {
-    this.$().on('error', bind(this, this.onImageError));
+    this.element.addEventListener('error', bind(this, this.onImageError));
   },
 
   willDestroyElement () {
-    this.$().off();
+    this.element.removeEventListener('error', bind(this, this.onImageError));
   },
 
   tagName: 'img',
 
-  attributeBindings: [ 'src', 'title', 'alt' ],
+  attributeBindings: ['src', 'title', 'alt'],
 
   imgIndex: 0,
 
@@ -46,8 +46,8 @@ export default Component.extend({
     return forceHttps(imgSrc, protocol);
   }),
 
-  onImageError () {
-    run(this, function () {
+  onImageError: function () {
+    run(() => {
       if (!this.get('isDestroyed') && !this.get('isDestroying')) {
         this.incrementProperty('imgIndex');
       }
