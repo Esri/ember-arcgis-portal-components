@@ -34,6 +34,7 @@ export default Component.extend({
   imgIndex: 0,
 
   imgSrcAry: computed('imgSrc', 'fallbackSrc', function () {
+    this.set('imgIndex', 0);
     const imgSrc = this.get('imgSrc');
     const result = isArray(imgSrc) ? imgSrc : [imgSrc];
     result.push(this.get('fallbackSrc'));
