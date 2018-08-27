@@ -32,14 +32,14 @@ export default Component.extend({
   classNames: ['item-picker-item-results-item'],
   classNameBindings: ['isSelected', 'selectMultiple'],
 
-  didInsertElement() {
+  didInsertElement () {
     const el = this.$('[data-toggle="tooltip"]');
     if (el.tooltip) {
       el.tooltip();
     }
   },
 
-  willDestroyElement() {
+  willDestroyElement () {
     const el = this.$('[data-toggle="tooltip"]');
     if (el.tooltip) {
       el.tooltip('destroy');
@@ -70,7 +70,7 @@ export default Component.extend({
   }),
 
   actions: {
-    selectItem(item) {
+    selectItem (item) {
       // this is needed because of what appears to be a glimmer race condition.
       // if not present, the checked state of the checkbox will be out of sync
       next(this, () => {
