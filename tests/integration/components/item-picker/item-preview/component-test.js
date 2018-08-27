@@ -1,11 +1,15 @@
 import { moduleForComponent, test } from 'ember-qunit';
 import hbs from 'htmlbars-inline-precompile';
+import Service from '@ember/service';
 
 moduleForComponent('item-picker/item-preview', 'Integration | Component | item picker/item preview', {
   integration: true,
   setup () {
     let intl = this.container.lookup('service:intl');
     intl.setLocale('en-us');
+
+    const session = Service.extend({});
+    this.register('service:session', session);
   }
 });
 
