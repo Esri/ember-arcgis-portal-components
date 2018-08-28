@@ -21,7 +21,9 @@ test('it renders', function (assert) {
     description: 'This is the description',
     owner: 'jupe',
     modified: 1411060006000,
-    type: 'Web Map'
+    type: 'Web Map',
+    thumbnail: 'thumbnail.png',
+    access: 'public'
   };
 
   this.set('model', {item: item});
@@ -37,11 +39,11 @@ test('it renders', function (assert) {
     onCancel=cancelAction
   }}`);
 
-  // assert.equal(this.$().text().trim(), '');
   const el = this.$('.item-picker-current-item-preview');
   assert.equal(el.find('h4').text().trim(), 'This is the name');
   assert.equal(el.find('div.shared-by-owner').text().trim(), 'Shared by: jupe');
   assert.equal(el.find('.item-picker-current-item-preview-description').text().trim(), 'This is the description');
   assert.equal(el.find('.item-date-modified').text().trim(), '9/18/2014');
   assert.equal(el.find('.item-item-type').text().trim(), 'Web Map');
+  assert.equal(el.find('img').attr('src').trim(), 'https://undefined/sharing/rest/content/items/test-dataset-id/info/thumbnail.png');
 });
