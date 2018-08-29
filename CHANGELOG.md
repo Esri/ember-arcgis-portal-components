@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [1.2.0]
 ### Added
 - Added vertical flex mode [85042](https://esriarlington.tpondemand.com/entity/85042-modals-minimum-height-is-very-tall)
 
