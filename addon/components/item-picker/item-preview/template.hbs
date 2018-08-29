@@ -3,7 +3,7 @@
     {{validationResult.message}}
   </p>
 {{/if}}
-{{image-with-fallback imgSrc=thumbnailUrl fallbackSrc='ember-arcgis-portal-components/assets/images/default-dataset-thumb.png'}}
+{{image-with-fallback imgSrc=thumbnailUrl fallbackSrc="/ember-arcgis-portal-components/assets/images/default-dataset-thumb.png"}}
 <h4>{{model.item.title}}</h4>
 
 <div class="shared-by-owner">{{t (concat _i18nScope "sharedBy") }}: {{model.item.owner}}</div>
