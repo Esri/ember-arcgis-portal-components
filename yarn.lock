@@ -7939,9 +7939,9 @@ to-regex@^3.0.1, to-regex@^3.0.2:
     regex-not "^1.0.2"
     safe-regex "^1.1.0"
 
-torii-provider-arcgis@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/torii-provider-arcgis/-/torii-provider-arcgis-1.2.0.tgz#c1d1c882ee38eba6b3d82400a954273f256f092b"
+torii-provider-arcgis@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/torii-provider-arcgis/-/torii-provider-arcgis-2.0.0.tgz#35f9d687686b3cb04cd2873b8d57792997c67848"
   dependencies:
     "@esri/arcgis-rest-auth" "^1.7.1"
     "@esri/arcgis-rest-request" "^1.7.1"
