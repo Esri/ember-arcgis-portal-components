@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [1.2.1]
 ### Changed
 - bump to ember-arcgis-portal-services 1.7.1 & torii-provider-arcgis 2.0
 
@@ -223,7 +223,11 @@ em
 - Number of search result rows can now be set by: `rowCount`
 - item-preview pane now has a preview button which links out to the item in question.
 
-[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.0...1.2.1
+[1.2.0]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.6...1.2.0
+[1.0.6]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.5...1.0.6
+[1.0.5]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.4...1.0.5
 [1.0.4]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.3...1.0.4
 [1.0.3]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.1...v1.0.2
