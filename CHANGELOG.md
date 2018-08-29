@@ -8,9 +8,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Hides duplicate 'clear-input' pseudoelement in text inputs on IE/Edge [83956](https://esriarlington.tpondemand.com/entity/83956)
+- Properly display thumbnails in the item preview component [85527](https://esriarlington.tpondemand.com/entity/85527-thumbnails-broken-on-item-picker)
 
 ### Changed
 - item-picker will now initialize with passed in selections if any are passed in
+- update `ember-cli` to 2.18.2, `ember-radio-button` to 1.2.4, `ember-cli-active-link-wrapper` to 0.4.0, `ember-cli-github-pages` to 0.2.0, `torii` to 0.10.1, and `torii-provider-arcgis` to 1.2.0
 
 ## [1.0.6]
 ### Fixed

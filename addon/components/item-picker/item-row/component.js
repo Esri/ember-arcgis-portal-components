@@ -9,13 +9,13 @@
   See the License for the specific language governing permissions and
   limitations under the License. */
 
-import { inject as service } from '@ember/service';
-import { computed } from '@ember/object';
+import {inject as service} from '@ember/service';
+import {computed} from '@ember/object';
 import Component from '@ember/component';
 import singleTemplate from './single/template';
 import multipleTemplate from './multiple/template';
-import { tryInvoke } from '@ember/utils';
-import { next } from '@ember/runloop';
+import {tryInvoke} from '@ember/utils';
+import {next} from '@ember/runloop';
 
 export default Component.extend({
   layout: computed('selectMultiple', function () {
@@ -29,8 +29,8 @@ export default Component.extend({
   itemService: service('items-service'),
 
   tagName: 'li',
-  classNames: [ 'item-picker-item-results-item' ],
-  classNameBindings: [ 'isSelected', 'selectMultiple' ],
+  classNames: ['item-picker-item-results-item'],
+  classNameBindings: ['isSelected', 'selectMultiple'],
 
   didInsertElement () {
     const el = this.$('[data-toggle="tooltip"]');

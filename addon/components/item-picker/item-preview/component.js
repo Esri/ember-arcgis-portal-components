@@ -19,6 +19,7 @@ import layout from './template';
 export default Component.extend({
   layout,
   intl: service(),
+  items: service('items-service'),
 
   classNames: [ 'item-picker-current-item-preview' ],
 
@@ -93,6 +94,18 @@ export default Component.extend({
       }
     }
     return previewURL;
+  }),
+
+  thumbnailUrl: computed('model.item', function () {
+    const item = this.get('model.item');
+    const portalUrl = this.get('items').getPortalRestUrl();
+    let url = `${portalUrl}/content/items/${item.id}/info/${item.thumbnail}`;
+    const notPublic = this.get('model.item.access') !== 'public';
+    if (notPublic) {
+      const token = this.get('item.session.token');
+      url = url + '?token=' + token;
+    }
+    return url;
   }),
 
   /**
