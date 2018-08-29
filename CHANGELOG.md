@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
-- bump to torii-provider-arcgis 2.0
+- bump to ember-arcgis-portal-services 1.7.1 & torii-provider-arcgis 2.0
 
 ## [1.2.0]
 ### Added
