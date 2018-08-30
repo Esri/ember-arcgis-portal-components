@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Changed
+- configure eslint to warn against use of jQuery
+
 ## [1.2.1]
 ### Changed
 - bump to ember-arcgis-portal-services 1.7.1 & torii-provider-arcgis 2.0

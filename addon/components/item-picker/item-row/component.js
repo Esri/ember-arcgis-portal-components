@@ -32,6 +32,8 @@ export default Component.extend({
   classNames: ['item-picker-item-results-item'],
   classNameBindings: ['isSelected', 'selectMultiple'],
 
+  // TODO: remove these hooks that are just used to init/destroy tooltips
+  // the templates don't even have tooltips
   didInsertElement () {
     const el = this.$('[data-toggle="tooltip"]');
     if (el.tooltip) {
