@@ -67,7 +67,7 @@ module.exports = {
       },
       rules: {
         // warn against use of jQuery in tests
-        "ember/no-jquery": 0
+        "ember/no-jquery": 1
       }
     },
 
