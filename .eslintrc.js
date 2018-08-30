@@ -19,9 +19,8 @@ module.exports = {
     "comma-dangle": [2, "only-multiline"],
     "no-console": 0,
     "no-extra-boolean-cast": 0,
-    // warn against future uses of jQuery
-    // TODO: set this to level 2 (error) once existing uses are replaced
-    "ember/no-jquery": 1
+    // don't allow uses of jQuery
+    "ember/no-jquery": 2
   },
   globals: {
     "_": false,
@@ -67,7 +66,7 @@ module.exports = {
         embertest: true
       },
       rules: {
-        // TODO: bump this to level 1 (warn) once we're ready to remove jQuery from tests
+        // warn against use of jQuery in tests
         "ember/no-jquery": 0
       }
     },
@@ -76,8 +75,8 @@ module.exports = {
     {
       files: ['tests/dummy/**/*.js'],
       rules: {
-        // TODO: bump this to level 1 (warn) once we're ready to remove jQuery from the dummy app
-        "ember/no-jquery": 0
+        // warn against use of jQuery in the dummy app
+        "ember/no-jquery": 1
       }
     }
   ]

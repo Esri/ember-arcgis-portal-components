@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
-- configure eslint to warn against use of jQuery
+- remove unnecessary uses of jQuery
+- configure eslint to disallow use of jQuery in addon
 
 ## [1.2.1]
 ### Changed

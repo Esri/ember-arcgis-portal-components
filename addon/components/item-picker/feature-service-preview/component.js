@@ -236,8 +236,7 @@ export default Component.extend({
   didRender () {
     // Needed to jump to error message
     if (this.get('showError')) {
-      // TODO: replace w/ https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTop
-      this.$().scrollTop(0);
+      this.element.scrollTop = 0;
     }
   },
 
