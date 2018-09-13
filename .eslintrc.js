@@ -18,7 +18,9 @@ module.exports = {
   rules: {
     "comma-dangle": [2, "only-multiline"],
     "no-console": 0,
-    "no-extra-boolean-cast": 0
+    "no-extra-boolean-cast": 0,
+    // don't allow uses of jQuery
+    "ember/no-jquery": 2
   },
   globals: {
     "_": false,
@@ -62,6 +64,19 @@ module.exports = {
       excludedFiles: ['tests/dummy/**/*.js'],
       env: {
         embertest: true
+      },
+      rules: {
+        // warn against use of jQuery in tests
+        "ember/no-jquery": 1
+      }
+    },
+
+    // dummy app files
+    {
+      files: ['tests/dummy/**/*.js'],
+      rules: {
+        // warn against use of jQuery in the dummy app
+        "ember/no-jquery": 1
       }
     }
   ]

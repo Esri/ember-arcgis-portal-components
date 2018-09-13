@@ -26,7 +26,7 @@ export default Component.extend({
   didRender () {
     // Needed to jump to error message
     if (this.get('showError')) {
-      this.$().scrollTop(0);
+      this.element.scrollTop = 0;
     }
   },
 

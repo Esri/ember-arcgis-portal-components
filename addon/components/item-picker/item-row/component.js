@@ -32,20 +32,6 @@ export default Component.extend({
   classNames: ['item-picker-item-results-item'],
   classNameBindings: ['isSelected', 'selectMultiple'],
 
-  didInsertElement () {
-    const el = this.$('[data-toggle="tooltip"]');
-    if (el.tooltip) {
-      el.tooltip();
-    }
-  },
-
-  willDestroyElement () {
-    const el = this.$('[data-toggle="tooltip"]');
-    if (el.tooltip) {
-      el.tooltip('destroy');
-    }
-  },
-
   isSelected: computed('currentItemId', 'model.id', function () {
     return this.get('currentItemId') === this.get('model.id');
   }),
