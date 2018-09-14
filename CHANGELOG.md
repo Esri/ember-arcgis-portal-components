@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - remove unnecessary uses of jQuery
 - configure eslint to disallow use of jQuery in addon
+- configure eslint to disallow use of global fetch
 
 ## [1.2.1]
 ### Changed

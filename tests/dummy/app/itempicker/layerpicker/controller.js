@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { copy } from '@ember/object/internals';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
+import fetch from 'fetch';
 
 export default Controller.extend({
   selectedItem: null,
