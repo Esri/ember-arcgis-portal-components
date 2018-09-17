@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { copy } from '@ember/object/internals';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
+import fetch from 'fetch';
 
 export default Controller.extend({
   selectedItem: null,
@@ -124,8 +125,8 @@ export default Controller.extend({
       $('#myModal').modal('hide');
       this.set('selectedItem', selected);
     },
-    selectionValidator (item) {
-      return this._validator(item);
+    selectionValidator (selected) {
+      return this._validator(selected.item ? selected.item : selected);
     }
   }
 });

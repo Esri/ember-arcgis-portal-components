@@ -35,7 +35,7 @@
     "broccoli-asset-rev": "^2.4.5",
     "calcite-bootstrap": "^0.4.4",
     "ember-arcgis-portal-services": "^1.7.1",
-    "ember-arcgis-server-services": "1.1.0",
+    "ember-arcgis-server-services": "^1.4.1",
     "ember-cli": "~2.18.2",
     "ember-cli-active-link-wrapper": "0.4.0",
     "ember-cli-app-version": "^3.0.0",

@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Changed
+- configure eslint to disallow use of global fetch [86117](https://esriarlington.tpondemand.com/entity/86117-eapc-use-eslint-no-restricted-globals)
+- fix bug in dummy app layerpicker route
+
 ## [1.2.2]
 ### Changed
 - remove unnecessary uses of jQuery
@@ -228,7 +233,8 @@ em
 - Number of search result rows can now be set by: `rowCount`
 - item-preview pane now has a preview button which links out to the item in question.
 
-[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.1...1.2.2
 [1.2.1]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.2.0...1.2.1
 [1.2.0]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.6...1.2.0
 [1.0.6]: https://github.com/Esri/ember-arcgis-portal-components/compare/v1.0.5...1.0.6

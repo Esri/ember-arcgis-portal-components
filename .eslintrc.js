@@ -20,7 +20,12 @@ module.exports = {
     "no-console": 0,
     "no-extra-boolean-cast": 0,
     // don't allow uses of jQuery
-    "ember/no-jquery": 2
+    "ember/no-jquery": 2,
+    // don't allow use of the global fetch
+    "no-restricted-globals": [2, {
+      name: "fetch",
+      message: "Use ember-fetch (import fetch from 'fetch') instead of the global."
+    }]
   },
   globals: {
     "_": false,

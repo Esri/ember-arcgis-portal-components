@@ -2732,11 +2732,11 @@ ember-arcgis-portal-services@^1.7.1:
     ember-cli-htmlbars "^1.0.3"
     ember-fetch "3.4.4"
 
-ember-arcgis-server-services@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/ember-arcgis-server-services/-/ember-arcgis-server-services-1.1.0.tgz#935bcbe697113b2d0c5980ee1d902427f5969b3c"
+ember-arcgis-server-services@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/ember-arcgis-server-services/-/ember-arcgis-server-services-1.4.1.tgz#42c960a18ac88a12381e78c21df5efe21b8f34a8"
   dependencies:
-    ember-cli-babel "^5.1.6"
+    ember-cli-babel "^6.6.0"
 
 ember-assign-polyfill@^2.0.2:
   version "2.2.0"
