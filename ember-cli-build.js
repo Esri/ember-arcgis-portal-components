@@ -5,12 +5,25 @@ const EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
 module.exports = function (defaults) {
   let app = new EmberAddon(defaults, {
     snippetPaths: ['snippets'],
+
     sassOptions: {
       includePaths: [
         'node_modules/bootstrap-sass/assets/stylesheets',
         'node_modules/calcite-bootstrap/dist/sass'
       ],
       sourceMap: true,
+    },
+
+    'ember-cli-bootstrap-sassy': {
+      // only import the bootstrap JS we use in the dummy app
+      'js': ['collapse', 'dropdown', 'modal']
+    },
+
+    'ember-bootstrap': {
+      'bootstrapVersion': 3,
+      // NOTE: for now we are going to let ember-cli-bootstrap-sassy continue to deal w/ CSS/fonts
+      'importBootstrapFont': false,
+      'importBootstrapCSS': false
     }
   });
 

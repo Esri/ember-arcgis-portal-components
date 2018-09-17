@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 
@@ -7,9 +6,11 @@ export default Controller.extend({
 
   itemService: service('items-service'),
 
+  isModalOpen: false,
+
   actions: {
     onSelectItem (selected) {
-      $('#myModal').modal('hide');
+      this.set('isModalOpen', false);
       this.set('selectedItem', selected);
     }
   }
