@@ -125,8 +125,8 @@ export default Controller.extend({
       $('#myModal').modal('hide');
       this.set('selectedItem', selected);
     },
-    selectionValidator (item) {
-      return this._validator(item);
+    selectionValidator (selected) {
+      return this._validator(selected.item ? selected.item : selected);
     }
   }
 });
