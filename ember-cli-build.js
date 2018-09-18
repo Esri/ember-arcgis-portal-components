@@ -8,22 +8,16 @@ module.exports = function (defaults) {
 
     sassOptions: {
       includePaths: [
+        // NOTE: I'm pretty sure this isn't needed
         'node_modules/bootstrap-sass/assets/stylesheets',
         'node_modules/calcite-bootstrap/dist/sass'
       ],
       sourceMap: true,
     },
 
-    'ember-cli-bootstrap-sassy': {
-      // don't import bootstrap JS, use ember-bootstrap instead
-      'js': false
-    },
-
     'ember-bootstrap': {
       'bootstrapVersion': 3,
-      // NOTE: for now we are going to let ember-cli-bootstrap-sassy continue to deal w/ CSS/fonts
-      'importBootstrapFont': false,
-      'importBootstrapCSS': false
+      'importBootstrapFont': true
     }
   });
 

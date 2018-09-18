@@ -1497,7 +1497,7 @@ boom@5.x.x:
   dependencies:
     hoek "4.x.x"
 
-bootstrap-sass@^3.0.0, bootstrap-sass@^3.3.7:
+bootstrap-sass@^3.3.7:
   version "3.3.7"
   resolved "https://registry.yarnpkg.com/bootstrap-sass/-/bootstrap-sass-3.3.7.tgz#6596c7ab40f6637393323ab0bc80d064fc630498"
 
@@ -3177,14 +3177,6 @@ ember-cli-babel@^6.9.2:
     clone "^2.0.0"
     ember-cli-version-checker "^2.1.2"
     semver "^5.5.0"
-
-ember-cli-bootstrap-sassy@0.5.5:
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/ember-cli-bootstrap-sassy/-/ember-cli-bootstrap-sassy-0.5.5.tgz#21705f89b21813e5f0ff43d25305d56abcd9828f"
-  dependencies:
-    bootstrap-sass "^3.0.0"
-    broccoli-funnel "^1.0.1"
-    resolve "^1.1.7"
 
 ember-cli-broccoli-sane-watcher@^2.0.4:
   version "2.1.1"

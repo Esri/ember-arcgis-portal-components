@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - configure eslint to disallow use of global fetch [86117](https://esriarlington.tpondemand.com/entity/86117-eapc-use-eslint-no-restricted-globals)
 - fix bug in dummy app layerpicker route
-- replace Bootstrap JS with ember-bootstrap in dummy app [86647](https://esriarlington.tpondemand.com/entity/86647-add-ember-bootstrap-to-eapc)
+- replace ember-cli-bootstrap-sassy with ember-bootstrap in dummy app [86647](https://esriarlington.tpondemand.com/entity/86647-add-ember-bootstrap-to-eapc)
 
 ## [1.2.2]
 ### Changed
