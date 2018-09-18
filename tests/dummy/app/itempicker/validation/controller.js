@@ -1,10 +1,10 @@
-import $ from 'jquery';
 import { copy } from '@ember/object/internals';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import fetch from 'fetch';
 
 export default Controller.extend({
+  isModalOpen: false,
   selectedModel: null,
 
   itemService: service('items-service'),
@@ -92,7 +92,7 @@ export default Controller.extend({
 
   actions: {
     onSelectItem (item, options) {
-      $('#myModal').modal('hide');
+      this.set('isModalOpen', false);
       let model = {
         item: item
       };

@@ -15,8 +15,8 @@ module.exports = function (defaults) {
     },
 
     'ember-cli-bootstrap-sassy': {
-      // only import the bootstrap JS we use in the dummy app
-      'js': ['modal']
+      // don't import bootstrap JS, use ember-bootstrap instead
+      'js': false
     },
 
     'ember-bootstrap': {
