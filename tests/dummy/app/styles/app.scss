@@ -2,6 +2,6 @@ $hub-font-path: './fonts/';
 @import 'hub-font';
 @import 'hub-icons';
 @import "themes/calcite-bootstrap";
-@import "bootstrap";
+@import "ember-bootstrap/bootstrap";
 @import 'ember-arcgis-portal-components';
 @import 'components/loading-indicator'

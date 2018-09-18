@@ -24,6 +24,13 @@ export default Route.extend({
         debug('No cookie was found, user is anonymous... ');
       });
   },
+
+  setupController (controller, model) {
+    this._super(controller, model);
+    // on mobile, nav menu should start out collapsed
+    controller.set('collapsed', true);
+  },
+
   actions: {
     signin () {
       this.get('session').open('arcgis-oauth-bearer')

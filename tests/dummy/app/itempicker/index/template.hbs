@@ -31,7 +31,7 @@
 
   <div class="col-sm-12">
     <h3>Modal Example </h3>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Select an Item</button>
+    <button type="button" class="btn btn-primary" onclick={{action (mut isModalOpen) true}}>Select an Item</button>
   </div>
   <div class="col-sm-12">
     <h3>Inline Panel Example</h3>
@@ -47,16 +47,13 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Default Usage</h4>
-      </div>
-      <div class="modal-body">
-        {{item-picker selectAction=(action "onSelectItem")}}
-      </div>
-    </div>
-  </div>
-</div>
+{{#bs-modal open=isModalOpen onHidden=(action (mut isModalOpen) false) as |modal|}}
+  {{#modal.header}}
+    <h4 class="modal-title">
+      Default Usage
+    </h4>
+  {{/modal.header}}
+  {{#modal.body}}
+    {{item-picker selectAction=(action "onSelectItem")}}
+  {{/modal.body}}
+{{/bs-modal}}

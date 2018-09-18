@@ -1,47 +1,42 @@
-<nav class="navbar navbar-default">
+{{#bs-navbar collapsed=collapsed onCollapse=(action (mut collapsed) true) onExpand=(action (mut collapsed) false) as |navbar|}}
   <div class="container">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-        {{link-to 'ember-arcgis-portal-components' 'index' class="navbar-brand"}}
+      {{navbar.toggle}}
+      {{link-to 'ember-arcgis-portal-components' 'index' class="navbar-brand"}}
     </div>
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-        {{#active-link}}{{link-to "Home" "index"}}{{/active-link}}
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Item Picker <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-              {{#active-link}}{{link-to "Default Usage" "itempicker.index"}}{{/active-link}}
-              {{#active-link}}{{link-to "Multi-Select" "itempicker.multiselect"}}{{/active-link}}
-              {{#active-link}}{{link-to "Facets" "itempicker.facets"}}{{/active-link}}
-              {{#active-link}}{{link-to "Layer Picker" "itempicker.layerpicker"}}{{/active-link}}
-              {{#active-link}}{{link-to "Default Catalog" "itempicker.defaultcatalog"}}{{/active-link}}
-              {{#active-link}}{{link-to "Validation" "itempicker.validation"}}{{/active-link}}
-              {{#active-link}}{{link-to "Specific ID" "itempicker.specificid"}}{{/active-link}}
-              {{#active-link}}{{link-to "Cross Portal" "itempicker.portalopts"}}{{/active-link}}
-          </ul>
-        </li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
+    {{#navbar.content}}
+      {{#bs-nav class="navbar-nav" as |nav|}}
+        {{#nav.item}}{{#nav.link-to "index"}}Home{{/nav.link-to}}{{/nav.item}}
+        {{#nav.dropdown as |dd|}}
+          {{#dd.toggle}}Item Picker <span class="caret"></span>{{/dd.toggle}}
+          {{#dd.menu as |ddm|}}
+            {{#ddm.item}}{{#ddm.link-to "itempicker.index"}}Default Usage{{/ddm.link-to}}{{/ddm.item}}
+            {{#ddm.item}}{{#ddm.link-to "itempicker.multiselect"}}Multi-Select{{/ddm.link-to}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Facets" "itempicker.facets"}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Layer Picker" "itempicker.layerpicker"}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Default Catalog" "itempicker.defaultcatalog"}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Validation" "itempicker.validation"}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Specific ID" "itempicker.specificid"}}{{/ddm.item}}
+            {{#ddm.item}}{{ddm.link-to "Cross Portal" "itempicker.portalopts"}}{{/ddm.item}}
+          {{/dd.menu}}
+        {{/nav.dropdown}}
+      {{/bs-nav}}
+      {{#bs-nav class="navbar-nav navbar-right" as |nav|}}
         {{#if session.isAuthenticated}}
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{session.currentUser.fullName}} <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li><a href="#" {{action 'signout'}}>Sign Out</a></li>
-          </ul>
-        </li>
+        {{#nav.dropdown as |dd|}}
+          {{#dd.toggle}}{{session.currentUser.fullName}} <span class="caret"></span>{{/dd.toggle}}
+          {{#dd.menu as |ddm|}}
+            {{#ddm.item}}<a href="#" {{action 'signout'}}>Sign Out</a>{{/ddm.item}}
+          {{/dd.menu}}
+        {{/nav.dropdown}}
         {{else}}
-        {{#active-link}}<a href="#" {{action 'signin'}}>Sign In</a>{{/active-link}}
+        {{#nav.item}}<a href="#" {{action 'signin'}}>Sign In</a>{{/nav.item}}
         {{/if}}
         <li><a href="https://github.com/arcgis/ember-arcgis-portal-components">Github</a></li>
-      </ul>
-    </div><!--/.nav-collapse -->
+      {{/bs-nav}}
+    {{/navbar.content}}<!--/.nav-collapse -->
   </div><!--/.container-fluid -->
-</nav>
+{{/bs-navbar}}
 <div class="container">
   {{outlet}}
 </div>

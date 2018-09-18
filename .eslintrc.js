@@ -74,15 +74,6 @@ module.exports = {
         // warn against use of jQuery in tests
         "ember/no-jquery": 1
       }
-    },
-
-    // dummy app files
-    {
-      files: ['tests/dummy/**/*.js'],
-      rules: {
-        // warn against use of jQuery in the dummy app
-        "ember/no-jquery": 1
-      }
     }
   ]
 };

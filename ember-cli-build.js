@@ -5,12 +5,19 @@ const EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
 module.exports = function (defaults) {
   let app = new EmberAddon(defaults, {
     snippetPaths: ['snippets'],
+
     sassOptions: {
       includePaths: [
+        // NOTE: I'm pretty sure this isn't needed
         'node_modules/bootstrap-sass/assets/stylesheets',
         'node_modules/calcite-bootstrap/dist/sass'
       ],
       sourceMap: true,
+    },
+
+    'ember-bootstrap': {
+      'bootstrapVersion': 3,
+      'importBootstrapFont': true
     }
   });
 
