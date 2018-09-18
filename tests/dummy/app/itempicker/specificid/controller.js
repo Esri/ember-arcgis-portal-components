@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import Controller from '@ember/controller';
 
 export default Controller.extend({
@@ -8,7 +7,6 @@ export default Controller.extend({
 
   actions: {
     onSelectItem (selected) {
-      $('#myModal').modal('hide');
       this.set('selectedItem', selected);
     },
   }
