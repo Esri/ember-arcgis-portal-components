@@ -1,10 +1,10 @@
-import $ from 'jquery';
 import { copy } from '@ember/object/internals';
 import { inject as service } from '@ember/service';
 import Controller from '@ember/controller';
 import fetch from 'fetch';
 
 export default Controller.extend({
+  isModalOpen: false,
   selectedItem: null,
   itemService: service('items-service'),
   url: 'http://dc.mapsqa.arcgis.com',
@@ -122,7 +122,7 @@ export default Controller.extend({
   },
   actions: {
     onSelectItem (selected) {
-      $('#myModal').modal('hide');
+      this.set('isModalOpen', false);
       this.set('selectedItem', selected);
     },
     selectionValidator (selected) {
