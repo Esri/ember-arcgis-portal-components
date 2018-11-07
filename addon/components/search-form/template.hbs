@@ -1,12 +1,12 @@
 <div class="input-group pull-left">
   <span class="input-group-btn">
-    <button type="submit" class="btn"><span class="glyphicon glyphicon-search"></span></button>
+    <button type="submit" class="btn" ><span class="glyphicon glyphicon-search" aria-label="{{t (concat _i18nScope 'aria.search')}}"></span></button>
   </span>
   <div class="has-feedback has-clear">
     <label for="{{inputElementId}}" class="sr-only">{{if placeholder placeholder (t placeholderi18nKey)}}:</label>
     <input autocomplete={{if autocomplete autocomplete 'off'}} id={{inputElementId}} value={{readonly _q}} class="form-control" placeholder={{if placeholder placeholder (t placeholderi18nKey)}} oninput={{action (mut _q) value="target.value"}} >
     {{#if _q}}
-      <button class="form-control-feedback clear-button" {{action 'cancel'}}><span class="glyphicon glyphicon-remove"></span></button>
+      <button class="form-control-feedback clear-button" {{action 'cancel'}}><span class="glyphicon glyphicon-remove" aria-label="{{t (concat _i18nScope 'aria.clear')}}"></span></button>
     {{/if}}
   </div>
 </div>

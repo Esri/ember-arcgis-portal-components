@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Added
+- added a11y labels to buttons on `search-form` component for screen readers [86518](https://esriarlington.tpondemand.com/entity/86518)
+
 ## [1.2.3]
 ### Changed
 - configure eslint to disallow use of global fetch [86117](https://esriarlington.tpondemand.com/entity/86117-eapc-use-eslint-no-restricted-globals)
