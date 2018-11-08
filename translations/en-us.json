@@ -5,7 +5,11 @@
         "defaultMessage":"Loading..."
       },
       "searchForm": {
-        "searchItems":"Search items"
+        "searchItems":"Search items",
+        "aria": {
+          "search": "Submit Search",
+          "clear": "Clear Search results"
+        }
       },
       "itemPicker": {
         "searchDatasets": "Search datasets",
