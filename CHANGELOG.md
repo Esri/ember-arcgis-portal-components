@@ -2,7 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [Unreleased]
+### Fixed
+- a11y of facets radio button list on `item-picker` component so they are keyboard navigable [86483](https://esriarlington.tpondemand.com/entity/86483-item-picker-facets-not-keyboard-navigable)
+
+## [1.2.4]
 ### Added
 - added a11y labels to buttons on `search-form` component for screen readers [86518](https://esriarlington.tpondemand.com/entity/86518)
 
