@@ -170,7 +170,9 @@ div.panel-body:has(.item-picker) {
     padding-left: 0px;
     padding-right: 0px;
     [type="radio"] {
-      display: none;
+      position: absolute;
+      width: 1px;
+      opacity: 0;
     }
     label {
       display: block;
@@ -184,6 +186,10 @@ div.panel-body:has(.item-picker) {
       span {
         font-weight: normal;
       }
+    }
+    label:focus-within {
+      outline: $calcite-blue-core auto 5px;
+      outline: -webkit-focus-ring-color auto 5px;
     }
     label:first-of-type {
       border-top: 1px solid $calcite-gray-lightest;

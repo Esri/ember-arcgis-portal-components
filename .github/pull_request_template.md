@@ -12,7 +12,7 @@ Were any new tests added? If not, why not?
 - if no, please note why they were not run
 
 ## Item Picker Screen Caps
-If the PR touches the `{{item-picker...` we want some screen caps to show that no visual regression has occured in the three main contexts it is used:
+If the PR touches the `{{item-picker...` we want some screen caps to show that no visual regression has occurred in the three main contexts it is used:
 
 - item picker in normal modal
 
