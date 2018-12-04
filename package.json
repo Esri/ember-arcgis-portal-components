@@ -34,8 +34,8 @@
   "devDependencies": {
     "broccoli-asset-rev": "^2.4.5",
     "calcite-bootstrap": "^0.4.4",
-    "ember-arcgis-portal-services": "^1.7.1",
-    "ember-arcgis-server-services": "^1.4.1",
+    "ember-arcgis-portal-services": "^1.12.0",
+    "ember-arcgis-server-services": "^1.7.0",
     "ember-bootstrap": "~2.0.0",
     "ember-cli": "~2.18.2",
     "ember-cli-app-version": "^3.0.0",
@@ -51,13 +51,13 @@
     "ember-cli-uglify": "^2.0.0",
     "ember-code-snippet": "1.8.1",
     "ember-export-application-global": "^2.0.0",
-    "ember-fetch": "^3.4.5",
+    "ember-fetch": "^6.2.0",
     "ember-intl": "2.31.1",
     "ember-load-initializers": "^1.0.0",
     "ember-maybe-import-regenerator": "^0.1.6",
     "ember-radio-button": "1.2.4",
     "ember-resolver": "^4.0.0",
-    "ember-sanitize": "2.0.2",
+    "ember-sanitize": "dbouwman/ember-sanitize",
     "ember-source": "~2.18.0",
     "eslint-config-semistandard": "~7.0.0",
     "eslint-config-standard": "~6.0.0",
@@ -67,8 +67,7 @@
     "eslint-plugin-react": "^6.2.0",
     "eslint-plugin-standard": "^2.0.0",
     "loader.js": "^4.2.3",
-    "torii": "0.10.1",
-    "torii-provider-arcgis": "^2.0.0"
+    "torii-provider-arcgis": "^2.2.1"
   },
   "engines": {
     "node": "^4.5 || 6.* || >= 7.*"
