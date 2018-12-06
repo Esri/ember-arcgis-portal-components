@@ -2746,10 +2746,10 @@ ember-arcgis-portal-services@^1.12.0:
     ember-cli-htmlbars "^3.0.0"
     ember-fetch "^6.2.0"
 
-ember-arcgis-server-services@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/ember-arcgis-server-services/-/ember-arcgis-server-services-1.7.0.tgz#ccef9fddddcb80b5bb87b3793c31e5ac6cc0b569"
-  integrity sha512-i93U/aLSfZVilFjaImBgeYR0FsMQ2CiJ4bMQNcLcYc2lK7OoJZBuOZMrsxqZgFr7NpQU/xv4GnR2FU+nuSp5yQ==
+ember-arcgis-server-services@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/ember-arcgis-server-services/-/ember-arcgis-server-services-1.7.1.tgz#d2f185f0c46b9effccad70315ba065b156af3d5a"
+  integrity sha512-KMBbHrv8V2orlclPCaz6ejMkQti74yjj9tsk42cPuvPjGHwzZBZYGvjVAyEyoASnjUxxCK1wvYUrQ6v7URAqiw==
   dependencies:
     "@esri/arcgis-rest-feature-service" "^1.14.3"
     "@esri/arcgis-rest-request" "^1.14.3"
