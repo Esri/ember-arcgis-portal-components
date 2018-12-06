@@ -2,8 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## 1.3.1
 ### Fixed
+- uses updated `ember-arcgis-server-services` version that *correctly* relies on ArcGIS-REST-JS
+
+## 1.3.0
+### Fixed
+- uses `ember-arcgis-server-services` version that relies on ArcGIS-REST-JS
 - a11y of facets radio button list on `item-picker` component so they are keyboard navigable [86483](https://esriarlington.tpondemand.com/entity/86483-item-picker-facets-not-keyboard-navigable)
 
 ## [1.2.4]
