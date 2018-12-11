@@ -28,7 +28,7 @@
     "bower": "1.8.2",
     "ember-cli-babel": "^6.6.0",
     "ember-cli-htmlbars": "^2.0.1",
-    "ember-cli-sass": "5.5.1",
+    "ember-cli-sass": "7.2.0",
     "ember-cli-string-helpers": "1.5.0"
   },
   "devDependencies": {
