@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Changed
+- upgraded ember-cli-sass
+
 ## 1.3.2
 ### Fixed
 - uses updated `ember-arcgis-server-services` version which has corrected logic for when to send tokens to servers (fail-and-retry)
