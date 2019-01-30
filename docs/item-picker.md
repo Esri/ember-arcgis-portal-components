@@ -15,7 +15,7 @@ The Item Picker encapsulates the selection of Items. At first this seems like a 
 |  [portalOpts](#specifying-portal-instance) | Object | No |   Allows searches to be run against different portal instances. |
 |  [previewParams](#layer-selection) | Object |  No    |   Pass parameters to the Preview components, notably forcing layer selection |
 |  [rowComponent](#custom-row-components) | String<br><small>(Component)</small> | No |   Name of a component to use when rendering the rows. |
-
+|  pageSize | Integer | No |   Number of results listed per page. |
 
 
 ## Concepts and Usage
