@@ -1,3 +1,7 @@
+{{#if showMessage}}
+  <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
+{{/if}}
+
 {{#if showFacets}}
   <div class="item-picker-radio-buttons col-xs-2">
     {{#each catalog as |appType|}}
@@ -12,10 +16,6 @@
       {{/radio-button}}
     {{/each}}
   </div>
-{{/if}}
-
-{{#if showMessage}}
-  <div class="alert alert-{{currentStatus}}" role="alert">{{currentMessage}}</div>
 {{/if}}
 
 {{#if currentModel.item}}

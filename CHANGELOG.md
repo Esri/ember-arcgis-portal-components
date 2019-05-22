@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - upgraded ember-cli-sass
 - added focus state color to item-picker rows for a11y
+- moved `alert` message in item-picker to avoid collisions with facets in the DOM
 
 ## 1.3.2
 ### Fixed
