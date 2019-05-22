@@ -69,6 +69,9 @@ div.panel-body:has(.item-picker) {
           color: $off-black;
         }
       }
+      a:focus {
+        background-color: $calcite-blue-lightest;
+      }
       .item-picker-item-results-item-type {
         margin-top: 8px;
         margin-right: 10px;
