@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 ### Changed
 - upgraded ember-cli-sass
+- moved `alert` message in item-picker to avoid collisions with facets in the DOM
 
 ## 1.3.2
 ### Fixed
