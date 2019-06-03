@@ -25,6 +25,7 @@ export default Component.extend({
   forceLayerSelection: reads('params.forceLayerSelection'),
   hasSelectedLayer: notEmpty('selectedLayer'),
   intl: service(),
+  session: service(),
   isLoading: true,
   isValidating: false,
   itemService: service('items-service'),
