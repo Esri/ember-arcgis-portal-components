@@ -32,6 +32,7 @@ export default Component.extend({
   selectAnyway: false,
   shouldValidate: false,
   showError: notEmpty('validationResult'),
+  session: service(),
 
   /**
    * Compute the translation scope
