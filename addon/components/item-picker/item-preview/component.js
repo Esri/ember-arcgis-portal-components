@@ -20,7 +20,6 @@ export default Component.extend({
   layout,
   intl: service(),
   items: service('items-service'),
-  session: service(),
 
   classNames: [ 'item-picker-current-item-preview' ],
 
