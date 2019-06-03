@@ -75,6 +75,8 @@
   version "1.14.3"
   resolved "https://registry.yarnpkg.com/@esri/arcgis-rest-users/-/arcgis-rest-users-1.14.3.tgz#d8800a74c3e8e1eba2964fec8e486251f8d7c437"
   integrity sha512-V6qTDJXSiN6gh67MRn+FOMRX3wdsshMvLnvZnQnnhQFxrKboOrb1f+/bbiKuvd5HrvxGkBsevoaQohd3W94RtQ==
+  dependencies:
+    tslib "^1.7.1"
 
 "@glimmer/di@^0.2.0":
   version "0.2.1"
