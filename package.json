@@ -52,7 +52,7 @@
     "ember-code-snippet": "1.8.1",
     "ember-export-application-global": "^2.0.0",
     "ember-fetch": "^6.2.0",
-    "ember-intl": "2.31.1",
+    "ember-intl": "2.33.4",
     "ember-load-initializers": "^1.0.0",
     "ember-maybe-import-regenerator": "^0.1.6",
     "ember-radio-button": "1.2.4",
@@ -74,5 +74,8 @@
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
+  },
+  "resolutions": {
+    "intl-format-cache": "2.1.0"
   }
 }
