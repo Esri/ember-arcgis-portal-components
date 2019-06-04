@@ -74,5 +74,8 @@
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
+  },
+  "resolutions": {
+    "intl-format-cache": "2.1.0"
   }
 }
