@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - added focus state color to item-picker rows for a11y
 - moved `alert` message in item-picker to avoid collisions with facets in the DOM
 
+### Fixed
+- injected necessary `session` service into preview components in the `item-picker` [90782](https://esriarlington.tpondemand.com/entity/90782-webmap-picker-preview-adds-extra-https
+)
+
 ## 1.3.2
 ### Fixed
 - uses updated `ember-arcgis-server-services` version which has corrected logic for when to send tokens to servers (fail-and-retry)
