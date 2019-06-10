@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+
+## 1.3.5
+
 ### Changed
 - upgraded ember-cli-sass
 - added focus state color to item-picker rows for a11y
