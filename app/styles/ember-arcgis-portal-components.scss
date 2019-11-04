@@ -243,6 +243,9 @@ div.panel-body:has(.item-picker) {
         font-size: 14px;
         display: inline-block;
       }
+      .loader {
+        padding: 0;
+      }
       .item-picker-current-item-preview-description {
         overflow: hidden;
         flex: 1 1 auto;
