@@ -10,6 +10,8 @@
 [travis-url]: https://travis-ci.org/Esri/ember-arcgis-portal-components
 
 
+> **DEPRECATED**: This addon is no longer in production use, nor maintained.
+
 > Ember Components for interacting with ArcGIS Online/Enterprise items.
 
 This repository contains standalone components from [ArcGIS Hub](https://hub.arcgis.com) for interacting with ArcGIS Online and Enterprise items, making it extremely simple to include a responsive search dialog in your own Ember, [Bootstrap](https://getbootstrap.com/) application.
